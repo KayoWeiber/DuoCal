@@ -13,6 +13,7 @@ DuoCal/
 ├─ .gitignore
 ├─ .tanstack/
 ├─ dist/
+├─ docs/
 ├─ eslint.config.js
 ├─ index.html
 ├─ node_modules/
@@ -22,6 +23,7 @@ DuoCal/
 ├─ README.md
 ├─ SDD.md
 ├─ src/
+├─ supabase/
 ├─ tsconfig.app.json
 ├─ tsconfig.json
 ├─ tsconfig.node.json
@@ -38,8 +40,19 @@ DuoCal/
 - `package.json`: scripts e dependências.
 - `public/`: arquivos servidos estáticos na raiz do site.
 - `src/`: código-fonte da aplicação.
+- `supabase/`: migrations e metadados locais do Supabase CLI.
 - `tsconfig*.json`: configs TypeScript (app e node).
 - `vite.config.ts`: configuração do Vite (plugins, PWA, TanStack Router plugin, Tailwind, etc.).
+
+## docs/
+
+```
+docs/
+└─ SDD_BANCO_MVP1.md
+```
+
+- `docs/`: documentação do projeto.
+- `docs/SDD_BANCO_MVP1.md`: documentação focada no banco/MVP (conteúdo específico do repositório).
 
 ## public/
 
@@ -99,4 +112,25 @@ src/
 
 ## Notas rápidas
 - **Arquivos gerados:** `dist/`, `node_modules/`, `src/routeTree.gen.ts`.
+- **Supabase:** `supabase/migrations/` deve ser versionado; `supabase/.temp/` é local/gerado.
 - **Remoção do template Vite:** não há mais `src/App.tsx` antigo, `App.css`, `index.css`, nem logos/links/contador do starter.
+
+## supabase/
+
+```
+supabase/
+├─ migrations/
+│  ├─ 20260508000100_001_extensoes_funcoes_base.sql
+│  ├─ 20260508000200_002_dimensoes_core.sql
+│  ├─ 20260508000300_003_workspaces_vinculos.sql
+│  ├─ 20260508000400_004_eventos_notificacoes.sql
+│  ├─ 20260508000500_005_rls_policies.sql
+│  └─ 20260508000600_006_versionamento_app.sql
+└─ .temp/
+   ├─ linked-project.json
+   ├─ project-ref
+   └─ (outros arquivos de cache/versões)
+```
+
+- `supabase/migrations/`: versionamento do schema/policies via SQL.
+- `supabase/.temp/`: cache local do Supabase CLI (não versionar).
