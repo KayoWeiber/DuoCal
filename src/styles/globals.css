@@ -9,3 +9,8 @@ body {
   min-height: 100vh;
   background: #f8fafc;
 }
+
+button,
+input {
+  font: inherit;
+}
