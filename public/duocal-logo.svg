@@ -1,0 +1,64 @@
+<svg width="720" height="180" viewBox="0 0 720 180" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">DuoCal Logo</title>
+  <desc id="desc">Logo do DuoCal com ícone de calendário compartilhado e texto DuoCal.</desc>
+
+  <defs>
+    <linearGradient id="duocalGradient" x1="18" y1="18" x2="142" y2="142" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5466F1"/>
+      <stop offset="1" stop-color="#B66DFF"/>
+    </linearGradient>
+
+    <linearGradient id="softGradient" x1="42" y1="46" x2="118" y2="126" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EAF0FF"/>
+      <stop offset="1" stop-color="#F6EBFF"/>
+    </linearGradient>
+
+    <linearGradient id="heartGradient" x1="74" y1="88" x2="94" y2="109" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF7AB6"/>
+      <stop offset="1" stop-color="#B66DFF"/>
+    </linearGradient>
+
+    <filter id="shadow" x="0" y="0" width="180" height="180" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#1E1B4B" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Icon -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="20" width="140" height="140" rx="36" fill="url(#duocalGradient)"/>
+    <rect x="34" y="48" width="112" height="94" rx="24" fill="url(#softGradient)"/>
+
+    <!-- Calendar binding -->
+    <circle cx="64" cy="42" r="8" fill="#FFFFFF" opacity="0.95"/>
+    <circle cx="116" cy="42" r="8" fill="#FFFFFF" opacity="0.95"/>
+    <rect x="52" y="62" width="76" height="5" rx="2.5" fill="#5466F1" opacity="0.16"/>
+
+    <!-- Left user -->
+    <circle cx="72" cy="92" r="16" fill="#5466F1"/>
+    <path d="M45 127C48.5 110.5 58.5 103 72 103C85.5 103 95.5 110.5 99 127" fill="#5466F1"/>
+
+    <!-- Right user -->
+    <circle cx="108" cy="92" r="16" fill="#B66DFF"/>
+    <path d="M81 127C84.5 110.5 94.5 103 108 103C121.5 103 131.5 110.5 135 127" fill="#B66DFF"/>
+
+    <!-- Overlap/sync shape -->
+    <path d="M90 103C96.9 103 102.8 105 107.4 108.7C102.7 112.2 97 114 90 114C83 114 77.3 112.2 72.6 108.7C77.2 105 83.1 103 90 103Z" fill="#6FE7D2" opacity="0.95"/>
+
+    <!-- Heart -->
+    <path d="M90 117.8C89.3 117.2 78 110.3 78 101.4C78 96.9 81.5 93.5 85.8 93.5C88.2 93.5 89.8 94.5 90.9 96C92 94.5 93.8 93.5 96.2 93.5C100.5 93.5 104 96.9 104 101.4C104 110.3 91.7 117.2 90.9 117.8C90.6 118.1 90.3 118.1 90 117.8Z" fill="url(#heartGradient)" stroke="#FFFFFF" stroke-width="3"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g>
+    <text x="196" y="94" fill="#11144A" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="70" font-weight="800" letter-spacing="-3.5">
+      Duo<tspan fill="#5466F1">Cal</tspan>
+    </text>
+
+    <rect x="199" y="112" width="68" height="6" rx="3" fill="#5466F1"/>
+    <rect x="275" y="112" width="38" height="6" rx="3" fill="#B66DFF" opacity="0.85"/>
+
+    <text x="196" y="143" fill="#6B7280" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" font-weight="500" letter-spacing="-0.3">
+      Sincronia é a base de tudo
+    </text>
+  </g>
+</svg>
