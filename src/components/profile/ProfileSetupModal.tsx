@@ -37,17 +37,19 @@ export function ProfileSetupModal({ perfil }: ProfileSetupModalProps) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/35 px-4 pb-4 backdrop-blur-sm sm:items-center">
-        <section className="w-full max-w-[430px] rounded-[30px] bg-white p-5 shadow-2xl shadow-slate-950/20">
+      <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(17,20,74,0.32)] px-4 pb-4 backdrop-blur-sm sm:items-center">
+        <section className="duocal-card w-full max-w-[430px] p-5">
           <div className="mb-5 flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-950">
+            <div className="duocal-gradient flex size-11 items-center justify-center rounded-2xl text-white shadow-[0_10px_24px_rgba(84,102,241,0.24)]">
               <UserRound className="size-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-950">
+              <h2 className="text-lg font-bold text-[var(--duocal-text)]">
                 Complete seu perfil
               </h2>
-              <p className="text-sm text-slate-500">{perfil.ds_email}</p>
+              <p className="text-sm text-[var(--duocal-muted)]">
+                {perfil.ds_email}
+              </p>
             </div>
           </div>
 
@@ -57,26 +59,26 @@ export function ProfileSetupModal({ perfil }: ProfileSetupModalProps) {
               label="Nome de exibição"
               minLength={2}
               onChange={(event) => setNmUsuario(event.target.value)}
-              placeholder="Como voce quer aparecer?"
+              placeholder="Como você quer aparecer?"
               required
               value={nmUsuario}
             />
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <div className="rounded-3xl border border-[var(--duocal-border)] bg-[var(--duocal-surface-soft)] p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-[var(--duocal-text)]">
                 <KeyRound className="size-4" />
-                Token de conexao
+                Token de conexão
               </div>
-              <p className="mt-2 text-3xl font-black tracking-[0.22em] text-slate-950">
+              <p className="mt-2 text-3xl font-black tracking-[0.22em] text-[var(--duocal-primary)]">
                 {perfil.cd_token_conexao}
               </p>
-              <p className="mt-2 text-sm leading-5 text-slate-500">
-                Este codigo conecta outra pessoa ao seu workspace compartilhado.
+              <p className="mt-2 text-sm leading-5 text-[var(--duocal-muted)]">
+                Este código conecta outra pessoa ao seu workspace compartilhado.
               </p>
             </div>
 
             {errorMessage ? (
-              <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <p className="rounded-2xl bg-[rgba(255,90,122,0.10)] px-4 py-3 text-sm text-[var(--duocal-danger)]">
                 {errorMessage}
               </p>
             ) : null}

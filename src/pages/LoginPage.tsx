@@ -92,17 +92,23 @@ export function LoginPage() {
 
   return (
     <>
-      <ScreenContainer className="justify-center bg-[linear-gradient(180deg,#F8FAFC_0%,#EEF2FF_100%)]">
-        <section className="rounded-[32px] border border-white/80 bg-white/92 p-6 shadow-xl shadow-slate-200/80 backdrop-blur">
+      <ScreenContainer className="justify-center">
+        <section className="duocal-card p-6">
           <div className="mb-8 text-center">
-            <img src="/duocal-logo.svg" alt="DuoCal" className="mx-auto h-16 w-auto" />
-            <h1 className="mt-4 text-3xl font-black text-slate-950">DuoCal</h1>
-            <p className="mt-2 text-sm text-slate-500">
+            <img
+              src="/duocal-logo.svg"
+              alt="DuoCal"
+              className="mx-auto h-16 w-auto"
+            />
+            <h1 className="mt-4 text-3xl font-black text-[var(--duocal-text)]">
+              DuoCal
+            </h1>
+            <p className="mt-2 text-sm text-[var(--duocal-muted)]">
               Sincronia é a base de tudo.
             </p>
           </div>
 
-          <div className="mb-5 grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
+          <div className="mb-5 grid grid-cols-2 rounded-[18px] bg-[var(--duocal-surface-soft)] p-1">
             <button
               className={modeButtonClass(mode === 'login')}
               onClick={() => setMode('login')}
@@ -131,23 +137,25 @@ export function LoginPage() {
               value={email}
             />
             <div className="space-y-2">
-              <span className="text-sm font-medium text-slate-700">Senha</span>
+              <span className="text-sm font-medium text-[var(--duocal-text)]">
+                Senha
+              </span>
               <div className="relative">
                 <input
                   autoComplete={
                     mode === 'login' ? 'current-password' : 'new-password'
                   }
-                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-12 text-base text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200/70"
+                  className="duocal-input pr-12 text-base"
                   minLength={6}
                   onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Minimo de 6 caracteres"
+                  placeholder="Mínimo de 6 caracteres"
                   required
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                 />
                 <button
                   aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                  className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                  className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-[var(--duocal-muted)] transition hover:bg-white hover:text-[var(--duocal-primary)]"
                   onClick={() => setShowPassword((value) => !value)}
                   type="button"
                 >
@@ -161,13 +169,13 @@ export function LoginPage() {
             </div>
 
             {errorMessage ? (
-              <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <p className="rounded-2xl bg-[rgba(255,90,122,0.10)] px-4 py-3 text-sm text-[var(--duocal-danger)]">
                 {errorMessage}
               </p>
             ) : null}
 
             {successMessage ? (
-              <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              <p className="rounded-2xl bg-[rgba(53,207,165,0.12)] px-4 py-3 text-sm text-[#159A7D]">
                 {successMessage}
               </p>
             ) : null}
@@ -188,7 +196,7 @@ export function LoginPage() {
             </Button>
 
             <p className="text-center text-xs font-medium text-slate-400">
-              V{appVersion}
+              Versão {appVersion}
             </p>
           </form>
         </section>
@@ -201,8 +209,10 @@ export function LoginPage() {
 
 function modeButtonClass(active: boolean) {
   return [
-    'h-10 rounded-xl text-sm font-semibold transition',
-    active ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500',
+    'h-10 rounded-[14px] text-sm font-bold transition',
+    active
+      ? 'duocal-gradient text-white shadow-[0_8px_20px_rgba(84,102,241,0.24)]'
+      : 'text-[var(--duocal-muted)]',
   ].join(' ')
 }
 

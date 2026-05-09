@@ -1,16 +1,127 @@
 @import "tailwindcss";
 
+:root {
+  --duocal-primary: #5466F1;
+  --duocal-primary-dark: #3F46D8;
+  --duocal-violet: #B66DFF;
+  --duocal-bg: #F6F7FB;
+  --duocal-surface: #FFFFFF;
+  --duocal-surface-soft: #F1F3FA;
+  --duocal-text: #11144A;
+  --duocal-muted: #6B7280;
+  --duocal-border: #E5E7F0;
+  --duocal-kayo: #5466F1;
+  --duocal-athina: #D96DFF;
+  --duocal-casal: #B66DFF;
+  --duocal-success: #35CFA5;
+  --duocal-warning: #FFB020;
+  --duocal-danger: #FF5A7A;
+  --duocal-shadow: 0 18px 50px rgba(84, 102, 241, 0.12);
+  --duocal-shadow-soft: 0 10px 30px rgba(17, 20, 74, 0.08);
+}
+
 html {
   font-family: Inter, system-ui, sans-serif;
+  background: var(--duocal-bg);
+  color: var(--duocal-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
-  background: #f8fafc;
+  background:
+    radial-gradient(circle at top, rgba(84, 102, 241, 0.10), transparent 32%),
+    linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%);
+  color: var(--duocal-text);
+}
+
+#root {
+  min-height: 100vh;
 }
 
 button,
 input {
   font: inherit;
+}
+
+::selection {
+  background: rgba(84, 102, 241, 0.18);
+}
+
+.duocal-ios-shell {
+  background:
+    radial-gradient(circle at top, rgba(84, 102, 241, 0.10), transparent 32%),
+    linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%);
+}
+
+.duocal-gradient {
+  background: linear-gradient(135deg, var(--duocal-primary) 0%, var(--duocal-violet) 100%);
+}
+
+.duocal-card {
+  background: var(--duocal-surface);
+  border: 1px solid rgba(229, 231, 240, 0.92);
+  border-radius: 30px;
+  box-shadow: var(--duocal-shadow-soft);
+}
+
+.duocal-soft-shadow {
+  box-shadow: var(--duocal-shadow);
+}
+
+.duocal-input {
+  height: 3rem;
+  width: 100%;
+  border-radius: 1.125rem;
+  border: 1px solid var(--duocal-border);
+  background: var(--duocal-surface-soft);
+  padding: 0 1rem;
+  color: var(--duocal-text);
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.duocal-input::placeholder {
+  color: rgba(107, 114, 128, 0.72);
+}
+
+.duocal-input:focus {
+  border-color: var(--duocal-primary);
+  background: var(--duocal-surface);
+  box-shadow: 0 0 0 4px rgba(84, 102, 241, 0.14);
+}
+
+.duocal-category-trabalho {
+  background: #E8F0FF;
+  color: #3157D8;
+}
+
+.duocal-category-faculdade {
+  background: #F0E8FF;
+  color: #7C3AED;
+}
+
+.duocal-category-casal {
+  background: #F7E8FF;
+  color: #B66DFF;
+}
+
+.duocal-category-saude {
+  background: #E7FBF5;
+  color: #159A7D;
+}
+
+.duocal-category-financas {
+  background: #FFF6D8;
+  color: #B77900;
+}
+
+.duocal-category-casa {
+  background: #EDF2F7;
+  color: #526175;
 }

@@ -18,7 +18,7 @@ export default defineConfig({
         short_name: 'DuoCal',
         description: 'Agenda compartilhada para casais',
         theme_color: '#5466F1',
-        background_color: '#F8FAFC',
+        background_color: '#F6F7FB',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',

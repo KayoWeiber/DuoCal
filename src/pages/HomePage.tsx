@@ -64,7 +64,7 @@ export function HomePage() {
     setFeedbackMessage(null)
 
     if (token.length !== 6) {
-      setErrorMessage('Informe um token com 6 digitos.')
+      setErrorMessage('Informe um token com 6 dígitos.')
       return
     }
 
@@ -133,16 +133,16 @@ export function HomePage() {
       <ScreenContainer>
         <header className="flex items-center justify-between gap-3 pb-5">
           <div className="min-w-0">
-            <p className="text-sm font-medium text-slate-500">
-              Ola, {perfil.nm_usuario ?? 'bem-vindo'}
+            <p className="text-sm font-semibold text-[var(--duocal-muted)]">
+              Olá, {perfil.nm_usuario ?? 'bem-vindo'}
             </p>
-            <h1 className="truncate text-3xl font-black text-slate-950">
+            <h1 className="truncate text-3xl font-black text-[var(--duocal-text)]">
               DuoCal
             </h1>
           </div>
           <button
             aria-label="Sair"
-            className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm"
+            className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--duocal-border)] bg-white text-[var(--duocal-muted)] shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition hover:text-[var(--duocal-primary)]"
             onClick={handleSignOut}
             type="button"
           >
@@ -150,26 +150,30 @@ export function HomePage() {
           </button>
         </header>
 
-        <section className="rounded-[30px] bg-slate-950 p-5 text-white shadow-xl shadow-slate-300">
+        <section className="duocal-gradient duocal-soft-shadow rounded-[30px] p-5 text-white">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-300">Seu token</p>
+              <p className="text-sm font-semibold text-white/78">Seu token</p>
               <p className="mt-2 text-3xl font-black tracking-[0.22em]">
                 {perfil.cd_token_conexao}
               </p>
             </div>
-            <img src="/duocal-logo.svg" alt="DuoCal" className="h-10 w-auto rounded-xl bg-white/95 p-1" />
+            <img
+              src="/duocal-logo.svg"
+              alt="DuoCal"
+              className="h-10 w-auto rounded-xl bg-white/95 p-1"
+            />
           </div>
-          <p className="mt-4 text-sm leading-5 text-slate-300">
-            Compartilhe este codigo com a pessoa que vai dividir o workspace com
-            voce.
+          <p className="mt-4 text-sm leading-5 text-white/78">
+            Compartilhe este código com a pessoa que vai dividir o workspace
+            com você.
           </p>
         </section>
 
         <section className="mt-5 space-y-4">
           {workspaceQuery.isLoading ? (
             <StateBlock
-              description="Buscando seu espaco compartilhado."
+              description="Buscando seu espaço compartilhado."
               icon={<Heart className="size-6" />}
               title="Carregando workspace"
             />
@@ -221,8 +225,10 @@ export function HomePage() {
 function LoadingScreen({ message }: { message: string }) {
   return (
     <ScreenContainer className="items-center justify-center">
-      <div className="size-10 animate-pulse rounded-3xl bg-slate-200" />
-      <p className="mt-4 text-sm font-medium text-slate-500">{message}</p>
+      <div className="duocal-gradient size-10 animate-pulse rounded-3xl" />
+      <p className="mt-4 text-sm font-medium text-[var(--duocal-muted)]">
+        {message}
+      </p>
     </ScreenContainer>
   )
 }
@@ -237,12 +243,16 @@ function StateBlock({
   title: string
 }) {
   return (
-    <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-800">
+    <section className="duocal-card p-5">
+      <div className="flex size-12 items-center justify-center rounded-2xl bg-[rgba(84,102,241,0.10)] text-[var(--duocal-primary)]">
         {icon}
       </div>
-      <h2 className="mt-4 text-lg font-bold text-slate-950">{title}</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
+      <h2 className="mt-4 text-lg font-bold text-[var(--duocal-text)]">
+        {title}
+      </h2>
+      <p className="mt-2 text-sm leading-6 text-[var(--duocal-muted)]">
+        {description}
+      </p>
     </section>
   )
 }
@@ -259,20 +269,28 @@ function WorkspaceCard({
   totalMembros: number
 }) {
   return (
-    <section className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="duocal-card p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-500">Workspace</p>
-          <h2 className="mt-1 text-2xl font-black text-slate-950">{nome}</h2>
+          <p className="text-sm font-semibold text-[var(--duocal-muted)]">
+            Workspace
+          </p>
+          <h2 className="mt-1 text-2xl font-black text-[var(--duocal-text)]">
+            {nome}
+          </h2>
         </div>
-        <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+        <span className="rounded-full bg-[rgba(53,207,165,0.14)] px-3 py-1 text-xs font-bold text-[#159A7D]">
           {papel}
         </span>
       </div>
-      <p className="mt-3 text-sm leading-6 text-slate-500">{slogan}</p>
-      <div className="mt-4 flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm">
-        <span className="text-slate-500">Membros ativos</span>
-        <span className="font-bold text-slate-950">{totalMembros}</span>
+      <p className="mt-3 text-sm leading-6 text-[var(--duocal-muted)]">
+        {slogan}
+      </p>
+      <div className="mt-4 flex items-center justify-between rounded-2xl bg-[var(--duocal-surface-soft)] px-4 py-3 text-sm">
+        <span className="text-[var(--duocal-muted)]">Membros ativos</span>
+        <span className="font-bold text-[var(--duocal-text)]">
+          {totalMembros}
+        </span>
       </div>
     </section>
   )
@@ -302,25 +320,25 @@ function NoWorkspacePanel({
   workspaceName: string
 }) {
   return (
-    <section className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700">
+    <section className="duocal-card p-5">
+      <div className="duocal-gradient flex size-12 items-center justify-center rounded-2xl text-white shadow-[0_10px_24px_rgba(84,102,241,0.22)]">
         <Link2 className="size-6" />
       </div>
-      <h2 className="mt-4 text-xl font-black text-slate-950">
+      <h2 className="mt-4 text-xl font-black text-[var(--duocal-text)]">
         Workspace compartilhado
       </h2>
-      <p className="mt-2 text-sm leading-6 text-slate-500">
-        Voce ainda nao possui um workspace compartilhado. Conecte-se com outra
-        pessoa usando o token de 6 digitos ou crie seu espaco inicial.
+      <p className="mt-2 text-sm leading-6 text-[var(--duocal-muted)]">
+        Você ainda não possui um workspace compartilhado. Conecte-se com outra
+        pessoa usando o token de 6 dígitos ou crie seu espaço inicial.
       </p>
 
       <div className="mt-5 space-y-3">
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">
-            Token de conexao
+          <span className="text-sm font-semibold text-[var(--duocal-text)]">
+            Token de conexão
           </span>
           <input
-            className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-center text-xl font-black tracking-[0.22em] text-slate-950 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-200/70"
+            className="duocal-input px-4 text-center text-xl font-black tracking-[0.22em]"
             inputMode="numeric"
             maxLength={6}
             onChange={(event) => onTokenChange(event.target.value)}
@@ -339,11 +357,11 @@ function NoWorkspacePanel({
         </Button>
       </div>
 
-      <div className="my-5 h-px bg-slate-100" />
+      <div className="my-5 h-px bg-[var(--duocal-border)]" />
 
       <div className="space-y-3">
         <input
-          className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base text-slate-950 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-200/70"
+          className="duocal-input text-base"
           onChange={(event) => onWorkspaceNameChange(event.target.value)}
           placeholder="Nome do workspace"
           value={workspaceName}
@@ -360,13 +378,13 @@ function NoWorkspacePanel({
       </div>
 
       {feedbackMessage ? (
-        <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p className="mt-4 rounded-2xl bg-[rgba(53,207,165,0.12)] px-4 py-3 text-sm text-[#159A7D]">
           {feedbackMessage}
         </p>
       ) : null}
 
       {errorMessage ? (
-        <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <p className="mt-4 rounded-2xl bg-[rgba(255,90,122,0.10)] px-4 py-3 text-sm text-[var(--duocal-danger)]">
           {errorMessage}
         </p>
       ) : null}
@@ -384,10 +402,12 @@ function SmallStatusCard({
   value: string
 }) {
   return (
-    <section className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="text-slate-500">{icon}</div>
-      <p className="mt-3 text-sm text-slate-500">{label}</p>
-      <p className="mt-1 text-base font-bold text-slate-950">{value}</p>
+    <section className="duocal-card rounded-[24px] p-4">
+      <div className="text-[var(--duocal-primary)]">{icon}</div>
+      <p className="mt-3 text-sm text-[var(--duocal-muted)]">{label}</p>
+      <p className="mt-1 text-base font-bold text-[var(--duocal-text)]">
+        {value}
+      </p>
     </section>
   )
 }

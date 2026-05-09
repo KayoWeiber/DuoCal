@@ -10,10 +10,12 @@ export function Input({ className, id, label, ...props }: InputProps) {
 
   return (
     <label className="block space-y-2" htmlFor={inputId}>
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <span className="text-sm font-semibold text-[var(--duocal-text)]">
+        {label}
+      </span>
       <input
         className={cn(
-          'h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200/70',
+          'duocal-input text-base',
           className,
         )}
         id={inputId}

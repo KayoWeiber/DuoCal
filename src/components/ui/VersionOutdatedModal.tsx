@@ -17,11 +17,13 @@ export function VersionOutdatedModal({ open }: VersionOutdatedModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-5 backdrop-blur-sm">
-      <section className="w-full max-w-sm rounded-[28px] bg-white p-6 shadow-2xl shadow-slate-950/20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,20,74,0.38)] px-5 backdrop-blur-sm">
+      <section className="duocal-card w-full max-w-sm p-6">
         <div className="space-y-3">
-          <h2 className="text-xl font-bold text-slate-950">Atualize o DuoCal</h2>
-          <p className="text-sm leading-6 text-slate-600">
+          <h2 className="text-xl font-bold text-[var(--duocal-text)]">
+            Atualize o DuoCal
+          </h2>
+          <p className="text-sm leading-6 text-[var(--duocal-muted)]">
             {versionOutdatedMessage}
           </p>
         </div>

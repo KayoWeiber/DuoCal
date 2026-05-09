@@ -5,13 +5,16 @@ import { cn } from '../../utils'
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: ReactNode
   isLoading?: boolean
-  variant?: 'primary' | 'secondary' | 'ghost'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger'
 }
 
 const variants = {
-  primary: 'bg-slate-950 text-white shadow-sm shadow-slate-950/20',
-  secondary: 'border border-slate-200 bg-white text-slate-900 shadow-sm',
-  ghost: 'bg-transparent text-slate-600',
+  primary: 'duocal-gradient duocal-soft-shadow text-white hover:brightness-[1.03]',
+  secondary:
+    'border border-[var(--duocal-border)] bg-white text-[var(--duocal-text)] shadow-[0_10px_26px_rgba(17,20,74,0.06)] hover:border-[rgba(84,102,241,0.35)]',
+  ghost:
+    'bg-transparent text-[var(--duocal-primary)] hover:bg-[rgba(84,102,241,0.08)]',
+  danger: 'bg-[rgba(255,90,122,0.12)] text-[var(--duocal-danger)]',
 }
 
 export function Button({
@@ -27,7 +30,7 @@ export function Button({
   return (
     <button
       className={cn(
-        'inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl px-4 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60',
+        'inline-flex min-h-12 items-center justify-center gap-2 rounded-[20px] px-5 text-sm font-bold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60',
         variants[variant],
         className,
       )}
