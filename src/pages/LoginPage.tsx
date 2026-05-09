@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { ArrowRight, UserPlus } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, UserPlus } from 'lucide-react'
 import { Button, Input, ScreenContainer, VersionOutdatedModal } from '../components'
 import { getErrorMessage, isVersionOutdatedError, supabase } from '../lib'
 import { useAuthSession } from '../hooks'
@@ -11,10 +11,12 @@ export function LoginPage() {
   const [mode, setMode] = useState<AuthMode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [versionOutdated, setVersionOutdated] = useState(false)
+  const appVersion = import.meta.env.VITE_APP_VERSION
 
   useEffect(() => {
     if (!isLoading && session) {
@@ -128,16 +130,35 @@ export function LoginPage() {
               type="email"
               value={email}
             />
-            <Input
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              label="Senha"
-              minLength={6}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Minimo de 6 caracteres"
-              required
-              type="password"
-              value={password}
-            />
+            <div className="space-y-2">
+              <span className="text-sm font-medium text-slate-700">Senha</span>
+              <div className="relative">
+                <input
+                  autoComplete={
+                    mode === 'login' ? 'current-password' : 'new-password'
+                  }
+                  className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 pr-12 text-base text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-4 focus:ring-slate-200/70"
+                  minLength={6}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Minimo de 6 caracteres"
+                  required
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                />
+                <button
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                  onClick={() => setShowPassword((value) => !value)}
+                  type="button"
+                >
+                  {showPassword ? (
+                    <EyeOff className="size-5" />
+                  ) : (
+                    <Eye className="size-5" />
+                  )}
+                </button>
+              </div>
+            </div>
 
             {errorMessage ? (
               <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -165,6 +186,10 @@ export function LoginPage() {
             >
               {mode === 'login' ? 'Entrar' : 'Criar conta'}
             </Button>
+
+            <p className="text-center text-xs font-medium text-slate-400">
+              V{appVersion}
+            </p>
           </form>
         </section>
       </ScreenContainer>
