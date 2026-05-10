@@ -25,10 +25,12 @@ O DuoCal é uma aplicação PWA mobile-first em React + TypeScript, com TanStack
 
 ```text
 DuoCal/
+├─ .env.example
 ├─ .env.local
 ├─ .git/
 ├─ .gitignore
 ├─ .tanstack/
+├─ dist/
 ├─ README.md
 ├─ SDD.md
 ├─ docs/
@@ -48,6 +50,7 @@ DuoCal/
 
 ### 2.1 Raiz
 
+- `.env.example` (**versionado**): template de variáveis de ambiente (não contém segredos).
 - `.env.local` (**local**): variáveis de ambiente para Vite, incluindo credenciais do Supabase e versão do app.
 - `.gitignore` (**versionado**): arquivos e pastas que não entram no Git.
 - `eslint.config.js` (**versionado**): configuração do ESLint em flat config.
@@ -60,6 +63,7 @@ DuoCal/
 - `tsconfig.app.json` (**versionado**): TypeScript do frontend.
 - `tsconfig.node.json` (**versionado**): TypeScript das ferramentas e build.
 - `vite.config.ts` (**versionado**): configuração do Vite e plugins do ecossistema do app.
+- `dist/` (**gerado**): saída do build do Vite (ignorada pelo Git).
 - `node_modules/` (**gerado**): dependências instaladas.
 - `.tanstack/` (**gerado/local**): artefatos e cache do ecossistema TanStack.
 - `.git/` (**local**): metadados do Git.
@@ -90,9 +94,11 @@ Arquivos estáticos servidos a partir da raiz do app.
 src/
 ├─ app/
 │  └─ App.tsx
+├─ assets/
 ├─ components/
 │  ├─ index.ts
 │  ├─ notifications/
+│  │  ├─ index.ts
 │  │  ├─ NotificationCenterCard.tsx
 │  │  └─ NotificationRequestCard.tsx
 │  ├─ profile/
@@ -101,6 +107,7 @@ src/
 │     ├─ BottomNavigation.tsx
 │     ├─ Button.tsx
 │     ├─ EmptyState.tsx
+│     ├─ FeedbackAlert.tsx
 │     ├─ Input.tsx
 │     ├─ ScreenContainer.tsx
 │     └─ VersionOutdatedModal.tsx
@@ -143,6 +150,7 @@ src/
 ### 3.2 Responsabilidades por pasta
 
 - `src/app/`: shell global da aplicação.
+- `src/assets/`: assets versionados importados pelo frontend (atualmente vazio, reservado para imagens/ícones do bundle).
 - `src/components/`: componentes reutilizáveis de UI, modais e cards.
 - `src/hooks/`: hooks de sessão, perfil, workspace e notificações.
 - `src/lib/`: cliente Supabase, cache, mensagens de erro e tokens visuais.
@@ -214,9 +222,11 @@ src/
 - `src/components/ui/Input.tsx` (**versionado**): input com label e estilo padrão.
 - `src/components/ui/ScreenContainer.tsx` (**versionado**): container mobile-first com largura máxima e safe-area.
 - `src/components/ui/EmptyState.tsx` (**versionado**): componente de estado vazio.
+- `src/components/ui/FeedbackAlert.tsx` (**versionado**): alerta de feedback (`success`, `error`, `info`) com ação opcional de fechar.
 - `src/components/ui/VersionOutdatedModal.tsx` (**versionado**): modal de atualização que limpa storages antes de recarregar.
 - `src/components/ui/BottomNavigation.tsx` (**versionado**): navegação inferior com badge de notificações.
 - `src/components/profile/ProfileSetupModal.tsx` (**versionado**): modal para completar perfil.
+- `src/components/notifications/index.ts` (**versionado**): barrel export dos componentes de notificações.
 - `src/components/notifications/NotificationCenterCard.tsx` (**versionado**): card da central de notificações com agrupamento e formatação de tempo.
 - `src/components/notifications/NotificationRequestCard.tsx` (**versionado**): card individual de solicitação com ações de aceitar/recusar.
 
@@ -262,15 +272,17 @@ src/
 ```text
 supabase/
 └─ migrations/
-    ├─ 20260508000100_001_extensoes_funcoes_base.sql
-    ├─ 20260508000200_002_dimensoes_core.sql
-    ├─ 20260508000300_003_workspaces_vinculos.sql
-    ├─ 20260508000400_004_eventos_notificacoes.sql
-    ├─ 20260508000500_005_rls_policies.sql
-    ├─ 20260508000600_006_versionamento_app.sql
-    ├─ 20260508000700_007_auth_users_trigger_dim_usuario.sql
-    ├─ 20260510000100_008_ajuste_workspace_solicitacoes_codigo.sql
-    └─ 20260510000200_009_corrige_rpc_solicitacoes_workspace_uuid.sql
+   ├─ 20260508000100_001_extensoes_funcoes_base.sql
+   ├─ 20260508000200_002_dimensoes_core.sql
+   ├─ 20260508000300_003_workspaces_vinculos.sql
+   ├─ 20260508000400_004_eventos_notificacoes.sql
+   ├─ 20260508000500_005_rls_policies.sql
+   ├─ 20260508000600_006_versionamento_app.sql
+   ├─ 20260508000700_007_auth_users_trigger_dim_usuario.sql
+   ├─ 20260510000100_008_ajuste_workspace_solicitacoes_codigo.sql
+   ├─ 20260510000200_009_corrige_rpc_solicitacoes_workspace_uuid.sql
+   ├─ 20260510000300_010_corrige_ambiguidade_rpc_responder_solicitacao_workspace.sql
+   └─ 20260510000400_011_corrige_on_conflict_rpc_responder_solicitacao_workspace.sql
 ```
 
 ### 4.1 Papel da pasta
@@ -281,14 +293,16 @@ supabase/
 ### 4.2 Migrations
 
 - `20260508000100_001_extensoes_funcoes_base.sql`: extensão `pgcrypto` e função base de `updated_at`.
-- `20260508000200_002_dimensoes_core.sql`: base de dimensões do app, incluindo `dim_usuario` e token de conexão.
+- `20260508000200_002_dimensoes_core.sql`: base de dimensões do app, incluindo `dim_usuario` e o código de conexão (inicialmente como token).
 - `20260508000300_003_workspaces_vinculos.sql`: workspace, vínculo entre usuários e configuração por workspace.
 - `20260508000400_004_eventos_notificacoes.sql`: categorias, eventos, relacionamentos e notificações.
 - `20260508000500_005_rls_policies.sql`: funções auxiliares, grants e políticas de RLS.
 - `20260508000600_006_versionamento_app.sql`: controle de versão do client via header `x-duocal-version`.
 - `20260508000700_007_auth_users_trigger_dim_usuario.sql`: trigger de `auth.users` para criar `dim_usuario` e RPCs de perfil/login.
 - `20260510000100_008_ajuste_workspace_solicitacoes_codigo.sql`: renomeia token para código de conexão e introduz o fluxo de solicitações pendentes.
-- `20260510000200_009_corrige_rpc_solicitacoes_workspace_uuid.sql`: corrige RPCs de solicitação para usar UUIDs e fluxos consistentes.
+- `20260510000200_009_corrige_rpc_solicitacoes_workspace_uuid.sql`: corrige RPCs de solicitação para evitar operações inválidas com UUID e garantir fluxo consistente.
+- `20260510000300_010_corrige_ambiguidade_rpc_responder_solicitacao_workspace.sql`: qualifica colunas/aliases e remove ambiguidades na RPC `rpc_responder_solicitacao_workspace`.
+- `20260510000400_011_corrige_on_conflict_rpc_responder_solicitacao_workspace.sql`: corrige `ON CONFLICT` na RPC `rpc_responder_solicitacao_workspace` para evitar colisões e garantir idempotência.
 
 ---
 
