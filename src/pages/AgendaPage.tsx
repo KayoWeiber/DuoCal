@@ -109,7 +109,7 @@ export function AgendaPage() {
 
   return (
     <>
-      <ScreenContainer withBottomNavigation className="pb-4">
+      <ScreenContainer withBottomNavigation>
         {/* Header */}
         <header className="flex items-center justify-between gap-3 pb-2">
           <div className="min-w-0">
@@ -202,14 +202,16 @@ export function AgendaPage() {
 
       {/* FAB Novo evento */}
       {workspaceId && (
-        <button
-          type="button"
-          onClick={() => setShowForm(true)}
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+80px)] right-1/2 z-20 translate-x-[calc(215px-100%)] duocal-gradient inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-white shadow-[0_10px_28px_rgba(84,102,241,0.38)] hover:shadow-[0_14px_34px_rgba(84,102,241,0.46)] transition"
-        >
-          <Plus className="size-4" />
-          Novo evento
-        </button>
+        <div className="duocal-constrained-width fixed bottom-[calc(env(safe-area-inset-bottom)+80px)] left-1/2 z-20 flex w-full -translate-x-1/2 justify-end px-5">
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="duocal-gradient inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-white shadow-[0_10px_28px_rgba(84,102,241,0.38)] transition hover:shadow-[0_14px_34px_rgba(84,102,241,0.46)]"
+          >
+            <Plus className="size-4" />
+            Novo evento
+          </button>
+        </div>
       )}
 
       <BottomNavigation activeTab="agenda" unreadCount={unreadCount} />
