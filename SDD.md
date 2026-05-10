@@ -1,21 +1,36 @@
 # SDD — Estrutura detalhada do projeto (DuoCal)
 
-**Data:** 2026-05-08  
-**Objetivo deste SDD:** documentar a **estrutura atual do repositório** (pastas/arquivos) e descrever **o propósito de cada item**, indicando o que é **versionado** vs **gerado/local**.
+**Data:** 2026-05-10  
+**Objetivo deste SDD:** documentar a estrutura atual do repositório e o papel de cada arquivo/pasta, distinguindo o que é versionado, gerado ou local.
 
 ---
 
-## 1) Árvore do repositório (nível alto)
+## 1) Visão geral
 
-> Pastas grandes/geradas (`node_modules/`, `dist/`) aparecem aqui, mas não são expandidas.
+O DuoCal é uma aplicação PWA mobile-first em React + TypeScript, com TanStack Router, TanStack Query e Supabase. O estado atual do repositório já contém:
 
-```
+- autenticação por e-mail/senha;
+- criação e manutenção de perfil do usuário;
+- leitura do workspace atual;
+- conexão por código de 6 dígitos;
+- central de notificações de solicitações de workspace;
+- navegação inferior para as áreas principais;
+- telas placeholder para agenda, kanban e perfil.
+
+---
+
+## 2) Árvore do repositório
+
+> Pastas geradas ou locais aparecem aqui, mas não são detalhadas como código de produto.
+
+```text
 DuoCal/
 ├─ .env.local
 ├─ .git/
 ├─ .gitignore
 ├─ .tanstack/
-├─ dist/
+├─ README.md
+├─ SDD.md
 ├─ docs/
 ├─ eslint.config.js
 ├─ index.html
@@ -23,8 +38,6 @@ DuoCal/
 ├─ package-lock.json
 ├─ package.json
 ├─ public/
-├─ README.md
-├─ SDD.md
 ├─ src/
 ├─ supabase/
 ├─ tsconfig.app.json
@@ -33,83 +46,61 @@ DuoCal/
 └─ vite.config.ts
 ```
 
----
+### 2.1 Raiz
 
-## 2) Descrição item-a-item (raiz)
-
-### 2.1 Configuração e build
-- `.env.local` (**local**, não commitar segredos): variáveis de ambiente para Vite (prefixo `VITE_`).
-- `.gitignore` (**versionado**): define o que não entra no Git (ex.: `node_modules/`, `dist/`, `supabase/.temp/`).
-- `eslint.config.js` (**versionado**): ESLint em modo flat config; aplica regras para TS/React Hooks/React Refresh.
-- `tsconfig.json` (**versionado**): “solution config” com referências para `tsconfig.app.json` e `tsconfig.node.json`.
-- `tsconfig.app.json` (**versionado**): configura o TypeScript do app (`src/`), modo bundler, `jsx: react-jsx`.
-- `tsconfig.node.json` (**versionado**): configura o TypeScript do Node (principalmente `vite.config.ts`).
-- `vite.config.ts` (**versionado**): plugins do Vite (React, Tailwind, TanStack Router, PWA) e manifest do app.
-- `index.html` (**versionado**): HTML do Vite (metas, favicon, `#root`, script para `src/main.tsx`).
-
-### 2.2 Dependências e artefatos
-- `package.json` (**versionado**): scripts (`dev`, `build`, `lint`, `preview`) e dependências.
+- `.env.local` (**local**): variáveis de ambiente para Vite, incluindo credenciais do Supabase e versão do app.
+- `.gitignore` (**versionado**): arquivos e pastas que não entram no Git.
+- `eslint.config.js` (**versionado**): configuração do ESLint em flat config.
+- `index.html` (**versionado**): HTML base do Vite, com `#root` e bootstrap de `src/main.tsx`.
+- `package.json` (**versionado**): scripts e dependências do projeto.
 - `package-lock.json` (**versionado**): lockfile do npm.
-- `node_modules/` (**gerado**): dependências instaladas.
-- `dist/` (**gerado**): saída do build do Vite.
-
-### 2.3 Documentos
-- `README.md` (**versionado**): documentação geral do projeto (pode estar básico).
+- `README.md` (**versionado**): visão geral do projeto.
 - `SDD.md` (**versionado**): este documento.
-- `docs/` (**versionado**): documentação complementar (expandido na seção 3).
-
-### 2.4 Integrações
-- `supabase/` (**misto**): migrations versionadas + cache local do Supabase CLI (expandido na seção 5).
-
-### 2.5 Pastas internas do Git/Tooling
+- `tsconfig.json` (**versionado**): configuração principal do TypeScript.
+- `tsconfig.app.json` (**versionado**): TypeScript do frontend.
+- `tsconfig.node.json` (**versionado**): TypeScript das ferramentas e build.
+- `vite.config.ts` (**versionado**): configuração do Vite e plugins do ecossistema do app.
+- `node_modules/` (**gerado**): dependências instaladas.
+- `.tanstack/` (**gerado/local**): artefatos e cache do ecossistema TanStack.
 - `.git/` (**local**): metadados do Git.
-- `.tanstack/` (**local/gerado**): artefatos/caches do ecossistema TanStack (ex.: geração de rotas). Conteúdo pode variar por máquina.
 
----
+### 2.2 Documentação
 
-## 3) docs/
-
-```
+```text
 docs/
 └─ SDD_BANCO_MVP1.md
 ```
 
-- `docs/SDD_BANCO_MVP1.md` (**versionado**): especificação do banco para o MVP (migrations, taxonomia `dim_`/`fato_`/`rel_`, RLS, versionamento por header `x-duocal-version`).
+- `docs/SDD_BANCO_MVP1.md` (**versionado**): documento técnico do banco do MVP 1, com taxonomia, RLS, RPCs e versionamento de client.
 
----
+### 2.3 Assets públicos
 
-## 4) public/
-
-Arquivos estáticos servidos na raiz do app (ex.: `/duocal-logo.svg`).
-
-```
-public/
-├─ duocal-icon.svg
-└─ duocal-logo.svg
-```
+Arquivos estáticos servidos a partir da raiz do app.
 
 - `public/duocal-icon.svg` (**versionado**): ícone do app.
-   - Usado em: `index.html` (favicon) e `vite.config.ts` (PWA manifest `icons`).
-- `public/duocal-logo.svg` (**versionado**): logotipo exibido em telas (ex.: login/home).
+- `public/duocal-logo.svg` (**versionado**): logotipo usado nas telas de login e home.
 
 ---
 
-## 5) src/
+## 3) `src/`
 
-### 5.1 Árvore
+### 3.1 Árvore atual
 
-```
+```text
 src/
 ├─ app/
 │  └─ App.tsx
-├─ assets/
-│  └─ (vazio)
 ├─ components/
 │  ├─ index.ts
+│  ├─ notifications/
+│  │  ├─ NotificationCenterCard.tsx
+│  │  └─ NotificationRequestCard.tsx
 │  ├─ profile/
 │  │  └─ ProfileSetupModal.tsx
 │  └─ ui/
+│     ├─ BottomNavigation.tsx
 │     ├─ Button.tsx
+│     ├─ EmptyState.tsx
 │     ├─ Input.tsx
 │     ├─ ScreenContainer.tsx
 │     └─ VersionOutdatedModal.tsx
@@ -117,19 +108,29 @@ src/
 │  ├─ index.ts
 │  ├─ useAuthSession.ts
 │  ├─ useMeuPerfil.ts
+│  ├─ useUnreadNotificationCount.ts
 │  └─ useWorkspaceAtual.ts
 ├─ lib/
 │  ├─ cache.ts
 │  ├─ errors.ts
 │  ├─ index.ts
-│  └─ supabase.ts
+│  ├─ supabase.ts
+│  └─ visual.ts
 ├─ pages/
+│  ├─ AppTabPlaceholderPage.tsx
+│  ├─ ConnectPage.tsx
 │  ├─ HomePage.tsx
-│  └─ LoginPage.tsx
+│  ├─ LoginPage.tsx
+│  └─ NotificationsPage.tsx
 ├─ routes/
 │  ├─ __root.tsx
+│  ├─ agenda.tsx
+│  ├─ conectar.tsx
 │  ├─ index.tsx
-│  └─ login.tsx
+│  ├─ kanban.tsx
+│  ├─ login.tsx
+│  ├─ notificacoes.tsx
+│  └─ perfil.tsx
 ├─ styles/
 │  └─ globals.css
 ├─ utils/
@@ -139,117 +140,197 @@ src/
 └─ routeTree.gen.ts
 ```
 
-### 5.2 Pastas (responsabilidades)
-- `src/app/`: layout/shell base da aplicação.
-- `src/assets/`: assets importados via bundler (quando houver).
-- `src/components/`: componentes reutilizáveis (UI + modais).
-- `src/hooks/`: hooks com regras de negócio e acesso a dados.
-- `src/lib/`: infraestrutura (cliente Supabase, helpers de erro, cache versionado).
-- `src/pages/`: páginas (telas) consumidas por rotas.
-- `src/routes/`: rotas file-based (TanStack Router).
-- `src/styles/`: CSS global (Tailwind + ajustes base).
-- `src/utils/`: utilitários puros (ex.: `cn` para classes).
+### 3.2 Responsabilidades por pasta
 
-### 5.3 Entrypoint e providers
-- `src/main.tsx` (**versionado**): bootstrap do React.
-   - Cria `QueryClient` (TanStack Query) com defaults (`refetchOnWindowFocus: false`, `retry: 1`).
-   - Envolve a app com `QueryClientProvider` e `RouterProvider`.
-   - Importa o CSS global (`src/styles/globals.css`).
+- `src/app/`: shell global da aplicação.
+- `src/components/`: componentes reutilizáveis de UI, modais e cards.
+- `src/hooks/`: hooks de sessão, perfil, workspace e notificações.
+- `src/lib/`: cliente Supabase, cache, mensagens de erro e tokens visuais.
+- `src/pages/`: páginas concretas usadas pelas rotas.
+- `src/routes/`: rotas file-based do TanStack Router.
+- `src/styles/`: estilos globais e base visual.
+- `src/utils/`: utilitários puros.
 
-### 5.4 Router
-- `src/router.ts` (**versionado**): cria o router (`createRouter`) usando `routeTree` gerado.
-- `src/routeTree.gen.ts` (**gerado**): arquivo gerado automaticamente pelo TanStack Router Plugin com base em `src/routes/`.
-   - **Não editar manualmente**.
+### 3.3 Bootstrap
 
-### 5.5 Rotas
-- `src/routes/__root.tsx` (**versionado**): rota raiz; define o layout via `AppLayout` e renderiza `Outlet`.
-- `src/routes/index.tsx` (**versionado**): rota `/` → renderiza `HomePage`.
-- `src/routes/login.tsx` (**versionado**): rota `/login` → renderiza `LoginPage`.
+- `src/main.tsx` (**versionado**): ponto de entrada do React.
+   - cria o `QueryClient` com `refetchOnWindowFocus: false` e `retry: 1`;
+   - envolve a app com `QueryClientProvider` e `RouterProvider`;
+   - carrega `src/styles/globals.css`.
+- `src/app/App.tsx` (**versionado**): layout raiz da aplicação.
+   - aplica a base visual global e o background do app.
 
-### 5.6 Páginas
+### 3.4 Router
+
+- `src/router.ts` (**versionado**): cria o router com base em `routeTree`.
+- `src/routeTree.gen.ts` (**gerado**): árvore gerada automaticamente pelo TanStack Router Plugin.
+   - não deve ser editado manualmente.
+
+### 3.5 Rotas
+
+- `src/routes/__root.tsx` (**versionado**): rota raiz que envolve a aplicação com `AppLayout`.
+- `src/routes/index.tsx` (**versionado**): rota `/`, renderiza `HomePage`.
+- `src/routes/login.tsx` (**versionado**): rota `/login`, renderiza `LoginPage`.
+- `src/routes/conectar.tsx` (**versionado**): rota `/conectar`, renderiza `ConnectPage`.
+- `src/routes/notificacoes.tsx` (**versionado**): rota `/notificacoes`, renderiza `NotificationsPage`.
+- `src/routes/agenda.tsx` (**versionado**): rota `/agenda`, renderiza placeholder da agenda.
+- `src/routes/kanban.tsx` (**versionado**): rota `/kanban`, renderiza placeholder do quadro.
+- `src/routes/perfil.tsx` (**versionado**): rota `/perfil`, renderiza a tela de perfil em placeholder.
+
+### 3.6 Páginas
+
 - `src/pages/LoginPage.tsx` (**versionado**): tela de autenticação.
-   - Alterna modo `login`/`signup`.
-   - Usa `supabase.auth.signInWithPassword` / `supabase.auth.signUp`.
-   - Exibe `VersionOutdatedModal` quando o backend exigir atualização via versão.
-- `src/pages/HomePage.tsx` (**versionado**): tela principal (pós-login).
-   - Garante sessão (redireciona para `/login` quando não autenticado).
-   - Busca/gera perfil do usuário e dados do workspace.
-   - Mostra token de conexão e ações de conectar/criar workspace.
+   - alterna entre `login` e `signup`;
+   - usa `supabase.auth.signInWithPassword` e `supabase.auth.signUp`;
+   - chama a RPC `rpc_registrar_login_usuario` após login bem-sucedido;
+   - exibe `VersionOutdatedModal` quando a API sinaliza versão obsoleta.
+- `src/pages/HomePage.tsx` (**versionado**): home autenticada.
+   - redireciona para `/login` quando não há sessão;
+   - carrega o perfil do usuário e o workspace atual;
+   - mostra o código de conexão do usuário;
+   - permite copiar e compartilhar o código/link;
+   - permite criar workspace inicial;
+   - permite solicitar conexão por código;
+   - mostra o contador de notificações não lidas.
+- `src/pages/ConnectPage.tsx` (**versionado**): fluxo de conexão a partir de link com `codigo`.
+   - lê `?codigo=XXXXXX` da URL;
+   - salva código pendente e redireciona para `/login` quando necessário;
+   - usa a mutation de solicitação por código;
+   - exibe modal de perfil incompleto e modal de versão quando necessário.
+- `src/pages/NotificationsPage.tsx` (**versionado**): central de notificações.
+   - lista solicitações pendentes e notificações de solicitação de workspace;
+   - permite aceitar ou recusar solicitações;
+   - usa navegação inferior e contador de não lidas;
+   - trata estado de perfil incompleto e erro de versão.
+- `src/pages/AppTabPlaceholderPage.tsx` (**versionado**): páginas placeholder para abas ainda não implementadas.
+   - `AgendaPlaceholderPage`;
+   - `KanbanPlaceholderPage`;
+   - `ProfilePlaceholderPage`, que também permite sair da conta.
 
-### 5.7 Componentes
-- `src/components/index.ts` (**versionado**): barrel exports (reexporta UI e modais).
-- `src/components/ui/Button.tsx`: botão com variantes (`primary`, `secondary`, `ghost`) e estado `isLoading`.
-- `src/components/ui/Input.tsx`: input com label e estilos padrão.
-- `src/components/ui/ScreenContainer.tsx`: container responsivo/mobile-first (limita largura e aplica padding/safe-area).
-- `src/components/ui/VersionOutdatedModal.tsx`: modal que orienta atualizar/refresh; limpa storages via `clearDuocalStorage()`.
-- `src/components/profile/ProfileSetupModal.tsx`: modal para completar perfil do usuário (nome de exibição etc.).
+### 3.7 Componentes
 
-### 5.8 Hooks
-- `src/hooks/index.ts`: barrel exports (reexporta todos os hooks do diretório).
-- `src/hooks/useAuthSession.ts`: mantém a sessão do Supabase em cache (TanStack Query) e reage a `onAuthStateChange`.
-- `src/hooks/useMeuPerfil.ts`: obtém/cria perfil via RPC (`rpc_obter_meu_perfil`, fallback `rpc_criar_perfil_usuario`) e mutations (`rpc_completar_perfil_usuario`, `rpc_registrar_login_usuario`).
-- `src/hooks/useWorkspaceAtual.ts`: resolve workspace atual e expõe mutations para conexão/criação via RPC.
+- `src/components/index.ts` (**versionado**): barrel export dos componentes.
+- `src/components/ui/Button.tsx` (**versionado**): botão com variantes `primary`, `secondary`, `ghost` e `danger`.
+- `src/components/ui/Input.tsx` (**versionado**): input com label e estilo padrão.
+- `src/components/ui/ScreenContainer.tsx` (**versionado**): container mobile-first com largura máxima e safe-area.
+- `src/components/ui/EmptyState.tsx` (**versionado**): componente de estado vazio.
+- `src/components/ui/VersionOutdatedModal.tsx` (**versionado**): modal de atualização que limpa storages antes de recarregar.
+- `src/components/ui/BottomNavigation.tsx` (**versionado**): navegação inferior com badge de notificações.
+- `src/components/profile/ProfileSetupModal.tsx` (**versionado**): modal para completar perfil.
+- `src/components/notifications/NotificationCenterCard.tsx` (**versionado**): card da central de notificações com agrupamento e formatação de tempo.
+- `src/components/notifications/NotificationRequestCard.tsx` (**versionado**): card individual de solicitação com ações de aceitar/recusar.
 
-### 5.9 Lib
-- `src/lib/supabase.ts`: cria o client do Supabase e valida variáveis `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_APP_VERSION`.
-   - Injeta header global `x-duocal-version` com a versão do app.
-- `src/lib/cache.ts`: chaves de cache versionadas (`duocal:${VITE_APP_VERSION}:`) e helpers para limpar storages por prefixo.
-- `src/lib/errors.ts`: normalização de mensagens e detecção de erro de versão obsoleta.
-- `src/lib/index.ts`: barrel exports.
+### 3.8 Hooks
 
-### 5.10 Styles e utils
-- `src/styles/globals.css`: Tailwind + estilos globais básicos e herança de fonte para `button/input`.
-- `src/utils/index.ts`: utilitário `cn()` (combina `clsx` + `tailwind-merge`).
+- `src/hooks/index.ts` (**versionado**): barrel export dos hooks.
+- `src/hooks/useAuthSession.ts` (**versionado**): carrega a sessão do Supabase e reage a `onAuthStateChange`.
+   - limpa caches versionados quando a sessão é removida.
+- `src/hooks/useMeuPerfil.ts` (**versionado**): obtém e completa o perfil do usuário.
+   - usa `rpc_obter_meu_perfil`;
+   - faz fallback para `rpc_criar_perfil_usuario`;
+   - expõe `rpc_completar_perfil_usuario` e `rpc_registrar_login_usuario`.
+- `src/hooks/useWorkspaceAtual.ts` (**versionado**): resolve workspace atual e integra as solicitações de conexão.
+   - lê o vínculo ativo em `rel_workspace_usuario`;
+   - expõe consultas de solicitações pendentes e notificações;
+   - expõe mutations para solicitar conexão, responder solicitação e criar workspace inicial.
+- `src/hooks/useUnreadNotificationCount.ts` (**versionado**): agrega o contador de não lidas com base nas consultas do workspace.
+
+### 3.9 Lib
+
+- `src/lib/supabase.ts` (**versionado**): cria o cliente Supabase.
+   - valida `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e `VITE_APP_VERSION`;
+   - injeta o header global `x-duocal-version`.
+- `src/lib/cache.ts` (**versionado**): chaves de cache versionadas e helpers de storage.
+   - usa o prefixo `duocal:${VITE_APP_VERSION}:`;
+   - persiste e remove o código de conexão pendente;
+   - limpa `localStorage` e `sessionStorage` por prefixo.
+- `src/lib/errors.ts` (**versionado**): normaliza mensagens e identifica erro de versão obsoleta.
+- `src/lib/visual.ts` (**versionado**): tokens visuais do produto.
+   - cores-base da marca;
+   - estilos de categorias do banco em português.
+- `src/lib/index.ts` (**versionado**): barrel export da camada de biblioteca.
+
+### 3.10 Utils e estilos
+
+- `src/utils/index.ts` (**versionado**): função `cn()` para combinar classes com `clsx` + `tailwind-merge`.
+- `src/styles/globals.css` (**versionado**): estilos globais do app.
 
 ---
 
-## 6) supabase/
+## 4) `supabase/`
 
-> Pasta usada pelo Supabase CLI.
-
-```
+```text
 supabase/
-├─ migrations/
-│  ├─ 20260508000100_001_extensoes_funcoes_base.sql
-│  ├─ 20260508000200_002_dimensoes_core.sql
-│  ├─ 20260508000300_003_workspaces_vinculos.sql
-│  ├─ 20260508000400_004_eventos_notificacoes.sql
-│  ├─ 20260508000500_005_rls_policies.sql
-│  └─ 20260508000600_006_versionamento_app.sql
-└─ .temp/
-    ├─ linked-project.json
-    ├─ project-ref
-    └─ (outros arquivos de cache/versões)
+└─ migrations/
+    ├─ 20260508000100_001_extensoes_funcoes_base.sql
+    ├─ 20260508000200_002_dimensoes_core.sql
+    ├─ 20260508000300_003_workspaces_vinculos.sql
+    ├─ 20260508000400_004_eventos_notificacoes.sql
+    ├─ 20260508000500_005_rls_policies.sql
+    ├─ 20260508000600_006_versionamento_app.sql
+    ├─ 20260508000700_007_auth_users_trigger_dim_usuario.sql
+    ├─ 20260510000100_008_ajuste_workspace_solicitacoes_codigo.sql
+    └─ 20260510000200_009_corrige_rpc_solicitacoes_workspace_uuid.sql
 ```
 
-### 6.1 migrations/
-- `20260508000100_001_extensoes_funcoes_base.sql`: habilita extensão `pgcrypto` e cria função padrão `fn_set_updated_at()`.
-- `20260508000200_002_dimensoes_core.sql`: cria `dim_usuario` (perfil do app), gera token de conexão (6 dígitos) e trigger para proteger o token.
-- `20260508000300_003_workspaces_vinculos.sql`: cria `dim_workspace`, vínculo `rel_workspace_usuario`, `cfg_workspace`, convites e triggers de `updated_at`.
-- `20260508000400_004_eventos_notificacoes.sql`: categorias padrão/por workspace, eventos (`fato_evento`) e relacionamento de participantes.
-- `20260508000500_005_rls_policies.sql`: funções auxiliares e políticas/grants de RLS para isolar por workspace.
-- `20260508000600_006_versionamento_app.sql`: tabela de versão da aplicação e função `fn_validar_versao_requisicao()` para exigir header `x-duocal-version`.
+### 4.1 Papel da pasta
 
-### 6.2 .temp/
-- `supabase/.temp/` (**local/gerado**): cache do Supabase CLI (não versionar; já ignorado no `.gitignore`).
+- `supabase/migrations/` (**versionado**): histórico de schema, funções, triggers, policies e RPCs.
+- `supabase/.temp/` (**local/gerado**, quando existir): cache do Supabase CLI.
+
+### 4.2 Migrations
+
+- `20260508000100_001_extensoes_funcoes_base.sql`: extensão `pgcrypto` e função base de `updated_at`.
+- `20260508000200_002_dimensoes_core.sql`: base de dimensões do app, incluindo `dim_usuario` e token de conexão.
+- `20260508000300_003_workspaces_vinculos.sql`: workspace, vínculo entre usuários e configuração por workspace.
+- `20260508000400_004_eventos_notificacoes.sql`: categorias, eventos, relacionamentos e notificações.
+- `20260508000500_005_rls_policies.sql`: funções auxiliares, grants e políticas de RLS.
+- `20260508000600_006_versionamento_app.sql`: controle de versão do client via header `x-duocal-version`.
+- `20260508000700_007_auth_users_trigger_dim_usuario.sql`: trigger de `auth.users` para criar `dim_usuario` e RPCs de perfil/login.
+- `20260510000100_008_ajuste_workspace_solicitacoes_codigo.sql`: renomeia token para código de conexão e introduz o fluxo de solicitações pendentes.
+- `20260510000200_009_corrige_rpc_solicitacoes_workspace_uuid.sql`: corrige RPCs de solicitação para usar UUIDs e fluxos consistentes.
 
 ---
 
-## 7) Variáveis de ambiente (Vite)
+## 5) Integração com o frontend
 
-> Variáveis lidas no frontend via `import.meta.env`.
+### 5.1 Variáveis de ambiente
+
+O frontend lê as variáveis abaixo via `import.meta.env`:
 
 - `VITE_SUPABASE_URL`: URL do projeto Supabase.
 - `VITE_SUPABASE_ANON_KEY`: chave anônima do Supabase.
-- `VITE_APP_VERSION`: versão do client usada para:
-   - header `x-duocal-version` (backend pode bloquear versões antigas);
-   - chaves de cache e limpeza de storage por prefixo.
+- `VITE_APP_VERSION`: versão do client.
+
+### 5.2 Uso da versão do app
+
+- `src/lib/supabase.ts` injeta `x-duocal-version` em toda chamada ao backend.
+- `src/lib/cache.ts` prefixa chaves com `duocal:${VITE_APP_VERSION}:`.
+- `src/components/ui/VersionOutdatedModal.tsx` limpa storages antes de recarregar quando o backend sinaliza desatualização.
 
 ---
 
-## 8) Scripts npm
+## 6) Scripts npm
 
-- `npm run dev`: inicia o Vite.
-- `npm run build`: `tsc -b` + `vite build`.
-- `npm run lint`: roda ESLint.
-- `npm run preview`: preview do build.
+- `npm run dev`: inicia o Vite em modo desenvolvimento.
+- `npm run build`: executa `tsc -b` e depois `vite build`.
+- `npm run lint`: executa o ESLint.
+- `npm run preview`: sobe o preview do build gerado.
+
+---
+
+## 7) Status atual do projeto
+
+O repositório já possui a base funcional do fluxo principal:
+
+- login e signup;
+- criação automática de perfil;
+- leitura da sessão;
+- home autenticada;
+- código de conexão do usuário;
+- solicitação de conexão por código;
+- central de notificações de solicitações;
+- navegação inferior;
+- placeholders para agenda, kanban e perfil.
+
+As próximas áreas naturais de evolução são a implementação completa da agenda, do kanban e das configurações detalhadas do workspace.
