@@ -2,18 +2,17 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Bell,
   CalendarDays,
-  Check,
   Copy,
   DoorOpen,
   Heart,
   KeyRound,
   Link2,
-  LogOut,
   Plus,
   Share2,
-  X,
 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import {
+  BottomNavigation,
   Button,
   ProfileSetupModal,
   ScreenContainer,
@@ -23,13 +22,10 @@ import {
   useAuthSession,
   useCriarWorkspaceInicial,
   useMeuPerfil,
-  useNotificacoesSolicitacaoWorkspace,
   useRegistrarLoginUsuario,
-  useResponderSolicitacaoWorkspace,
-  useSolicitacoesWorkspacePendentes,
   useSolicitarConexaoPorCodigo,
+  useUnreadNotificationCount,
   useWorkspaceAtual,
-  type SolicitacaoWorkspacePendente,
 } from '../hooks'
 import {
   clearPendingConnectionCode,
@@ -44,15 +40,9 @@ export function HomePage() {
   const perfilQuery = useMeuPerfil(Boolean(session))
   const perfil = perfilQuery.data ?? null
   const workspaceQuery = useWorkspaceAtual(perfil)
-  const solicitacoesQuery = useSolicitacoesWorkspacePendentes(
-    Boolean(perfil?.id && perfil.fl_perfil_completo),
-  )
-  const notificacoesSolicitacaoQuery = useNotificacoesSolicitacaoWorkspace(
-    Boolean(perfil?.id && perfil.fl_perfil_completo),
-  )
+  const { unreadCount } = useUnreadNotificationCount(perfil)
   const registrarLogin = useRegistrarLoginUsuario()
   const solicitarConexao = useSolicitarConexaoPorCodigo()
-  const responderSolicitacao = useResponderSolicitacaoWorkspace()
   const criarWorkspace = useCriarWorkspaceInicial()
   const loginRegistradoRef = useRef<string | null>(null)
   const [codigo, setCodigo] = useState('')
@@ -182,23 +172,6 @@ export function HomePage() {
     }
   }
 
-  async function handleResponderSolicitacao(
-    solicitacaoId: string,
-    aceitar: boolean,
-  ) {
-    setErrorMessage(null)
-    setFeedbackMessage(null)
-
-    try {
-      await responderSolicitacao.mutateAsync({ solicitacaoId, aceitar })
-      setFeedbackMessage(
-        aceitar ? 'Solicitação aceita.' : 'Solicitação recusada.',
-      )
-    } catch (error) {
-      handleActionError(error)
-    }
-  }
-
   function handleActionError(error: unknown) {
     if (isVersionOutdatedError(error)) {
       setVersionOutdated(true)
@@ -240,7 +213,7 @@ export function HomePage() {
 
   return (
     <>
-      <ScreenContainer>
+      <ScreenContainer withBottomNavigation>
         <header className="flex items-center justify-between gap-3 pb-5">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-[var(--duocal-muted)]">
@@ -250,14 +223,14 @@ export function HomePage() {
               DuoCal
             </h1>
           </div>
-          <button
-            aria-label="Sair"
-            className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-[var(--duocal-border)] bg-white text-[var(--duocal-muted)] shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition hover:text-[var(--duocal-primary)]"
-            onClick={handleSignOut}
-            type="button"
+          <Link
+            aria-label="Abrir notificações"
+            className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-[var(--duocal-border)] bg-white text-[var(--duocal-muted)] shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition hover:text-[var(--duocal-primary)]"
+            to="/notificacoes"
           >
-            <LogOut className="size-5" />
-          </button>
+            <Bell className="size-5" />
+            {unreadCount > 0 ? <HeaderNotificationBadge count={unreadCount} /> : null}
+          </Link>
         </header>
 
         <section className="duocal-gradient duocal-soft-shadow rounded-[30px] p-5 text-white">
@@ -306,16 +279,6 @@ export function HomePage() {
         />
 
         <section className="mt-5 space-y-4">
-          <NotificationsPanel
-            isLoading={
-              solicitacoesQuery.isLoading ||
-              notificacoesSolicitacaoQuery.isLoading
-            }
-            isResponding={responderSolicitacao.isPending}
-            onResponder={handleResponderSolicitacao}
-            solicitacoes={solicitacoesQuery.data ?? []}
-          />
-
           {workspaceQuery.isLoading ? (
             <StateBlock
               description="Buscando seu espaço compartilhado."
@@ -359,6 +322,7 @@ export function HomePage() {
         </section>
       </ScreenContainer>
 
+      <BottomNavigation activeTab="home" unreadCount={unreadCount} />
       <PendingConnectionModal
         codigo={codigoPendente}
         isPending={solicitarConexao.isPending}
@@ -386,6 +350,16 @@ function LoadingScreen({ message }: { message: string }) {
         {message}
       </p>
     </ScreenContainer>
+  )
+}
+
+function HeaderNotificationBadge({ count }: { count: number }) {
+  const label = count > 9 ? '9+' : String(count)
+
+  return (
+    <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-[var(--duocal-danger)] px-1 text-[10px] font-black leading-4 text-white ring-2 ring-white">
+      {label}
+    </span>
   )
 }
 
@@ -448,86 +422,6 @@ function WorkspaceCard({
           {totalMembros}
         </span>
       </div>
-    </section>
-  )
-}
-
-function NotificationsPanel({
-  isLoading,
-  isResponding,
-  onResponder,
-  solicitacoes,
-}: {
-  isLoading: boolean
-  isResponding: boolean
-  onResponder: (solicitacaoId: string, aceitar: boolean) => void
-  solicitacoes: SolicitacaoWorkspacePendente[]
-}) {
-  return (
-    <section className="duocal-card p-5">
-      <div className="flex items-center gap-3">
-        <div className="flex size-11 items-center justify-center rounded-2xl bg-[rgba(84,102,241,0.10)] text-[var(--duocal-primary)]">
-          <Bell className="size-5" />
-        </div>
-        <div>
-          <h2 className="text-base font-black text-[var(--duocal-text)]">
-            Central de notificações
-          </h2>
-          <p className="text-sm text-[var(--duocal-muted)]">
-            Solicitações de conexão aparecem aqui.
-          </p>
-        </div>
-      </div>
-
-      {isLoading ? (
-        <p className="mt-4 text-sm text-[var(--duocal-muted)]">
-          Buscando solicitações...
-        </p>
-      ) : null}
-
-      {!isLoading && solicitacoes.length === 0 ? (
-        <p className="mt-4 rounded-2xl bg-[var(--duocal-surface-soft)] px-4 py-3 text-sm text-[var(--duocal-muted)]">
-          Nenhuma solicitação pendente.
-        </p>
-      ) : null}
-
-      {solicitacoes.length > 0 ? (
-        <div className="mt-4 space-y-3">
-          {solicitacoes.map((solicitacao) => (
-            <article
-              className="rounded-[24px] border border-[var(--duocal-border)] bg-white p-4"
-              key={solicitacao.solicitacao_id}
-            >
-              <p className="text-sm font-black text-[var(--duocal-text)]">
-                {solicitacao.nm_usuario_solicitante} quer se conectar com você
-              </p>
-              <p className="mt-2 text-sm leading-5 text-[var(--duocal-muted)]">
-                Ele solicitou participar de um workspace compartilhado no
-                DuoCal.
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <Button
-                  icon={<X className="size-4" />}
-                  isLoading={isResponding}
-                  onClick={() =>
-                    onResponder(solicitacao.solicitacao_id, false)
-                  }
-                  variant="danger"
-                >
-                  Recusar
-                </Button>
-                <Button
-                  icon={<Check className="size-4" />}
-                  isLoading={isResponding}
-                  onClick={() => onResponder(solicitacao.solicitacao_id, true)}
-                >
-                  Aceitar
-                </Button>
-              </div>
-            </article>
-          ))}
-        </div>
-      ) : null}
     </section>
   )
 }

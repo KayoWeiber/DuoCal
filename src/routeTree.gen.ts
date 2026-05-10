@@ -9,18 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PerfilRouteImport } from './routes/perfil'
+import { Route as NotificacoesRouteImport } from './routes/notificacoes'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as KanbanRouteImport } from './routes/kanban'
 import { Route as ConectarRouteImport } from './routes/conectar'
+import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as IndexRouteImport } from './routes/index'
 
+const PerfilRoute = PerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificacoesRoute = NotificacoesRouteImport.update({
+  id: '/notificacoes',
+  path: '/notificacoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KanbanRoute = KanbanRouteImport.update({
+  id: '/kanban',
+  path: '/kanban',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConectarRoute = ConectarRouteImport.update({
   id: '/conectar',
   path: '/conectar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaRoute = AgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,36 +55,88 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/conectar': typeof ConectarRoute
+  '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
+  '/notificacoes': typeof NotificacoesRoute
+  '/perfil': typeof PerfilRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/conectar': typeof ConectarRoute
+  '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
+  '/notificacoes': typeof NotificacoesRoute
+  '/perfil': typeof PerfilRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agenda': typeof AgendaRoute
   '/conectar': typeof ConectarRoute
+  '/kanban': typeof KanbanRoute
   '/login': typeof LoginRoute
+  '/notificacoes': typeof NotificacoesRoute
+  '/perfil': typeof PerfilRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/conectar' | '/login'
+  fullPaths:
+    | '/'
+    | '/agenda'
+    | '/conectar'
+    | '/kanban'
+    | '/login'
+    | '/notificacoes'
+    | '/perfil'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/conectar' | '/login'
-  id: '__root__' | '/' | '/conectar' | '/login'
+  to:
+    | '/'
+    | '/agenda'
+    | '/conectar'
+    | '/kanban'
+    | '/login'
+    | '/notificacoes'
+    | '/perfil'
+  id:
+    | '__root__'
+    | '/'
+    | '/agenda'
+    | '/conectar'
+    | '/kanban'
+    | '/login'
+    | '/notificacoes'
+    | '/perfil'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgendaRoute: typeof AgendaRoute
   ConectarRoute: typeof ConectarRoute
+  KanbanRoute: typeof KanbanRoute
   LoginRoute: typeof LoginRoute
+  NotificacoesRoute: typeof NotificacoesRoute
+  PerfilRoute: typeof PerfilRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/perfil': {
+      id: '/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof PerfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notificacoes': {
+      id: '/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof NotificacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -68,11 +144,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kanban': {
+      id: '/kanban'
+      path: '/kanban'
+      fullPath: '/kanban'
+      preLoaderRoute: typeof KanbanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conectar': {
       id: '/conectar'
       path: '/conectar'
       fullPath: '/conectar'
       preLoaderRoute: typeof ConectarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda': {
+      id: '/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AgendaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,8 +177,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgendaRoute: AgendaRoute,
   ConectarRoute: ConectarRoute,
+  KanbanRoute: KanbanRoute,
   LoginRoute: LoginRoute,
+  NotificacoesRoute: NotificacoesRoute,
+  PerfilRoute: PerfilRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
