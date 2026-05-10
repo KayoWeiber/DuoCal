@@ -1,20 +1,30 @@
 import { useEffect, useState } from 'react'
-import { Copy, Link2, LogOut, Share2, UserRound } from 'lucide-react'
+import { Bell, ChevronRight, Link2, LogOut, Palette, Plus, Settings, Shield, Tag, UserRound } from 'lucide-react'
 import {
   BottomNavigation,
-  Button,
   FeedbackAlert,
   ProfileSetupModal,
   ScreenContainer,
   VersionOutdatedModal,
 } from '../components'
+import { ConnectionCodeSheet } from '../components/profile/ConnectionCodeSheet'
+import { ProfileHeroCard } from '../components/profile/ProfileHeroCard'
+import { ProfileMenuItem } from '../components/profile/ProfileMenuItem'
 import {
   useAuthSession,
+  useMembrosWorkspace,
   useMeuPerfil,
   useUnreadNotificationCount,
   useWorkspaceAtual,
 } from '../hooks'
-import { supabase } from '../lib'
+import { appVersion, supabase } from '../lib'
+
+function getIniciais(nome: string | null): string {
+  if (!nome) return '?'
+  const partes = nome.trim().split(/\s+/)
+  if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase()
+  return nome.slice(0, 2).toUpperCase()
+}
 
 export function ProfilePage() {
   const { session, isLoading } = useAuthSession()
@@ -22,11 +32,14 @@ export function ProfilePage() {
   const perfil = perfilQuery.data ?? null
   const workspaceQuery = useWorkspaceAtual(perfil)
   const workspace = workspaceQuery.data ?? null
+  const membrosQuery = useMembrosWorkspace(workspace?.workspace.id)
+  const membros = membrosQuery.data ?? []
   const { unreadCount } = useUnreadNotificationCount(perfil)
 
   const [feedback, setFeedback] = useState<string | null>(null)
   const [erro, setErro] = useState<string | null>(null)
-  const [versionOutdated, setVersionOutdated] = useState(false)
+  const [codeSheetOpen, setCodeSheetOpen] = useState(false)
+  const [versionOutdated] = useState(false)
 
   useEffect(() => {
     if (!isLoading && !session) {
@@ -43,170 +56,221 @@ export function ProfilePage() {
     window.location.replace('/login')
   }
 
-  async function handleCopyCode() {
-    if (!perfil?.cd_codigo_conexao) return
-
-    try {
-      await navigator.clipboard.writeText(perfil.cd_codigo_conexao)
-      setFeedback('Código copiado.')
-      setErro(null)
-    } catch {
-      setErro('Não foi possível copiar o código.')
-    }
-  }
-
-  async function handleShareLink() {
-    if (!perfil?.cd_codigo_conexao) return
-
-    const shareUrl = `${window.location.origin}/conectar?codigo=${perfil.cd_codigo_conexao}`
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'DuoCal',
-          text: 'Entre no meu workspace compartilhado no DuoCal usando este código.',
-          url: shareUrl,
-        })
-        return
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          return
-        }
-        // navigator.share falhou por outro motivo — tenta copiar o link
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      setFeedback('Link copiado para a área de transferência.')
-      setErro(null)
-    } catch {
-      setFeedback(shareUrl)
-      setErro(null)
-    }
+  function showWip() {
+    setFeedback('Funcionalidade em construção.')
+    setErro(null)
   }
 
   return (
     <>
       <ScreenContainer withBottomNavigation>
+        {/* Header */}
         <header className="pb-5">
           <p className="text-sm font-semibold text-[var(--duocal-muted)]">Conta</p>
           <h1 className="mt-1 text-3xl font-black text-[var(--duocal-text)]">Perfil</h1>
         </header>
 
-        {/* Card do usuário */}
-        <section className="duocal-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="duocal-gradient grid size-14 shrink-0 place-items-center rounded-[22px] text-white shadow-[0_10px_24px_rgba(84,102,241,0.24)]">
-              <UserRound className="size-7" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="truncate text-lg font-black text-[var(--duocal-text)]">
-                {perfil?.nm_usuario ?? 'Seu perfil'}
-              </h2>
-              <p className="truncate text-sm text-[var(--duocal-muted)]">
-                {perfil?.ds_email ?? session?.user.email ?? ''}
-              </p>
-            </div>
-          </div>
-        </section>
-
         {/* Feedback */}
-        {(feedback || erro) ? (
+        {feedback || erro ? (
           <FeedbackAlert
-            className="mt-4"
+            className="mb-4"
             message={feedback ?? erro ?? ''}
-            onClose={() => {
-              setFeedback(null)
-              setErro(null)
-            }}
+            onClose={() => { setFeedback(null); setErro(null) }}
             variant={erro ? 'error' : 'success'}
           />
         ) : null}
 
-        {/* Código de conexão */}
-        {perfil?.cd_codigo_conexao ? (
-          <section className="mt-4 duocal-gradient rounded-[30px] p-5 text-white shadow-[0_18px_50px_rgba(84,102,241,0.22)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-white/78">
-                  Código de conexão
-                </p>
-                <p className="mt-2 text-3xl font-black tracking-[0.22em]">
-                  {perfil.cd_codigo_conexao}
-                </p>
-              </div>
-              <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-white/18">
-                <Link2 className="size-5" />
-              </div>
-            </div>
-            <p className="mt-3 text-sm leading-5 text-white/78">
-              Compartilhe este código ou link com quem vai dividir o workspace com você.
-            </p>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={handleCopyCode}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white/16 px-4 text-sm font-bold text-white transition hover:bg-white/22"
-              >
-                <Copy className="size-4" />
-                Copiar código
-              </button>
-              <button
-                type="button"
-                onClick={handleShareLink}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-white/16 px-4 text-sm font-bold text-white transition hover:bg-white/22"
-              >
-                <Share2 className="size-4" />
-                Compartilhar
-              </button>
-            </div>
-          </section>
-        ) : null}
-
-        {/* Workspace */}
+        {/* — Hero card (com workspace) ou card simples (sem workspace) — */}
         {workspace ? (
-          <section className="mt-4 duocal-card p-5">
-            <p className="text-sm font-semibold text-[var(--duocal-muted)]">
-              Workspace compartilhado
+          <ProfileHeroCard workspace={workspace} membros={membros} />
+        ) : (
+          <section className="duocal-card p-5">
+            <div className="flex items-center gap-3">
+              <div className="duocal-gradient grid size-14 shrink-0 place-items-center rounded-[22px] text-white shadow-[0_10px_24px_rgba(84,102,241,0.24)]">
+                <UserRound className="size-7" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="truncate text-lg font-black text-[var(--duocal-text)]">
+                  {perfil?.nm_usuario ?? 'Seu perfil'}
+                </h2>
+                <p className="truncate text-sm text-[var(--duocal-muted)]">
+                  {perfil?.ds_email ?? session?.user.email ?? ''}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* — Seção Membros (só com workspace) — */}
+        {workspace ? (
+          <section className="mt-5">
+            <p className="mb-2 px-1 text-[11px] font-bold tracking-widest text-[var(--duocal-muted)]">
+              MEMBROS
             </p>
-            <h2 className="mt-1 text-xl font-black text-[var(--duocal-text)]">
-              {workspace.workspace.nm_workspace}
-            </h2>
-            {workspace.workspace.ds_slogan ? (
-              <p className="mt-1 text-sm text-[var(--duocal-muted)]">
-                {workspace.workspace.ds_slogan}
-              </p>
-            ) : null}
-            <div className="mt-4 flex items-center justify-between rounded-2xl bg-[var(--duocal-surface-soft)] px-4 py-3 text-sm">
-              <span className="text-[var(--duocal-muted)]">Membros ativos</span>
-              <span className="font-bold text-[var(--duocal-text)]">
-                {workspace.total_membros}
-              </span>
+            <div className="duocal-card overflow-hidden divide-y divide-[var(--duocal-border)]">
+              {membros.map((membro) => {
+                const ehVoce = membro.usuario_id === perfil?.id
+                const papelLabel = membro.tp_papel === 'ADMIN' ? 'Admin' : 'Membro'
+                return (
+                  <div
+                    key={membro.usuario_id}
+                    className="flex items-center gap-3 px-4 py-3.5"
+                  >
+                    <div
+                      className="grid size-10 shrink-0 place-items-center rounded-full text-sm font-black text-white"
+                      style={{
+                        background: ehVoce
+                          ? 'var(--duocal-primary)'
+                          : 'var(--duocal-violet)',
+                      }}
+                    >
+                      {getIniciais(membro.nm_usuario)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[var(--duocal-text)]">
+                        {membro.nm_usuario}
+                      </p>
+                      <p className="truncate text-xs text-[var(--duocal-muted)]">
+                        {ehVoce
+                          ? `Você · ${papelLabel} · ${membro.ds_email}`
+                          : `${papelLabel} · ${membro.ds_email}`}
+                      </p>
+                    </div>
+                    <ChevronRight className="size-4 shrink-0 text-[var(--duocal-border)]" />
+                  </div>
+                )
+              })}
+
+              {/* Convidar membro */}
+              <button
+                type="button"
+                onClick={showWip}
+                className="flex w-full items-center gap-3 px-4 py-3.5 transition hover:bg-[var(--duocal-surface-soft)]"
+              >
+                <div className="grid size-10 shrink-0 place-items-center rounded-full bg-[rgba(182,109,255,0.12)]">
+                  <Plus className="size-5 text-[var(--duocal-violet)]" />
+                </div>
+                <span className="text-sm font-semibold text-[var(--duocal-primary)]">
+                  Convidar membro
+                </span>
+              </button>
             </div>
           </section>
         ) : null}
 
-        {/* Sessão */}
-        <section className="mt-4 duocal-card p-5">
-          <h2 className="text-base font-black text-[var(--duocal-text)]">Sessão</h2>
-          <p className="mt-1 text-sm leading-6 text-[var(--duocal-muted)]">
-            Gerencie o acesso desta conta no dispositivo atual.
+        {/* — Seção Workspace / Configurações — */}
+        <section className="mt-5">
+          <p className="mb-2 px-1 text-[11px] font-bold tracking-widest text-[var(--duocal-muted)]">
+            {workspace ? 'WORKSPACE' : 'CONFIGURAÇÕES'}
           </p>
-          <Button
-            className="mt-4 w-full"
-            icon={<LogOut className="size-4" />}
-            onClick={handleSignOut}
-            variant="danger"
-          >
-            Sair da conta
-          </Button>
+          <div className="duocal-card overflow-hidden divide-y divide-[var(--duocal-border)]">
+            {workspace ? (
+              <>
+                <ProfileMenuItem
+                  icon={<Settings className="size-[17px] text-[var(--duocal-primary)]" />}
+                  iconBg="rgba(84,102,241,0.12)"
+                  label="Configurações do workspace"
+                  sublabel="Nome, fuso, idioma"
+                  onClick={showWip}
+                />
+                <ProfileMenuItem
+                  icon={<Tag className="size-[17px] text-[var(--duocal-violet)]" />}
+                  iconBg="rgba(182,109,255,0.12)"
+                  label="Categorias"
+                  sublabel="Organize seus eventos"
+                  onClick={showWip}
+                />
+              </>
+            ) : null}
+
+            <ProfileMenuItem
+              icon={<Link2 className="size-[17px] text-[var(--duocal-success)]" />}
+              iconBg="rgba(53,207,165,0.12)"
+              label="Convite por código"
+              sublabel={
+                perfil?.cd_codigo_conexao
+                  ? `Código: ${perfil.cd_codigo_conexao}`
+                  : 'Compartilhe seu link de conexão'
+              }
+              onClick={() => setCodeSheetOpen(true)}
+            />
+            <ProfileMenuItem
+              icon={<Bell className="size-[17px] text-[var(--duocal-warning)]" />}
+              iconBg="rgba(255,176,32,0.12)"
+              label="Notificações"
+              sublabel="Preferências personalizadas"
+              onClick={showWip}
+            />
+            <ProfileMenuItem
+              icon={<Palette className="size-[17px] text-[#FF5A7A]" />}
+              iconBg="rgba(255,90,122,0.10)"
+              label="Tema do app"
+              sublabel="Sistema"
+              onClick={showWip}
+            />
+            <ProfileMenuItem
+              icon={<Shield className="size-[17px] text-[var(--duocal-muted)]" />}
+              iconBg="rgba(107,114,128,0.10)"
+              label="Privacidade & dados"
+              sublabel="Segurança e permissões"
+              onClick={showWip}
+            />
+          </div>
         </section>
+
+        {/* — Código em destaque (apenas sem workspace) — */}
+        {!workspace && perfil?.cd_codigo_conexao ? (
+          <section
+            className="mt-5 rounded-[30px] p-5 text-white shadow-[0_18px_50px_rgba(84,102,241,0.22)]"
+            style={{ background: 'linear-gradient(135deg, #5466F1 0%, #B66DFF 100%)' }}
+          >
+            <p className="text-sm font-semibold text-white/80">Código de conexão</p>
+            <p className="mt-2 text-4xl font-black tracking-[0.28em]">
+              {perfil.cd_codigo_conexao}
+            </p>
+            <p className="mt-2 text-sm leading-5 text-white/78">
+              Compartilhe com quem vai dividir o workspace com você.
+            </p>
+            <button
+              type="button"
+              onClick={() => setCodeSheetOpen(true)}
+              className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-white/16 text-sm font-bold text-white transition hover:bg-white/22"
+            >
+              Copiar ou compartilhar
+            </button>
+          </section>
+        ) : null}
+
+        {/* — Botão sair — */}
+        <section className="mt-5">
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex w-full items-center justify-center gap-2 rounded-[24px] border border-[rgba(255,90,122,0.20)] bg-white py-4 text-sm font-bold text-[var(--duocal-danger)] shadow-[0_4px_16px_rgba(255,90,122,0.06)] transition hover:bg-[rgba(255,90,122,0.04)]"
+          >
+            <LogOut className="size-4" />
+            Sair da conta
+          </button>
+        </section>
+
+        {/* — Versão — */}
+        <div className="mt-6 pb-2 text-center">
+          <p className="text-[11px] font-bold tracking-widest text-[var(--duocal-border)]">
+            DUOCAL · {appVersion}
+          </p>
+        </div>
       </ScreenContainer>
 
       <BottomNavigation activeTab="profile" unreadCount={unreadCount} />
       {perfilIncompleto && perfil ? <ProfileSetupModal perfil={perfil} /> : null}
       <VersionOutdatedModal open={versionOutdated} />
+
+      {codeSheetOpen && perfil?.cd_codigo_conexao ? (
+        <ConnectionCodeSheet
+          codigo={perfil.cd_codigo_conexao}
+          onClose={() => setCodeSheetOpen(false)}
+        />
+      ) : null}
     </>
   )
 }
