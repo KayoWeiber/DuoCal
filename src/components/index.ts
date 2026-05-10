@@ -1,3 +1,4 @@
+export * from './events'
 export * from './notifications'
 export * from './profile/ProfileSetupModal'
 export * from './ui/BottomNavigation'

@@ -1,4 +1,6 @@
 export * from './useAuthSession'
+export * from './useCategoriasEvento'
+export * from './useEventosWorkspace'
 export * from './useMeuPerfil'
 export * from './useUnreadNotificationCount'
 export * from './useWorkspaceAtual'

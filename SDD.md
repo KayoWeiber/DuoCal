@@ -50,7 +50,9 @@ DuoCal/
 
 ### 2.1 Raiz
 
-- `.env.example` (**versionado**): template de variáveis de ambiente (não contém segredos).
+- `.env.example` (**versionado**): template de variáveis de ambiente.
+   - inclui `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e `VITE_APP_VERSION`.
+   - inclui `SUPABASE_SERVICE_ROLE_KEY` (somente CI/backend; nunca usar no frontend e nunca prefixar com `VITE_`).
 - `.env.local` (**local**): variáveis de ambiente para Vite, incluindo credenciais do Supabase e versão do app.
 - `.gitignore` (**versionado**): arquivos e pastas que não entram no Git.
 - `eslint.config.js` (**versionado**): configuração do ESLint em flat config.
@@ -63,6 +65,7 @@ DuoCal/
 - `tsconfig.app.json` (**versionado**): TypeScript do frontend.
 - `tsconfig.node.json` (**versionado**): TypeScript das ferramentas e build.
 - `vite.config.ts` (**versionado**): configuração do Vite e plugins do ecossistema do app.
+   - inclui TanStack Router Plugin (geração de `routeTree.gen.ts`) e `vite-plugin-pwa` (manifest do PWA).
 - `dist/` (**gerado**): saída do build do Vite (ignorada pelo Git).
 - `node_modules/` (**gerado**): dependências instaladas.
 - `.tanstack/` (**gerado/local**): artefatos e cache do ecossistema TanStack.
@@ -76,6 +79,7 @@ docs/
 ```
 
 - `docs/SDD_BANCO_MVP1.md` (**versionado**): documento técnico do banco do MVP 1, com taxonomia, RLS, RPCs e versionamento de client.
+   - observação: o fluxo de conexão evoluiu do vínculo direto por token para solicitações por código (ver migrations `008+`).
 
 ### 2.3 Assets públicos
 
@@ -171,6 +175,7 @@ src/
 ### 3.4 Router
 
 - `src/router.ts` (**versionado**): cria o router com base em `routeTree`.
+   - usa `defaultPreload: 'intent'`.
 - `src/routeTree.gen.ts` (**gerado**): árvore gerada automaticamente pelo TanStack Router Plugin.
    - não deve ser editado manualmente.
 
@@ -299,8 +304,12 @@ supabase/
 - `20260508000500_005_rls_policies.sql`: funções auxiliares, grants e políticas de RLS.
 - `20260508000600_006_versionamento_app.sql`: controle de versão do client via header `x-duocal-version`.
 - `20260508000700_007_auth_users_trigger_dim_usuario.sql`: trigger de `auth.users` para criar `dim_usuario` e RPCs de perfil/login.
-- `20260510000100_008_ajuste_workspace_solicitacoes_codigo.sql`: renomeia token para código de conexão e introduz o fluxo de solicitações pendentes.
-- `20260510000200_009_corrige_rpc_solicitacoes_workspace_uuid.sql`: corrige RPCs de solicitação para evitar operações inválidas com UUID e garantir fluxo consistente.
+- `20260510000100_008_ajuste_workspace_solicitacoes_codigo.sql`: renomeia token para código de conexão (`cd_codigo_conexao`) e introduz o fluxo de solicitações pendentes.
+   - cria `fato_solicitacao_workspace` + RLS, e permite `workspace_id` nulo em `fato_notificacao` para notificações fora de workspace.
+   - adiciona a RPC `rpc_listar_solicitacoes_workspace_pendentes`.
+- `20260510000200_009_corrige_rpc_solicitacoes_workspace_uuid.sql`: reaplica/corrige as RPCs de solicitação.
+   - define `rpc_solicitar_conexao_por_codigo`.
+   - define a versão base de `rpc_responder_solicitacao_workspace` (posteriormente ajustada em `010/011`).
 - `20260510000300_010_corrige_ambiguidade_rpc_responder_solicitacao_workspace.sql`: qualifica colunas/aliases e remove ambiguidades na RPC `rpc_responder_solicitacao_workspace`.
 - `20260510000400_011_corrige_on_conflict_rpc_responder_solicitacao_workspace.sql`: corrige `ON CONFLICT` na RPC `rpc_responder_solicitacao_workspace` para evitar colisões e garantir idempotência.
 
@@ -321,6 +330,27 @@ O frontend lê as variáveis abaixo via `import.meta.env`:
 - `src/lib/supabase.ts` injeta `x-duocal-version` em toda chamada ao backend.
 - `src/lib/cache.ts` prefixa chaves com `duocal:${VITE_APP_VERSION}:`.
 - `src/components/ui/VersionOutdatedModal.tsx` limpa storages antes de recarregar quando o backend sinaliza desatualização.
+
+### 5.3 RPCs e tabelas usadas pelo frontend
+
+RPCs consumidas pelo client (via `supabase.rpc()`):
+
+- Perfil (hooks `useMeuPerfil` e `useRegistrarLoginUsuario`, e tela de login):
+   - `rpc_obter_meu_perfil`.
+   - `rpc_criar_perfil_usuario` (fallback quando o perfil ainda não existe).
+   - `rpc_completar_perfil_usuario`.
+   - `rpc_registrar_login_usuario`.
+- Workspace e conexão por código (hook `useWorkspaceAtual`):
+   - `rpc_criar_workspace_inicial`.
+   - `rpc_solicitar_conexao_por_codigo`.
+   - `rpc_listar_solicitacoes_workspace_pendentes`.
+   - `rpc_responder_solicitacao_workspace`.
+
+Leituras diretas via PostgREST (via `supabase.from(...)`):
+
+- `fato_notificacao`: lista notificações não lidas do tipo `SOLICITACAO_WORKSPACE`.
+- `rel_workspace_usuario`: resolve o vínculo ativo do usuário.
+- `dim_workspace`: carrega detalhes do workspace atual.
 
 ---
 
