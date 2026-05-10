@@ -6,7 +6,7 @@ export type MeuPerfil = {
   auth_user_id: string
   nm_usuario: string | null
   ds_email: string
-  cd_token_conexao: string
+  cd_codigo_conexao: string
   url_avatar: string | null
   fl_perfil_completo: boolean
   dt_perfil_completo: string | null
@@ -44,10 +44,10 @@ export function useCompletarPerfilUsuario() {
         throw error
       }
 
-      return normalizeRpcRow<MeuPerfil>(data)
+      return normalizePerfil(normalizeRpcRow<MeuPerfil>(data))
     },
     onSuccess: (perfil) => {
-      queryClient.setQueryData(meuPerfilQueryKey, perfil)
+      queryClient.setQueryData(meuPerfilQueryKey, normalizePerfil(perfil))
       queryClient.invalidateQueries({ queryKey: meuPerfilQueryKey })
     },
   })
@@ -69,7 +69,7 @@ async function obterMeuPerfil() {
   const { data, error } = await supabase.rpc('rpc_obter_meu_perfil')
 
   if (!error) {
-    return normalizeRpcRow<MeuPerfil>(data)
+    return normalizePerfil(normalizeRpcRow<MeuPerfil>(data))
   }
 
   if (!isPerfilNaoEncontrado(error)) {
@@ -84,7 +84,7 @@ async function obterMeuPerfil() {
     throw fallback.error
   }
 
-  return normalizeRpcRow<MeuPerfil>(fallback.data)
+  return normalizePerfil(normalizeRpcRow<MeuPerfil>(fallback.data))
 }
 
 function normalizeRpcRow<T>(data: unknown) {
@@ -93,6 +93,17 @@ function normalizeRpcRow<T>(data: unknown) {
   }
 
   return data as T | null
+}
+
+function normalizePerfil(perfil: MeuPerfil | null) {
+  if (!perfil) {
+    return null
+  }
+
+  return {
+    ...perfil,
+    cd_codigo_conexao: perfil.cd_codigo_conexao ?? '',
+  } satisfies MeuPerfil
 }
 
 function isPerfilNaoEncontrado(error: unknown) {

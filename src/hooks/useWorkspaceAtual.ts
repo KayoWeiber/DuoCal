@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { buildQueryKey, supabase } from '../lib'
-import type { MeuPerfil } from './useMeuPerfil'
+import { meuPerfilQueryKey, type MeuPerfil } from './useMeuPerfil'
 
 type RelWorkspaceUsuario = {
   workspace_id: string
@@ -23,6 +23,12 @@ export type WorkspaceAtual = {
 }
 
 export const workspaceAtualQueryKey = buildQueryKey('workspace-atual')
+export const solicitacoesWorkspaceQueryKey = buildQueryKey(
+  'solicitacoes-workspace-pendentes',
+)
+export const notificacoesSolicitacaoWorkspaceQueryKey = buildQueryKey(
+  'notificacoes-solicitacao-workspace',
+)
 
 export function useWorkspaceAtual(perfil: MeuPerfil | null | undefined) {
   return useQuery({
@@ -33,15 +39,76 @@ export function useWorkspaceAtual(perfil: MeuPerfil | null | undefined) {
   })
 }
 
-export function useConectarUsuarioPorToken() {
+export type SolicitacaoWorkspacePendente = {
+  solicitacao_id: string
+  usuario_solicitante_id: string
+  nm_usuario_solicitante: string
+  workspace_id: string | null
+  nm_workspace: string | null
+  cd_codigo_utilizado: string
+  dt_solicitacao: string
+  ds_mensagem: string | null
+}
+
+export type NotificacaoSolicitacaoWorkspace = {
+  id: string
+  tp_notificacao: 'SOLICITACAO_WORKSPACE'
+  nm_titulo: string
+  ds_mensagem: string
+  entidade_id: string | null
+  created_at: string
+}
+
+export function useSolicitacoesWorkspacePendentes(enabled: boolean) {
+  return useQuery({
+    queryKey: solicitacoesWorkspaceQueryKey,
+    enabled,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc(
+        'rpc_listar_solicitacoes_workspace_pendentes',
+      )
+
+      if (error) {
+        throw error
+      }
+
+      return normalizeRpcRows<SolicitacaoWorkspacePendente>(data)
+    },
+    staleTime: 15_000,
+  })
+}
+
+export function useNotificacoesSolicitacaoWorkspace(enabled: boolean) {
+  return useQuery({
+    queryKey: notificacoesSolicitacaoWorkspaceQueryKey,
+    enabled,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('fato_notificacao')
+        .select('id,tp_notificacao,nm_titulo,ds_mensagem,entidade_id,created_at')
+        .eq('tp_notificacao', 'SOLICITACAO_WORKSPACE')
+        .eq('fl_lida', false)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        throw error
+      }
+
+      return (data ?? []) as NotificacaoSolicitacaoWorkspace[]
+    },
+    staleTime: 15_000,
+  })
+}
+
+export function useSolicitarConexaoPorCodigo() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (token: string) => {
+    mutationFn: async (codigo: string) => {
       const { data, error } = await supabase.rpc(
-        'rpc_conectar_usuario_por_token',
+        'rpc_solicitar_conexao_por_codigo',
         {
-          p_cd_token_conexao: token,
+          p_cd_codigo_conexao: codigo,
         },
       )
 
@@ -52,7 +119,40 @@ export function useConectarUsuarioPorToken() {
       return data
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: solicitacoesWorkspaceQueryKey })
+      queryClient.invalidateQueries({
+        queryKey: notificacoesSolicitacaoWorkspaceQueryKey,
+      })
+    },
+  })
+}
+
+export function useResponderSolicitacaoWorkspace() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (payload: { solicitacaoId: string; aceitar: boolean }) => {
+      const { data, error } = await supabase.rpc(
+        'rpc_responder_solicitacao_workspace',
+        {
+          p_solicitacao_id: payload.solicitacaoId,
+          p_aceitar: payload.aceitar,
+        },
+      )
+
+      if (error) {
+        throw error
+      }
+
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: solicitacoesWorkspaceQueryKey })
+      queryClient.invalidateQueries({
+        queryKey: notificacoesSolicitacaoWorkspaceQueryKey,
+      })
       queryClient.invalidateQueries({ queryKey: workspaceAtualQueryKey })
+      queryClient.invalidateQueries({ queryKey: meuPerfilQueryKey })
     },
   })
 }
@@ -135,4 +235,12 @@ async function obterWorkspaceAtual(usuarioId: string | undefined) {
     dt_entrada: rel.dt_entrada,
     total_membros: countResponse.count ?? 1,
   } satisfies WorkspaceAtual
+}
+
+function normalizeRpcRows<T>(data: unknown) {
+  if (!data) {
+    return [] as T[]
+  }
+
+  return Array.isArray(data) ? (data as T[]) : ([data] as T[])
 }
