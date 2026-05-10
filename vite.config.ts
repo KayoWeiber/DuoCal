@@ -6,6 +6,7 @@ import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/',
   plugins: [
     TanStackRouterVite(),
     react(),
@@ -16,9 +17,9 @@ export default defineConfig({
       manifest: {
         name: 'DuoCal',
         short_name: 'DuoCal',
-        description: 'Agenda compartilhada para casais',
+        description: 'Agenda compartilhada para casais. Sincronia é a base de tudo.',
         theme_color: '#5466F1',
-        background_color: '#F6F7FB',
+        background_color: '#F8FAFC',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
