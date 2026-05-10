@@ -48,7 +48,7 @@ export function BottomNavigation({
   return (
     <nav
       aria-label="Navegação principal"
-      className="fixed bottom-0 left-1/2 z-30 w-full max-w-[430px] -translate-x-1/2 border-t border-[rgba(229,231,240,0.88)] bg-white/86 px-3 pb-[max(0.7rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_34px_rgba(17,20,74,0.08)] backdrop-blur-xl"
+      className="duocal-constrained-width fixed bottom-0 left-1/2 z-30 w-full -translate-x-1/2 border-t border-[rgba(229,231,240,0.88)] bg-white/86 px-3 pb-[max(0.7rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_34px_rgba(17,20,74,0.08)] backdrop-blur-xl"
     >
       <div className="grid grid-cols-5 gap-1">
         {navigationItems.map((item) => (

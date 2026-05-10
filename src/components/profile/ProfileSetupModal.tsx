@@ -39,7 +39,7 @@ export function ProfileSetupModal({ perfil }: ProfileSetupModalProps) {
   return (
     <>
       <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(17,20,74,0.32)] px-4 pb-4 backdrop-blur-sm sm:items-center">
-        <section className="duocal-card w-full max-w-[430px] overflow-y-auto p-5" style={{ maxHeight: 'min(90dvh, 640px)' }}>
+        <section className="duocal-card duocal-constrained-width w-full overflow-y-auto p-5" style={{ maxHeight: 'min(90dvh, 640px)' }}>
           <div className="mb-5 flex items-center gap-3">
             <div className="duocal-gradient flex size-11 items-center justify-center rounded-2xl text-white shadow-[0_10px_24px_rgba(84,102,241,0.24)]">
               <UserRound className="size-5" />

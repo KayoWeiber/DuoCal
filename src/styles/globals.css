@@ -68,7 +68,7 @@ input {
   position: relative;
 }
 
-@media (min-width: 481px) {
+@media (min-width: 481px) and (min-height: 600px) {
   .duocal-app-shell {
     max-width: 430px;
     box-shadow:
@@ -76,6 +76,17 @@ input {
       0 24px 80px rgba(17, 20, 74, 0.10);
     border-left: 1px solid rgba(229, 231, 240, 0.5);
     border-right: 1px solid rgba(229, 231, 240, 0.5);
+  }
+}
+
+/* Largura limitada para elementos fixos (BottomNav, FABs) — mesma regra do shell */
+.duocal-constrained-width {
+  max-width: 100%;
+}
+
+@media (min-width: 481px) and (min-height: 600px) {
+  .duocal-constrained-width {
+    max-width: 430px;
   }
 }
 

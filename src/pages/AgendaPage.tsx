@@ -202,7 +202,7 @@ export function AgendaPage() {
 
       {/* FAB Novo evento */}
       {workspaceId && (
-        <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+80px)] left-1/2 z-20 flex w-full max-w-[430px] -translate-x-1/2 justify-end px-5">
+        <div className="duocal-constrained-width fixed bottom-[calc(env(safe-area-inset-bottom)+80px)] left-1/2 z-20 flex w-full -translate-x-1/2 justify-end px-5">
           <button
             type="button"
             onClick={() => setShowForm(true)}
