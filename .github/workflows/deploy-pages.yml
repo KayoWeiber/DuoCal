@@ -4,11 +4,9 @@ on:
   pull_request:
     branches:
       - main
-
   push:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
@@ -24,9 +22,10 @@ jobs:
   build:
     name: Build DuoCal
     runs-on: ubuntu-latest
-
+    outputs:
+      app_version: ${{ steps.version.outputs.app_version }}
     steps:
-      - name: Baixar repositório
+      - name: Baixar repositorio
         uses: actions/checkout@v4
 
       - name: Configurar Node.js
@@ -36,7 +35,7 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Instalar dependências
+      - name: Instalar dependencias
         run: npm install
 
       - name: Criar .env.production
@@ -45,8 +44,21 @@ jobs:
           echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> .env.production
           echo "VITE_APP_VERSION=${{ secrets.VITE_APP_VERSION }}" >> .env.production
 
-      - name: Build
+      - name: Reservar versao de producao
+        id: version
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run version:prod
+
+      - name: Build Pull Request
+        if: github.event_name == 'pull_request'
         run: npm run build
+
+      - name: Build Producao
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: npm run build:prod
 
       - name: Upload artifact GitHub Pages
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -58,14 +70,28 @@ jobs:
     name: Deploy GitHub Pages
     runs-on: ubuntu-latest
     needs: build
-
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Ativar versao no banco
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DUOCAL_DEPLOY_VERSION: ${{ needs.build.outputs.app_version }}
+        run: |
+          test -n "$DUOCAL_DEPLOY_VERSION"
+          curl --fail --request POST "$VITE_SUPABASE_URL/rest/v1/rpc/rpc_ativar_versao_aplicacao" \
+            --header "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            --header "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            --header "Content-Type: application/json" \
+            --data "{
+              \"p_cd_versao\": \"$DUOCAL_DEPLOY_VERSION\",
+              \"p_ds_versao\": \"Deploy publicado no GitHub Pages\",
+              \"p_fl_bloqueia_versoes_antigas\": true
+            }"

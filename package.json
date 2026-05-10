@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:prod": "tsc -b && vite build --mode production",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "version:prod": "node scripts/prepare-prod-version.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
