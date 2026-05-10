@@ -1,20 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { ArrowRight, Eye, EyeOff, UserPlus } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { Button, Input, ScreenContainer, VersionOutdatedModal } from '../components'
 import { getErrorMessage, isVersionOutdatedError, supabase } from '../lib'
 import { useAuthSession } from '../hooks'
 
-type AuthMode = 'login' | 'signup'
-
 export function LoginPage() {
   const { session, isLoading } = useAuthSession()
-  const [mode, setMode] = useState<AuthMode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [signupUnavailableOpen, setSignupUnavailableOpen] = useState(false)
   const [versionOutdated, setVersionOutdated] = useState(false)
   const appVersion = import.meta.env.VITE_APP_VERSION
 
@@ -27,7 +24,6 @@ export function LoginPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setErrorMessage(null)
-    setSuccessMessage(null)
 
     const normalizedEmail = email.trim().toLowerCase()
 
@@ -44,22 +40,7 @@ export function LoginPage() {
     setIsSubmitting(true)
 
     try {
-      if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password,
-        })
-
-        if (error) {
-          throw error
-        }
-
-        await registrarLoginSemBloquear()
-        window.location.replace('/')
-        return
-      }
-
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
       })
@@ -68,16 +49,8 @@ export function LoginPage() {
         throw error
       }
 
-      if (data.session) {
-        await registrarLoginSemBloquear()
-        window.location.replace('/')
-        return
-      }
-
-      setSuccessMessage(
-        'Conta criada. Confirme seu e-mail para entrar no DuoCal.',
-      )
-      setMode('login')
+      await registrarLoginSemBloquear()
+      window.location.replace('/')
     } catch (error) {
       if (isVersionOutdatedError(error)) {
         setVersionOutdated(true)
@@ -110,15 +83,17 @@ export function LoginPage() {
 
           <div className="mb-5 grid grid-cols-2 rounded-[18px] bg-[var(--duocal-surface-soft)] p-1">
             <button
-              className={modeButtonClass(mode === 'login')}
-              onClick={() => setMode('login')}
+              className={modeButtonClass(true)}
               type="button"
             >
               Entrar
             </button>
             <button
-              className={modeButtonClass(mode === 'signup')}
-              onClick={() => setMode('signup')}
+              className={modeButtonClass(false)}
+              onClick={() => {
+                setErrorMessage(null)
+                setSignupUnavailableOpen(true)
+              }}
               type="button"
             >
               Criar conta
@@ -142,9 +117,7 @@ export function LoginPage() {
               </span>
               <div className="relative">
                 <input
-                  autoComplete={
-                    mode === 'login' ? 'current-password' : 'new-password'
-                  }
+                  autoComplete="current-password"
                   className="duocal-input pr-12 text-base"
                   minLength={6}
                   onChange={(event) => setPassword(event.target.value)}
@@ -174,25 +147,13 @@ export function LoginPage() {
               </p>
             ) : null}
 
-            {successMessage ? (
-              <p className="rounded-2xl bg-[rgba(53,207,165,0.12)] px-4 py-3 text-sm text-[#159A7D]">
-                {successMessage}
-              </p>
-            ) : null}
-
             <Button
               className="w-full"
-              icon={
-                mode === 'login' ? (
-                  <ArrowRight className="size-4" />
-                ) : (
-                  <UserPlus className="size-4" />
-                )
-              }
+              icon={<ArrowRight className="size-4" />}
               isLoading={isSubmitting}
               type="submit"
             >
-              {mode === 'login' ? 'Entrar' : 'Criar conta'}
+              Entrar
             </Button>
 
             <p className="text-center text-xs font-medium text-slate-400">
@@ -201,6 +162,42 @@ export function LoginPage() {
           </form>
         </section>
       </ScreenContainer>
+
+      {signupUnavailableOpen ? (
+        <div
+          aria-labelledby="signup-unavailable-title"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,20,74,0.28)] px-5 backdrop-blur-sm"
+          role="dialog"
+        >
+          <div className="duocal-card w-full max-w-sm p-6 text-center">
+            <h2
+              className="text-xl font-black text-[var(--duocal-text)]"
+              id="signup-unavailable-title"
+            >
+              Cadastro indisponível
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[var(--duocal-muted)]">
+              A criação de conta ainda não está disponível nesta versão do
+              DuoCal. Caso precise de acesso, entre em contato com Kayo Weiber
+              pelo e-mail{' '}
+              <a
+                className="font-bold text-[var(--duocal-primary)]"
+                href="mailto:caioveiber598@gmail.com"
+              >
+                caioveiber598@gmail.com
+              </a>
+              .
+            </p>
+            <Button
+              className="mt-6 w-full"
+              onClick={() => setSignupUnavailableOpen(false)}
+            >
+              Entendi
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       <VersionOutdatedModal open={versionOutdated} />
     </>
