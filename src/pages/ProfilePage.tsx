@@ -14,7 +14,7 @@ import {
   useUnreadNotificationCount,
   useWorkspaceAtual,
 } from '../hooks'
-import { getErrorMessage, isVersionOutdatedError, supabase } from '../lib'
+import { supabase } from '../lib'
 
 export function ProfilePage() {
   const { session, isLoading } = useAuthSession()
@@ -58,30 +58,31 @@ export function ProfilePage() {
   async function handleShareLink() {
     if (!perfil?.cd_codigo_conexao) return
 
-    const url = `${window.location.origin}/conectar?codigo=${perfil.cd_codigo_conexao}`
+    const shareUrl = `${window.location.origin}/conectar?codigo=${perfil.cd_codigo_conexao}`
 
-    try {
-      if (typeof navigator.share === 'function') {
+    if (navigator.share) {
+      try {
         await navigator.share({
           title: 'DuoCal',
-          text: 'Use este código para solicitar conexão no DuoCal.',
-          url,
+          text: 'Entre no meu workspace compartilhado no DuoCal usando este código.',
+          url: shareUrl,
         })
-      } else {
-        await navigator.clipboard.writeText(url)
-        setFeedback('Link de conexão copiado.')
-      }
-
-      setErro(null)
-    } catch (error) {
-      if (isVersionOutdatedError(error)) {
-        setVersionOutdated(true)
         return
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return
+        }
+        // navigator.share falhou por outro motivo — tenta copiar o link
       }
+    }
 
-      if ((error as { name?: string }).name !== 'AbortError') {
-        setErro(getErrorMessage(error))
-      }
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setFeedback('Link copiado para a área de transferência.')
+      setErro(null)
+    } catch {
+      setFeedback(shareUrl)
+      setErro(null)
     }
   }
 
