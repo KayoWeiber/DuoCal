@@ -71,7 +71,7 @@ export function EventDatePickerSheet({ value, onConfirm, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-[rgba(17,20,74,0.36)] backdrop-blur-sm">
-      <div className="w-full max-w-[430px] rounded-t-[32px] bg-white shadow-[0_-16px_60px_rgba(17,20,74,0.14)]">
+      <div className="w-full max-w-[430px] overflow-y-auto rounded-t-[32px] bg-white shadow-[0_-16px_60px_rgba(17,20,74,0.14)]" style={{ maxHeight: 'min(90dvh, 640px)' }}>
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="h-1 w-10 rounded-full bg-[var(--duocal-border)]" />

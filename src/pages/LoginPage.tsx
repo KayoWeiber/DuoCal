@@ -184,7 +184,7 @@ export function LoginPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,20,74,0.28)] px-5 backdrop-blur-sm"
           role="dialog"
         >
-          <div className="duocal-card w-full max-w-sm p-6 text-center">
+          <div className="duocal-card w-full max-w-sm overflow-y-auto p-6 text-center" style={{ maxHeight: 'min(90dvh, 480px)' }}>
             <h2
               className="text-xl font-black text-[var(--duocal-text)]"
               id="signup-unavailable-title"

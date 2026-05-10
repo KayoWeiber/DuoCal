@@ -717,7 +717,7 @@ function PendingConnectionModal({
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-[rgba(17,20,74,0.32)] px-4 pb-4 backdrop-blur-sm sm:items-center">
-      <section className="duocal-card w-full max-w-[430px] p-5">
+      <section className="duocal-card w-full max-w-[430px] overflow-y-auto p-5" style={{ maxHeight: 'min(90dvh, 480px)' }}>
         <div className="duocal-gradient flex size-12 items-center justify-center rounded-2xl text-white">
           <Link2 className="size-6" />
         </div>

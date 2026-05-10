@@ -150,7 +150,7 @@ export function EventFormSheet({
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(17,20,74,0.36)] backdrop-blur-sm">
-        <div className="flex w-full max-w-[430px] flex-col overflow-hidden rounded-t-[32px] bg-white shadow-[0_-16px_60px_rgba(17,20,74,0.14)]" style={{ maxHeight: '92svh' }}>
+        <div className="flex w-full max-w-[430px] flex-col overflow-hidden rounded-t-[32px] bg-white shadow-[0_-16px_60px_rgba(17,20,74,0.14)]" style={{ maxHeight: 'min(92dvh, 720px)' }}>
 
           {/* Handle */}
           <div className="flex shrink-0 justify-center pt-3 pb-1">

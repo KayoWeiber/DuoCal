@@ -18,7 +18,7 @@ export function VersionOutdatedModal({ open }: VersionOutdatedModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,20,74,0.38)] px-5 backdrop-blur-sm">
-      <section className="duocal-card w-full max-w-sm p-6">
+      <section className="duocal-card w-full max-w-sm overflow-y-auto p-6" style={{ maxHeight: 'min(90dvh, 400px)' }}>
         <div className="space-y-3">
           <h2 className="text-xl font-bold text-[var(--duocal-text)]">
             Atualize o DuoCal

@@ -26,7 +26,7 @@ export function EventCard({ evento, onClick }: EventCardProps) {
       >
         <div className="min-w-0 flex-1">
           <p
-            className="text-sm font-bold leading-snug"
+            className="truncate text-sm font-bold leading-snug"
             style={{ color: cor }}
           >
             {evento.nm_evento}
