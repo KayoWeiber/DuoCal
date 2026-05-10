@@ -4,6 +4,7 @@ import { getErrorMessage, isVersionOutdatedError } from '../../lib'
 import type { MeuPerfil } from '../../hooks'
 import { useCompletarPerfilUsuario } from '../../hooks'
 import { Button } from '../ui/Button'
+import { FeedbackAlert } from '../ui/FeedbackAlert'
 import { Input } from '../ui/Input'
 import { VersionOutdatedModal } from '../ui/VersionOutdatedModal'
 
@@ -79,9 +80,12 @@ export function ProfileSetupModal({ perfil }: ProfileSetupModalProps) {
             </div>
 
             {errorMessage ? (
-              <p className="rounded-2xl bg-[rgba(255,90,122,0.10)] px-4 py-3 text-sm text-[var(--duocal-danger)]">
-                {errorMessage}
-              </p>
+              <FeedbackAlert
+                message={errorMessage}
+                onClose={() => setErrorMessage(null)}
+                title="Não foi possível salvar"
+                variant="error"
+              />
             ) : null}
 
             <Button

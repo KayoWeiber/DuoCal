@@ -3,6 +3,7 @@ import { Bell, BellOff, Check, DoorOpen } from 'lucide-react'
 import {
   BottomNavigation,
   EmptyState,
+  FeedbackAlert,
   NotificationRequestCard,
   ProfileSetupModal,
   ScreenContainer,
@@ -163,6 +164,10 @@ export function NotificationsPage() {
         <ActionFeedback
           errorMessage={errorMessage}
           feedbackMessage={feedbackMessage}
+          onClear={() => {
+            setErrorMessage(null)
+            setFeedbackMessage(null)
+          }}
         />
 
         {solicitacoesQuery.isLoading || notificacoesQuery.isLoading ? (
@@ -257,9 +262,11 @@ function LoadingScreen({ message }: { message: string }) {
 function ActionFeedback({
   errorMessage,
   feedbackMessage,
+  onClear,
 }: {
   errorMessage: string | null
   feedbackMessage: string | null
+  onClear: () => void
 }) {
   if (!feedbackMessage && !errorMessage) {
     return null
@@ -268,15 +275,20 @@ function ActionFeedback({
   return (
     <div className="mt-4 space-y-3">
       {feedbackMessage ? (
-        <p className="rounded-2xl bg-[rgba(53,207,165,0.12)] px-4 py-3 text-sm text-[#159A7D]">
-          {feedbackMessage}
-        </p>
+        <FeedbackAlert
+          message={feedbackMessage}
+          onClose={onClear}
+          variant="success"
+        />
       ) : null}
 
       {errorMessage ? (
-        <p className="rounded-2xl bg-[rgba(255,90,122,0.10)] px-4 py-3 text-sm text-[var(--duocal-danger)]">
-          {errorMessage}
-        </p>
+        <FeedbackAlert
+          message={errorMessage}
+          onClose={onClear}
+          title="Não foi possível responder"
+          variant="error"
+        />
       ) : null}
     </div>
   )

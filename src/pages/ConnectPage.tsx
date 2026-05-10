@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { ArrowLeft, Link2, Send } from 'lucide-react'
 import {
   Button,
+  FeedbackAlert,
   ProfileSetupModal,
   ScreenContainer,
   VersionOutdatedModal,
@@ -130,15 +131,22 @@ export function ConnectPage() {
           </div>
 
           {feedbackMessage ? (
-            <p className="mt-4 rounded-2xl bg-[rgba(53,207,165,0.12)] px-4 py-3 text-sm text-[#159A7D]">
-              {feedbackMessage}
-            </p>
+            <FeedbackAlert
+              className="mt-4"
+              message={feedbackMessage}
+              onClose={() => setFeedbackMessage(null)}
+              variant="success"
+            />
           ) : null}
 
           {errorMessage ? (
-            <p className="mt-4 rounded-2xl bg-[rgba(255,90,122,0.10)] px-4 py-3 text-sm text-[var(--duocal-danger)]">
-              {errorMessage}
-            </p>
+            <FeedbackAlert
+              className="mt-4"
+              message={errorMessage}
+              onClose={() => setErrorMessage(null)}
+              title="Não foi possível enviar"
+              variant="error"
+            />
           ) : null}
 
           <div className="mt-5 grid grid-cols-2 gap-3">

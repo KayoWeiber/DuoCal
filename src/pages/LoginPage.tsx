@@ -1,7 +1,18 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ArrowRight, Eye, EyeOff } from 'lucide-react'
-import { Button, Input, ScreenContainer, VersionOutdatedModal } from '../components'
-import { getErrorMessage, isVersionOutdatedError, supabase } from '../lib'
+import {
+  Button,
+  FeedbackAlert,
+  Input,
+  ScreenContainer,
+  VersionOutdatedModal,
+} from '../components'
+import {
+  errorContains,
+  getErrorMessage,
+  isVersionOutdatedError,
+  supabase,
+} from '../lib'
 import { useAuthSession } from '../hooks'
 
 export function LoginPage() {
@@ -142,9 +153,12 @@ export function LoginPage() {
             </div>
 
             {errorMessage ? (
-              <p className="rounded-2xl bg-[rgba(255,90,122,0.10)] px-4 py-3 text-sm text-[var(--duocal-danger)]">
-                {errorMessage}
-              </p>
+              <FeedbackAlert
+                message={errorMessage}
+                onClose={() => setErrorMessage(null)}
+                title="Não foi possível entrar"
+                variant="error"
+              />
             ) : null}
 
             <Button
@@ -216,7 +230,7 @@ function modeButtonClass(active: boolean) {
 async function registrarLoginSemBloquear() {
   const { error } = await supabase.rpc('rpc_registrar_login_usuario')
 
-  if (error && !getErrorMessage(error).includes('PERFIL_NAO_ENCONTRADO')) {
+  if (error && !errorContains(error, 'PERFIL_NAO_ENCONTRADO')) {
     throw error
   }
 }

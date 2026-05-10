@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
-  AlertCircle,
   Bell,
   CalendarDays,
-  CheckCircle2,
   Copy,
   DoorOpen,
   Heart,
@@ -11,12 +9,12 @@ import {
   Link2,
   Plus,
   Share2,
-  X,
 } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import {
   BottomNavigation,
   Button,
+  FeedbackAlert,
   ProfileSetupModal,
   ScreenContainer,
   VersionOutdatedModal,
@@ -450,51 +448,12 @@ function ActionFeedback({
   const message = errorMessage ?? feedbackMessage
 
   return (
-    <div
-      className={[
-        'mt-4 overflow-hidden rounded-[24px] border bg-white shadow-[0_14px_34px_rgba(17,20,74,0.08)]',
-        isError
-          ? 'border-[rgba(255,90,122,0.22)]'
-          : 'border-[rgba(53,207,165,0.22)]',
-      ].join(' ')}
-      role={isError ? 'alert' : 'status'}
-    >
-      <div
-        className={[
-          'h-1 w-full',
-          isError
-            ? 'bg-[var(--duocal-danger)]'
-            : 'bg-[var(--duocal-success)]',
-        ].join(' ')}
-      />
-      <div className="flex items-center gap-3 px-4 py-3">
-        <div
-          className={[
-            'grid size-10 shrink-0 place-items-center rounded-2xl',
-            isError
-              ? 'bg-[rgba(255,90,122,0.12)] text-[var(--duocal-danger)]'
-              : 'bg-[rgba(53,207,165,0.13)] text-[#159A7D]',
-          ].join(' ')}
-        >
-          {isError ? (
-            <AlertCircle className="size-5" />
-          ) : (
-            <CheckCircle2 className="size-5" />
-          )}
-        </div>
-        <p className="min-w-0 flex-1 text-sm font-semibold leading-5 text-[var(--duocal-text)]">
-          {message}
-        </p>
-        <button
-          aria-label="Fechar aviso"
-          className="grid size-8 shrink-0 place-items-center rounded-full text-[var(--duocal-muted)] transition hover:bg-[var(--duocal-surface-soft)] hover:text-[var(--duocal-text)]"
-          onClick={onClear}
-          type="button"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
-    </div>
+    <FeedbackAlert
+      className="mt-4"
+      message={message ?? ''}
+      onClose={onClear}
+      variant={isError ? 'error' : 'success'}
+    />
   )
 }
 
