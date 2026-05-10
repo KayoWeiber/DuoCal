@@ -29,6 +29,8 @@ const exactMessageMap = new Map<string, string>([
   ['SOLICITANTE_INATIVO', 'A pessoa que solicitou conexão não está ativa.'],
   ['SOLICITANTE_JA_POSSUI_WORKSPACE', 'A pessoa solicitante já possui um workspace ativo.'],
   ['WORKSPACE_LIMITE_MEMBROS_ATINGIDO', 'Este workspace já atingiu o limite de membros.'],
+  ['WORKSPACE_NAO_ENCONTRADO', 'Não encontramos esse workspace.'],
+  ['NOTIFICACAO_NAO_ENCONTRADA', 'Essa notificação não está mais disponível.'],
   ['CODIGO_CONEXAO_IMUTAVEL', 'O código de conexão não pode ser alterado manualmente.'],
   ['AUTH_USER_ID_IMUTAVEL', 'Não foi possível alterar dados protegidos da conta.'],
   ['VERSAO_CLIENTE_OBSOLETA', versionOutdatedMessage],

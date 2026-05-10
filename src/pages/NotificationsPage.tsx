@@ -4,6 +4,7 @@ import {
   BottomNavigation,
   EmptyState,
   FeedbackAlert,
+  NotificationHistoryCard,
   NotificationRequestCard,
   ProfileSetupModal,
   ScreenContainer,
@@ -11,10 +12,13 @@ import {
 } from '../components'
 import {
   useAuthSession,
+  useMarcarNotificacaoLida,
+  useMarcarTodasNotificacoesLidas,
   useMeuPerfil,
-  useNotificacoesSolicitacaoWorkspace,
+  useMinhasNotificacoes,
   useResponderSolicitacaoWorkspace,
   useSolicitacoesWorkspacePendentes,
+  type NotificacaoSolicitacaoWorkspace,
   type SolicitacaoWorkspacePendente,
 } from '../hooks'
 import { getErrorMessage, isVersionOutdatedError } from '../lib'
@@ -22,19 +26,37 @@ import { formatRelativeTime } from '../components/notifications'
 
 type NotificationFilter = 'Todas' | 'Eventos' | 'Tarefas' | 'Convites'
 
+type NotificationListItem =
+  | {
+      categoria: NotificationFilter
+      createdAt: string
+      id: string
+      isUnread: boolean
+      notificacao?: NotificacaoSolicitacaoWorkspace
+      solicitacao: SolicitacaoWorkspacePendente
+      type: 'request'
+    }
+  | {
+      categoria: NotificationFilter
+      createdAt: string
+      id: string
+      isUnread: boolean
+      notificacao: NotificacaoSolicitacaoWorkspace
+      type: 'history'
+    }
+
 const filters: NotificationFilter[] = ['Todas', 'Eventos', 'Tarefas', 'Convites']
 
 export function NotificationsPage() {
   const { session, isLoading: isSessionLoading } = useAuthSession()
   const perfilQuery = useMeuPerfil(Boolean(session))
   const perfil = perfilQuery.data ?? null
-  const solicitacoesQuery = useSolicitacoesWorkspacePendentes(
-    Boolean(perfil?.id && perfil.fl_perfil_completo),
-  )
-  const notificacoesQuery = useNotificacoesSolicitacaoWorkspace(
-    Boolean(perfil?.id && perfil.fl_perfil_completo),
-  )
+  const enabled = Boolean(perfil?.id && perfil.fl_perfil_completo)
+  const solicitacoesQuery = useSolicitacoesWorkspacePendentes(enabled)
+  const notificacoesQuery = useMinhasNotificacoes(enabled)
   const responderSolicitacao = useResponderSolicitacaoWorkspace()
+  const marcarNotificacaoLida = useMarcarNotificacaoLida()
+  const marcarTodasLidas = useMarcarTodasNotificacoesLidas()
   const [activeFilter, setActiveFilter] = useState<NotificationFilter>('Todas')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
@@ -46,24 +68,25 @@ export function NotificationsPage() {
     }
   }, [isSessionLoading, session])
 
+  const notificacoes = notificacoesQuery.data ?? []
   const solicitacoes = solicitacoesQuery.data ?? []
-  const unreadCount = Math.max(
-    solicitacoes.length,
-    notificacoesQuery.data?.length ?? 0,
-  )
-  const visibleSolicitacoes = useMemo(() => {
-    if (activeFilter !== 'Todas' && activeFilter !== 'Convites') {
-      return []
-    }
+  const unreadCount = notificacoes.filter((notificacao) => !notificacao.fl_lida)
+    .length
 
-    return solicitacoes
-  }, [activeFilter, solicitacoes])
+  const visibleItems = useMemo(() => {
+    const items = buildNotificationItems(notificacoes, solicitacoes)
+      .filter((item) => matchesFilter(item, activeFilter))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
-  const hoje = visibleSolicitacoes.filter((solicitacao) =>
-    isToday(solicitacao.dt_solicitacao),
+    return items
+  }, [activeFilter, notificacoes, solicitacoes])
+
+  const hoje = visibleItems.filter((item) => isToday(item.createdAt))
+  const estaSemana = visibleItems.filter(
+    (item) => !isToday(item.createdAt) && isThisWeek(item.createdAt),
   )
-  const estaSemana = visibleSolicitacoes.filter(
-    (solicitacao) => !isToday(solicitacao.dt_solicitacao),
+  const anteriores = visibleItems.filter(
+    (item) => !isToday(item.createdAt) && !isThisWeek(item.createdAt),
   )
 
   async function handleResponderSolicitacao(
@@ -79,13 +102,39 @@ export function NotificationsPage() {
         aceitar ? 'Solicitação aceita.' : 'Solicitação recusada.',
       )
     } catch (error) {
-      if (isVersionOutdatedError(error)) {
-        setVersionOutdated(true)
-        return
-      }
-
-      setErrorMessage(getErrorMessage(error))
+      handleActionError(error)
     }
+  }
+
+  async function handleMarkRead(notificacaoId: string) {
+    setErrorMessage(null)
+
+    try {
+      await marcarNotificacaoLida.mutateAsync(notificacaoId)
+    } catch (error) {
+      handleActionError(error)
+    }
+  }
+
+  async function handleMarkAllRead() {
+    setErrorMessage(null)
+    setFeedbackMessage(null)
+
+    try {
+      await marcarTodasLidas.mutateAsync()
+      setFeedbackMessage('Notificações marcadas como lidas.')
+    } catch (error) {
+      handleActionError(error)
+    }
+  }
+
+  function handleActionError(error: unknown) {
+    if (isVersionOutdatedError(error)) {
+      setVersionOutdated(true)
+      return
+    }
+
+    setErrorMessage(getErrorMessage(error))
   }
 
   if (isSessionLoading || (!session && !perfilQuery.isError)) {
@@ -112,6 +161,8 @@ export function NotificationsPage() {
   }
 
   const perfilIncompleto = Boolean(perfil && !perfil.fl_perfil_completo)
+  const isLoading = solicitacoesQuery.isLoading || notificacoesQuery.isLoading
+  const isEmpty = !isLoading && visibleItems.length === 0
 
   return (
     <>
@@ -128,7 +179,9 @@ export function NotificationsPage() {
           <div className="flex items-center gap-2">
             <button
               aria-label="Marcar notificações como lidas"
-              className="grid size-11 place-items-center rounded-full border border-[var(--duocal-border)] bg-white text-[var(--duocal-text)] shadow-[0_10px_24px_rgba(17,20,74,0.06)]"
+              className="grid size-11 place-items-center rounded-full border border-[var(--duocal-border)] bg-white text-[var(--duocal-text)] shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition disabled:opacity-45"
+              disabled={unreadCount === 0 || marcarTodasLidas.isPending}
+              onClick={handleMarkAllRead}
               type="button"
             >
               <Check className="size-5" />
@@ -170,43 +223,47 @@ export function NotificationsPage() {
           }}
         />
 
-        {solicitacoesQuery.isLoading || notificacoesQuery.isLoading ? (
+        {isLoading ? (
           <section className="mt-4 space-y-3">
             <SkeletonNotification />
             <SkeletonNotification />
           </section>
         ) : null}
 
-        {!solicitacoesQuery.isLoading &&
-        !notificacoesQuery.isLoading &&
-        visibleSolicitacoes.length === 0 ? (
+        {isEmpty ? (
           <section className="mt-5">
             <EmptyState
-              description="Quando alguém usar seu código para solicitar conexão, a notificação aparecerá aqui."
+              description="Quando houver convites, solicitações, eventos ou tarefas, eles aparecerão aqui."
               icon={<Bell className="size-5" />}
-              title="Nenhuma solicitação pendente."
+              title="Nenhuma notificação por enquanto."
             />
           </section>
         ) : null}
 
         <NotificationGroup
           isResponding={responderSolicitacao.isPending}
+          items={hoje}
+          onMarkRead={handleMarkRead}
           onResponder={handleResponderSolicitacao}
-          solicitacoes={hoje}
           title="HOJE"
         />
         <NotificationGroup
           isResponding={responderSolicitacao.isPending}
+          items={estaSemana}
+          onMarkRead={handleMarkRead}
           onResponder={handleResponderSolicitacao}
-          solicitacoes={estaSemana}
           title="ESTA SEMANA"
+        />
+        <NotificationGroup
+          isResponding={responderSolicitacao.isPending}
+          items={anteriores}
+          onMarkRead={handleMarkRead}
+          onResponder={handleResponderSolicitacao}
+          title="ANTERIORES"
         />
       </ScreenContainer>
 
-      <BottomNavigation
-        activeTab="notifications"
-        unreadCount={unreadCount}
-      />
+      <BottomNavigation activeTab="notifications" unreadCount={unreadCount} />
       {perfilIncompleto && perfil ? <ProfileSetupModal perfil={perfil} /> : null}
       <VersionOutdatedModal open={versionOutdated} />
     </>
@@ -215,16 +272,18 @@ export function NotificationsPage() {
 
 function NotificationGroup({
   isResponding,
+  items,
+  onMarkRead,
   onResponder,
-  solicitacoes,
   title,
 }: {
   isResponding: boolean
+  items: NotificationListItem[]
+  onMarkRead: (notificacaoId: string) => void
   onResponder: (solicitacaoId: string, aceitar: boolean) => void
-  solicitacoes: SolicitacaoWorkspacePendente[]
   title: string
 }) {
-  if (solicitacoes.length === 0) {
+  if (items.length === 0) {
     return null
   }
 
@@ -234,15 +293,24 @@ function NotificationGroup({
         {title}
       </h2>
       <div className="mt-2 space-y-3">
-        {solicitacoes.map((solicitacao) => (
-          <NotificationRequestCard
-            isResponding={isResponding}
-            key={solicitacao.solicitacao_id}
-            onResponder={onResponder}
-            solicitacao={solicitacao}
-            timeLabel={formatRelativeTime(solicitacao.dt_solicitacao)}
-          />
-        ))}
+        {items.map((item) =>
+          item.type === 'request' ? (
+            <NotificationRequestCard
+              isResponding={isResponding}
+              isUnread={item.isUnread}
+              key={item.id}
+              onResponder={onResponder}
+              solicitacao={item.solicitacao}
+              timeLabel={formatRelativeTime(item.createdAt)}
+            />
+          ) : (
+            <NotificationHistoryCard
+              key={item.id}
+              notificacao={item.notificacao}
+              onMarkRead={onMarkRead}
+            />
+          ),
+        )}
       </div>
     </section>
   )
@@ -308,6 +376,88 @@ function SkeletonNotification() {
   )
 }
 
+function buildNotificationItems(
+  notificacoes: NotificacaoSolicitacaoWorkspace[],
+  solicitacoes: SolicitacaoWorkspacePendente[],
+) {
+  const solicitacoesPorId = new Map(
+    solicitacoes.map((solicitacao) => [solicitacao.solicitacao_id, solicitacao]),
+  )
+  const solicitacoesComNotificacao = new Set<string>()
+  const items: NotificationListItem[] = []
+
+  for (const notificacao of notificacoes) {
+    const solicitacao =
+      notificacao.tp_notificacao === 'SOLICITACAO_WORKSPACE' &&
+      notificacao.entidade_id
+        ? solicitacoesPorId.get(notificacao.entidade_id)
+        : undefined
+
+    if (solicitacao) {
+      solicitacoesComNotificacao.add(solicitacao.solicitacao_id)
+      items.push({
+        categoria: 'Convites',
+        createdAt: notificacao.created_at,
+        id: `request-${solicitacao.solicitacao_id}`,
+        isUnread: !notificacao.fl_lida,
+        notificacao,
+        solicitacao,
+        type: 'request',
+      })
+      continue
+    }
+
+    items.push({
+      categoria: getNotificationCategory(notificacao.tp_notificacao),
+      createdAt: notificacao.created_at,
+      id: `notification-${notificacao.notificacao_id}`,
+      isUnread: !notificacao.fl_lida,
+      notificacao,
+      type: 'history',
+    })
+  }
+
+  for (const solicitacao of solicitacoes) {
+    if (solicitacoesComNotificacao.has(solicitacao.solicitacao_id)) {
+      continue
+    }
+
+    items.push({
+      categoria: 'Convites',
+      createdAt: solicitacao.dt_solicitacao,
+      id: `request-orphan-${solicitacao.solicitacao_id}`,
+      isUnread: false,
+      solicitacao,
+      type: 'request',
+    })
+  }
+
+  return items
+}
+
+function getNotificationCategory(tpNotificacao: string): NotificationFilter {
+  if (tpNotificacao.startsWith('EVENTO') || tpNotificacao.includes('LEMBRETE')) {
+    return 'Eventos'
+  }
+
+  if (tpNotificacao.startsWith('TAREFA')) {
+    return 'Tarefas'
+  }
+
+  if (
+    tpNotificacao.startsWith('SOLICITACAO') ||
+    tpNotificacao.includes('CONVITE')
+  ) {
+    return 'Convites'
+  }
+
+  return 'Todas'
+}
+
+function matchesFilter(item: NotificationListItem, filter: NotificationFilter) {
+  return filter === 'Todas' || item.categoria === filter
+}
+
 function isToday(value: string) {
   const date = new Date(value)
   const now = new Date()
@@ -317,4 +467,14 @@ function isToday(value: string) {
     date.getMonth() === now.getMonth() &&
     date.getDate() === now.getDate()
   )
+}
+
+function isThisWeek(value: string) {
+  const date = new Date(value)
+  const now = new Date()
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() - now.getDay())
+  startOfWeek.setHours(0, 0, 0, 0)
+
+  return date >= startOfWeek
 }

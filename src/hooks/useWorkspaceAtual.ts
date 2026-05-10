@@ -27,7 +27,7 @@ export const solicitacoesWorkspaceQueryKey = buildQueryKey(
   'solicitacoes-workspace-pendentes',
 )
 export const notificacoesSolicitacaoWorkspaceQueryKey = buildQueryKey(
-  'notificacoes-solicitacao-workspace',
+  'minhas-notificacoes',
 )
 
 export function useWorkspaceAtual(perfil: MeuPerfil | null | undefined) {
@@ -51,11 +51,17 @@ export type SolicitacaoWorkspacePendente = {
 }
 
 export type NotificacaoSolicitacaoWorkspace = {
-  id: string
-  tp_notificacao: 'SOLICITACAO_WORKSPACE'
+  notificacao_id: string
+  workspace_id: string | null
+  tp_notificacao: string
   nm_titulo: string
   ds_mensagem: string
+  tp_entidade: string | null
   entidade_id: string | null
+  fl_lida: boolean
+  dt_lida: string | null
+  dt_agendada: string | null
+  dt_enviada: string | null
   created_at: string
 }
 
@@ -79,22 +85,26 @@ export function useSolicitacoesWorkspacePendentes(enabled: boolean) {
 }
 
 export function useNotificacoesSolicitacaoWorkspace(enabled: boolean) {
+  return useMinhasNotificacoes(enabled)
+}
+
+export function useMinhasNotificacoes(enabled: boolean) {
   return useQuery({
     queryKey: notificacoesSolicitacaoWorkspaceQueryKey,
     enabled,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('fato_notificacao')
-        .select('id,tp_notificacao,nm_titulo,ds_mensagem,entidade_id,created_at')
-        .eq('tp_notificacao', 'SOLICITACAO_WORKSPACE')
-        .eq('fl_lida', false)
-        .order('created_at', { ascending: false })
+      const { data, error } = await supabase.rpc(
+        'rpc_listar_minhas_notificacoes',
+        {
+          p_limite: 50,
+        },
+      )
 
       if (error) {
         throw error
       }
 
-      return (data ?? []) as NotificacaoSolicitacaoWorkspace[]
+      return normalizeRpcRows<NotificacaoSolicitacaoWorkspace>(data)
     },
     staleTime: 15_000,
   })
@@ -153,6 +163,55 @@ export function useResponderSolicitacaoWorkspace() {
       })
       queryClient.invalidateQueries({ queryKey: workspaceAtualQueryKey })
       queryClient.invalidateQueries({ queryKey: meuPerfilQueryKey })
+    },
+  })
+}
+
+export function useMarcarNotificacaoLida() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (notificacaoId: string) => {
+      const { data, error } = await supabase.rpc(
+        'rpc_marcar_notificacao_lida',
+        {
+          p_notificacao_id: notificacaoId,
+        },
+      )
+
+      if (error) {
+        throw error
+      }
+
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: notificacoesSolicitacaoWorkspaceQueryKey,
+      })
+    },
+  })
+}
+
+export function useMarcarTodasNotificacoesLidas() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc(
+        'rpc_marcar_todas_notificacoes_lidas',
+      )
+
+      if (error) {
+        throw error
+      }
+
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: notificacoesSolicitacaoWorkspaceQueryKey,
+      })
     },
   })
 }

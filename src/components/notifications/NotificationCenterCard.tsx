@@ -41,7 +41,7 @@ export function NotificationCenterCard({
 
       {!isLoading && solicitacoes.length === 0 ? (
         <div className="mt-4">
-          <EmptyState title="Nenhuma solicitação pendente." />
+          <EmptyState title="Nenhuma notificação por enquanto." />
         </div>
       ) : null}
 

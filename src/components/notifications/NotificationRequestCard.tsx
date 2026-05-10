@@ -3,6 +3,7 @@ import type { SolicitacaoWorkspacePendente } from '../../hooks'
 import { Button } from '../ui/Button'
 
 type NotificationRequestCardProps = {
+  isUnread?: boolean
   isResponding: boolean
   onResponder: (solicitacaoId: string, aceitar: boolean) => void
   solicitacao: SolicitacaoWorkspacePendente
@@ -10,16 +11,33 @@ type NotificationRequestCardProps = {
 }
 
 export function NotificationRequestCard({
+  isUnread = false,
   isResponding,
   onResponder,
   solicitacao,
   timeLabel,
 }: NotificationRequestCardProps) {
   return (
-    <article className="relative overflow-hidden rounded-[24px] border border-[rgba(229,231,240,0.86)] bg-white p-4 shadow-[0_12px_30px_rgba(17,20,74,0.05)]">
-      <span className="absolute left-0 top-6 h-8 w-1 rounded-r-full duocal-gradient" />
+    <article
+      className={[
+        'relative overflow-hidden rounded-[24px] border p-4 shadow-[0_12px_30px_rgba(17,20,74,0.05)]',
+        isUnread
+          ? 'border-[rgba(84,102,241,0.24)] bg-[rgba(84,102,241,0.06)]'
+          : 'border-[rgba(229,231,240,0.86)] bg-white',
+      ].join(' ')}
+    >
+      {isUnread ? (
+        <span className="absolute left-0 top-6 h-8 w-1 rounded-r-full duocal-gradient" />
+      ) : null}
       <div className="flex gap-3 pl-2">
-        <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-[rgba(84,102,241,0.10)] text-[var(--duocal-primary)]">
+        <div
+          className={[
+            'grid size-10 shrink-0 place-items-center rounded-2xl',
+            isUnread
+              ? 'duocal-gradient text-white'
+              : 'bg-[rgba(84,102,241,0.10)] text-[var(--duocal-primary)]',
+          ].join(' ')}
+        >
           <Link2 className="size-5" />
         </div>
 
@@ -34,6 +52,11 @@ export function NotificationRequestCard({
               </span>
             ) : null}
           </div>
+          {isUnread ? (
+            <span className="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--duocal-primary)]">
+              Nova
+            </span>
+          ) : null}
           <p className="mt-1 text-xs leading-5 text-[var(--duocal-muted)]">
             Ele solicitou participar do seu workspace compartilhado.
           </p>
