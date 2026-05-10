@@ -410,7 +410,7 @@ begin
     raise exception 'SOLICITACAO_JA_EXISTE';
   end if;
 
-  select count(*), min(r.workspace_id)
+  select count(*), (array_agg(r.workspace_id order by r.dt_entrada, r.workspace_id))[1]
     into v_workspace_destino_count, v_workspace_destino_id
   from public.rel_workspace_usuario r
   join public.dim_workspace w on w.id = r.workspace_id
@@ -645,7 +645,7 @@ begin
     raise exception 'SOLICITANTE_JA_POSSUI_WORKSPACE';
   end if;
 
-  select count(*), min(r.workspace_id)
+  select count(*), (array_agg(r.workspace_id order by r.dt_entrada, r.workspace_id))[1]
     into v_workspace_count, v_workspace_id
   from public.rel_workspace_usuario r
   join public.dim_workspace w on w.id = r.workspace_id
