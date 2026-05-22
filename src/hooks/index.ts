@@ -1,6 +1,7 @@
 export * from './useAuthSession'
 export * from './useCategoriasEvento'
 export * from './useEventosWorkspace'
+export * from './useGerenciarCategorias'
 export * from './useMeuPerfil'
 export * from './useOnlineStatus'
 export * from './useSyncQueue'

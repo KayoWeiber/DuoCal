@@ -1,5 +1,6 @@
 export * from './events'
 export * from './notifications'
+export * from './profile/CategoryManagementSheet'
 export * from './profile/ConnectionCodeSheet'
 export * from './profile/ProfileHeroCard'
 export * from './profile/ProfileMenuItem'
