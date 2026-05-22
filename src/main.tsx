@@ -10,6 +10,11 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
+      networkMode: 'offlineFirst',
+      gcTime: 24 * 60 * 60 * 1000,
+    },
+    mutations: {
+      networkMode: 'offlineFirst',
     },
   },
 })
