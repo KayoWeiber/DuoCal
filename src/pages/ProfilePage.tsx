@@ -7,6 +7,7 @@ import {
   ScreenContainer,
   VersionOutdatedModal,
 } from '../components'
+import { CategoryManagementSheet } from '../components/profile/CategoryManagementSheet'
 import { ConnectionCodeSheet } from '../components/profile/ConnectionCodeSheet'
 import { ProfileHeroCard } from '../components/profile/ProfileHeroCard'
 import { ProfileMenuItem } from '../components/profile/ProfileMenuItem'
@@ -39,6 +40,7 @@ export function ProfilePage() {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [erro, setErro] = useState<string | null>(null)
   const [codeSheetOpen, setCodeSheetOpen] = useState(false)
+  const [categorySheetOpen, setCategorySheetOpen] = useState(false)
   const [versionOutdated] = useState(false)
 
   useEffect(() => {
@@ -178,7 +180,7 @@ export function ProfilePage() {
                   iconBg="rgba(182,109,255,0.12)"
                   label="Categorias"
                   sublabel="Organize seus eventos"
-                  onClick={showWip}
+                  onClick={() => setCategorySheetOpen(true)}
                 />
               </>
             ) : null}
@@ -269,6 +271,13 @@ export function ProfilePage() {
         <ConnectionCodeSheet
           codigo={perfil.cd_codigo_conexao}
           onClose={() => setCodeSheetOpen(false)}
+        />
+      ) : null}
+
+      {categorySheetOpen && workspace ? (
+        <CategoryManagementSheet
+          workspaceId={workspace.workspace.id}
+          onClose={() => setCategorySheetOpen(false)}
         />
       ) : null}
     </>

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, Plus, Search } from 'lucide-react'
 import {
   BottomNavigation,
   EmptyState,
   EventCard,
   EventFormSheet,
+  OfflineBar,
   ProfileSetupModal,
   ScreenContainer,
   VersionOutdatedModal,
@@ -16,10 +17,13 @@ import {
   useEventosWorkspace,
   useMembrosWorkspace,
   useMeuPerfil,
+  useSyncQueue,
   useUnreadNotificationCount,
   useWorkspaceAtual,
 } from '../hooks'
 import { isVersionOutdatedError } from '../lib'
+import type { CategoriaEvento, CriarEventoPayload, EventoWorkspace, MembroWorkspace } from '../hooks'
+import type { SyncQueueItem } from '../lib'
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const MESES = [
@@ -47,6 +51,56 @@ function toTimestampEnd(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).toISOString()
 }
 
+function pendingItemToEvento(
+  item: SyncQueueItem,
+  membros: MembroWorkspace[],
+  categorias: CategoriaEvento[],
+): EventoWorkspace {
+  const p = item.payload as CriarEventoPayload
+  const categoria = categorias.find((c) => c.id === p.categoriaId)
+
+  return {
+    id: `local:${item.local_id}`,
+    workspace_id: item.workspace_id,
+    nm_evento: p.nmEvento,
+    ds_evento: p.dsEvento ?? null,
+    dt_inicio: p.dtInicio,
+    dt_fim: p.dtFim,
+    fl_dia_todo: p.flDiaTodo ?? false,
+    fl_bloqueia_horario: p.flBloqueiaHorario ?? false,
+    fl_recorrente: p.flRecorrente ?? false,
+    tp_status: 'PENDENTE',
+    categoria_id: p.categoriaId ?? null,
+    nm_categoria: categoria?.nm_categoria ?? null,
+    cd_cor_categoria: categoria?.cd_cor ?? null,
+    cd_icone_categoria: categoria?.cd_icone ?? null,
+    participantes: membros
+      .filter((m) => p.participantes.includes(m.usuario_id))
+      .map((m) => ({
+        usuario_id: m.usuario_id,
+        nm_usuario: m.nm_usuario,
+        tp_participacao: 'PARTICIPANTE' as const,
+        fl_responsavel_principal: false,
+      })),
+  }
+}
+
+function pendingItemsForDay(
+  items: SyncQueueItem[],
+  dtInicioDay: string,
+  dtFimDay: string,
+): SyncQueueItem[] {
+  const inicio = new Date(dtInicioDay)
+  const fim = new Date(dtFimDay)
+
+  return items.filter((item) => {
+    const p = item.payload as CriarEventoPayload
+    const eventoInicio = new Date(p.dtInicio)
+    const eventoFim = new Date(p.dtFim)
+    return eventoInicio < fim && eventoFim > inicio
+  })
+}
+
 export function AgendaPage() {
   const { session, isLoading: isSessionLoading } = useAuthSession()
   const perfilQuery = useMeuPerfil(Boolean(session))
@@ -72,6 +126,9 @@ export function AgendaPage() {
   const categoriasQuery = useCategoriasEvento(workspaceId)
   const criarEvento = useCriarEvento()
 
+  const { isOnline, syncState, pendingItems, pendingCount, reloadPending } =
+    useSyncQueue(workspaceId)
+
   useEffect(() => {
     if (!isSessionLoading && !session) {
       window.location.replace('/login')
@@ -80,14 +137,24 @@ export function AgendaPage() {
 
   const membros = membrosQuery.data ?? []
   const categorias = categoriasQuery.data ?? []
-
-  let eventos = eventosQuery.data ?? []
-
+  let eventosServidor = eventosQuery.data ?? []
   if (filtroCadMembro !== 'todos') {
-    eventos = eventos.filter((e) =>
+    eventosServidor = eventosServidor.filter((e) =>
       (e.participantes ?? []).some((p) => p.usuario_id === filtroCadMembro),
     )
   }
+
+  const eventosPendentes = useMemo(() => {
+    const itemsDoDia = pendingItemsForDay(pendingItems, dtInicio, dtFim)
+    return itemsDoDia.map((item) => pendingItemToEvento(item, membros, categorias))
+  }, [pendingItems, dtInicio, dtFim, membros, categorias])
+
+  const eventosPendentesFiltrados = useMemo(() => {
+    if (filtroCadMembro === 'todos') return eventosPendentes
+    return eventosPendentes.filter((e) =>
+      (e.participantes ?? []).some((p) => p.usuario_id === filtroCadMembro),
+    )
+  }, [eventosPendentes, filtroCadMembro])
 
   const perfilIncompleto = Boolean(
     perfil && (!perfil.fl_perfil_completo || !perfil.nm_usuario),
@@ -95,9 +162,11 @@ export function AgendaPage() {
 
   const mesAno = `${MESES[diaSelecionado.getMonth()]} ${diaSelecionado.getFullYear()}`
 
-  async function handleSave(payload: Parameters<typeof criarEvento.mutateAsync>[0]) {
+  async function handleSave(payload: CriarEventoPayload) {
     try {
       await criarEvento.mutateAsync(payload)
+
+      await reloadPending()
     } catch (error) {
       if (isVersionOutdatedError(error)) {
         setVersionOutdated(true)
@@ -107,23 +176,37 @@ export function AgendaPage() {
     }
   }
 
+  const isLoading = workspaceQuery.isLoading || eventosQuery.isLoading
+  const temEventos = eventosServidor.length > 0 || eventosPendentesFiltrados.length > 0
+
   return (
     <>
       <ScreenContainer withBottomNavigation>
         {/* Header */}
         <header className="flex items-center justify-between gap-3 pb-2">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[var(--duocal-muted)]">{mesAno}</p>
-            <h1 className="text-3xl font-black text-[var(--duocal-text)]">Agenda</h1>
+            <p className="text-sm font-semibold text-(--duocal-muted)">{mesAno}</p>
+            <h1 className="text-3xl font-black text-(--duocal-text)">Agenda</h1>
           </div>
           <button
             type="button"
-            className="grid size-11 shrink-0 place-items-center rounded-full border border-[var(--duocal-border)] bg-white text-[var(--duocal-muted)] shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition hover:text-[var(--duocal-primary)]"
+            className="grid size-11 shrink-0 place-items-center rounded-full border border-(--duocal-border) bg-white text-(--duocal-muted) shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition hover:text-(--duocal-primary)"
             aria-label="Buscar evento"
           >
             <Search className="size-5" />
           </button>
         </header>
+
+        {/* Indicador offline/sync */}
+        {((!isOnline || syncState !== 'idle' || pendingCount > 0)) && (
+          <div className="mt-2">
+            <OfflineBar
+              isOnline={isOnline}
+              syncState={syncState}
+              pendingCount={pendingCount}
+            />
+          </div>
+        )}
 
         {/* Strip de dias */}
         <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
@@ -137,7 +220,7 @@ export function AgendaPage() {
                 key={iso}
                 type="button"
                 onClick={() => setDiaSelecionado(dia)}
-                className="flex min-w-[46px] flex-col items-center gap-1 rounded-[18px] py-2.5 px-1.5 transition"
+                className="flex min-w-11.5 flex-col items-center gap-1 rounded-[18px] py-2.5 px-1.5 transition"
                 style={
                   isSel
                     ? { background: 'linear-gradient(135deg,#5466F1,#B66DFF)', color: '#fff' }
@@ -178,7 +261,7 @@ export function AgendaPage() {
 
         {/* Conteúdo */}
         <div className="mt-5 space-y-3">
-          {workspaceQuery.isLoading || eventosQuery.isLoading ? (
+          {isLoading ? (
             <LoadingDots />
           ) : !workspaceId ? (
             <EmptyState
@@ -186,16 +269,22 @@ export function AgendaPage() {
               title="Sem workspace"
               description="Conecte-se a um workspace para ver eventos na agenda."
             />
-          ) : eventos.length === 0 ? (
+          ) : !temEventos ? (
             <EmptyState
               icon={<CalendarDays className="size-5" />}
               title="Nenhum evento"
               description="Não há eventos para este dia. Crie o primeiro compromisso compartilhado."
             />
           ) : (
-            eventos.map((evento) => (
-              <EventCard key={evento.id} evento={evento} />
-            ))
+            <>
+              {/* Eventos pendentes (criados offline) aparecem primeiro */}
+              {eventosPendentesFiltrados.map((evento) => (
+                <EventCard key={evento.id} evento={evento} isPending />
+              ))}
+              {eventosServidor.map((evento) => (
+                <EventCard key={evento.id} evento={evento} />
+              ))}
+            </>
           )}
         </div>
       </ScreenContainer>
@@ -268,7 +357,7 @@ function LoadingDots() {
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="size-2 rounded-full bg-[var(--duocal-primary)] animate-pulse"
+          className="size-2 rounded-full bg-(--duocal-primary) animate-pulse"
           style={{ animationDelay: `${i * 0.15}s` }}
         />
       ))}
@@ -279,4 +368,3 @@ function LoadingDots() {
 function primeiroNome(nome: string | null) {
   return nome?.trim().split(/\s+/)[0] ?? 'Membro'
 }
-

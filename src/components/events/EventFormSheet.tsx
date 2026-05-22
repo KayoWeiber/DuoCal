@@ -102,6 +102,11 @@ export function EventFormSheet({
       return
     }
 
+    if (form.flRecorrente && !form.tpFrequencia) {
+      setErro('Selecione a frequência do evento recorrente.')
+      return
+    }
+
     if (form.participantes.length === 0) {
       setErro('Selecione pelo menos um participante.')
       return
@@ -394,22 +399,23 @@ function ToggleRow({
   onChange: (value: boolean) => void
 }) {
   return (
-    <div className="flex w-full items-center justify-between px-4 py-3">
-      <span className="min-w-0 flex-1 text-sm font-medium text-[var(--duocal-text)]">{label}</span>
+    <div className="flex w-full min-w-0 items-center justify-between gap-3 px-4 py-3">
+      <span className="min-w-0 flex-1 text-sm font-medium text-(--duocal-text)">{label}</span>
       <button
         type="button"
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={cn(
-          'relative ml-3 h-6 w-11 shrink-0 rounded-full transition-colors duration-200',
-          checked ? 'bg-[var(--duocal-primary)]' : 'bg-[var(--duocal-border)]',
+          'relative h-6 w-11 shrink-0 overflow-hidden rounded-full transition-colors duration-200',
+          checked ? 'bg-(--duocal-primary)' : 'bg-(--duocal-border)',
         )}
       >
+        {/* Usa left em vez de translate-x para maior compatibilidade com iOS Safari */}
         <span
           className={cn(
-            'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200',
-            checked ? 'translate-x-5' : 'translate-x-0.5',
+            'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all duration-200',
+            checked ? 'left-5.5' : 'left-0.5',
           )}
         />
       </button>

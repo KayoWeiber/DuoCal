@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { appVersion, buildQueryKey, supabase } from '../lib'
+import {
+  appVersion,
+  buildQueryKey,
+  cacheEventos,
+  enqueueAction,
+  getCachedEventos,
+  supabase,
+} from '../lib'
 
 export type ParticipanteEvento = {
   usuario_id: string
@@ -51,6 +58,10 @@ export type CriarEventoPayload = {
   dtFimRecorrencia?: string
 }
 
+export type CriarEventoResult =
+  | { offline: true; local_id: string }
+  | { offline: false; data: unknown }
+
 export function eventosWorkspaceQueryKey(
   workspaceId: string,
   dtInicio: string,
@@ -71,8 +82,19 @@ export function useEventosWorkspace(
   return useQuery({
     queryKey: eventosWorkspaceQueryKey(workspaceId ?? '', dtInicio, dtFim),
     enabled: Boolean(workspaceId && dtInicio && dtFim),
-    queryFn: () => listarEventos(workspaceId!, dtInicio, dtFim),
     staleTime: 30_000,
+    networkMode: 'offlineFirst',
+    queryFn: async () => {
+      try {
+        const result = await listarEventos(workspaceId!, dtInicio, dtFim)
+        cacheEventos(workspaceId!, dtInicio, dtFim, result).catch(() => {})
+        return result
+      } catch {
+        const cached = await getCachedEventos(workspaceId!, dtInicio, dtFim)
+        if (cached !== null) return cached as EventoWorkspace[]
+        throw new Error('Sem conexão e nenhum cache disponível para este período.')
+      }
+    },
   })
 }
 
@@ -82,14 +104,32 @@ export function useMembrosWorkspace(workspaceId: string | null | undefined) {
     enabled: Boolean(workspaceId),
     queryFn: () => listarMembros(workspaceId!),
     staleTime: 60_000,
+    networkMode: 'offlineFirst',
   })
 }
 
 export function useCriarEvento() {
   const queryClient = useQueryClient()
 
-  return useMutation({
+  return useMutation<CriarEventoResult, Error, CriarEventoPayload>({
     mutationFn: async (payload: CriarEventoPayload) => {
+      if (!navigator.onLine) {
+        const sessionResult = await supabase.auth.getSession()
+        const userId = sessionResult.data.session?.user.id ?? ''
+        const localId = crypto.randomUUID()
+        await enqueueAction({
+          local_id: localId,
+          type: 'CREATE_EVENT',
+          payload: payload as unknown as Record<string, unknown>,
+          workspace_id: payload.workspaceId,
+          user_id: userId,
+          created_at: new Date().toISOString(),
+          status: 'pendente',
+        })
+
+        return { offline: true, local_id: localId }
+      }
+
       const { data, error } = await supabase.rpc('rpc_criar_evento', {
         p_workspace_id:        payload.workspaceId,
         p_nm_evento:           payload.nmEvento,
@@ -107,13 +147,11 @@ export function useCriarEvento() {
         p_dt_fim_recorrencia:  payload.dtFimRecorrencia ?? null,
       })
 
-      if (error) {
-        throw error
-      }
+      if (error) throw error
 
-      return data
+      return { offline: false, data }
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (_result, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['duocal', appVersion, 'eventos-workspace', variables.workspaceId],
         exact: false,
@@ -155,9 +193,7 @@ async function listarEventos(
     p_dt_fim:       dtFim,
   })
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
   if (!data) return []
 
@@ -178,9 +214,7 @@ async function listarMembros(workspaceId: string): Promise<MembroWorkspace[]> {
     p_workspace_id: workspaceId,
   })
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
   if (!data) return []
 

@@ -1,11 +1,13 @@
+import { CloudOff } from 'lucide-react'
 import type { EventoWorkspace } from '../../hooks'
 
 type EventCardProps = {
   evento: EventoWorkspace
   onClick?: () => void
+  isPending?: boolean
 }
 
-export function EventCard({ evento, onClick }: EventCardProps) {
+export function EventCard({ evento, onClick, isPending = false }: EventCardProps) {
   const cor = evento.cd_cor_categoria ?? '#5466F1'
   const inicio = formatarHora(evento.dt_inicio)
   const fim = formatarHora(evento.dt_fim)
@@ -22,7 +24,11 @@ export function EventCard({ evento, onClick }: EventCardProps) {
     >
       <div
         className="flex items-start gap-3 rounded-[20px] p-3.5 shadow-[0_4px_16px_rgba(17,20,74,0.06)] transition hover:shadow-[0_6px_20px_rgba(17,20,74,0.10)]"
-        style={{ backgroundColor: cor + '14', borderLeft: `3px solid ${cor}` }}
+        style={{
+          backgroundColor: cor + '14',
+          borderLeft: `3px solid ${cor}`,
+          opacity: isPending ? 0.82 : 1,
+        }}
       >
         <div className="min-w-0 flex-1">
           <p
@@ -31,8 +37,13 @@ export function EventCard({ evento, onClick }: EventCardProps) {
           >
             {evento.nm_evento}
           </p>
-          {nomes ? (
-            <p className="mt-0.5 text-xs text-[var(--duocal-muted)]">{nomes}</p>
+          {isPending ? (
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-amber-600">
+              <CloudOff className="size-3 shrink-0" />
+              Pendente de envio
+            </p>
+          ) : nomes ? (
+            <p className="mt-0.5 text-xs text-(--duocal-muted)">{nomes}</p>
           ) : null}
         </div>
         <div className="shrink-0 text-right">
@@ -40,7 +51,7 @@ export function EventCard({ evento, onClick }: EventCardProps) {
             {evento.fl_dia_todo ? 'Dia todo' : inicio}
           </p>
           {!evento.fl_dia_todo && (
-            <p className="text-[11px] text-[var(--duocal-muted)]">{fim}</p>
+            <p className="text-[11px] text-(--duocal-muted)">{fim}</p>
           )}
           {evento.nm_categoria ? (
             <span
