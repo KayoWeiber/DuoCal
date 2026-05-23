@@ -113,19 +113,19 @@ export function ConnectPage() {
           <div className="duocal-gradient flex size-12 items-center justify-center rounded-2xl text-white">
             <Link2 className="size-6" />
           </div>
-          <h1 className="mt-4 text-2xl font-black text-[var(--duocal-text)]">
+          <h1 className="mt-4 text-2xl font-black text-(--duocal-text)">
             Solicitar conexão
           </h1>
-          <p className="mt-2 text-sm leading-6 text-[var(--duocal-muted)]">
+          <p className="mt-2 text-sm leading-6 text-(--duocal-muted)">
             Você recebeu um convite para enviar uma solicitação de conexão no
             DuoCal.
           </p>
 
-          <div className="mt-5 rounded-[24px] bg-[var(--duocal-surface-soft)] p-4 text-center">
-            <p className="text-sm font-semibold text-[var(--duocal-muted)]">
+          <div className="mt-5 rounded-3xl bg-(--duocal-surface-soft) p-4 text-center">
+            <p className="text-sm font-semibold text-(--duocal-muted)">
               Código de conexão
             </p>
-            <p className="mt-2 text-3xl font-black tracking-[0.22em] text-[var(--duocal-primary)]">
+            <p className="mt-2 text-3xl font-black tracking-[0.22em] text-(--duocal-primary)">
               {codigo}
             </p>
           </div>
@@ -179,7 +179,7 @@ function LoadingState({ message }: { message: string }) {
   return (
     <ScreenContainer className="items-center justify-center">
       <div className="duocal-gradient size-10 animate-pulse rounded-3xl" />
-      <p className="mt-4 text-sm font-medium text-[var(--duocal-muted)]">
+      <p className="mt-4 text-sm font-medium text-(--duocal-muted)">
         {message}
       </p>
     </ScreenContainer>
@@ -202,10 +202,10 @@ function StateContent({
       <div className="duocal-gradient flex size-12 items-center justify-center rounded-2xl text-white">
         <Link2 className="size-6" />
       </div>
-      <h1 className="mt-4 text-2xl font-black text-[var(--duocal-text)]">
+      <h1 className="mt-4 text-2xl font-black text-(--duocal-text)">
         {title}
       </h1>
-      <p className="mt-2 text-sm leading-6 text-[var(--duocal-muted)]">
+      <p className="mt-2 text-sm leading-6 text-(--duocal-muted)">
         {description}
       </p>
       <Button

@@ -52,25 +52,25 @@ export function EventDetailSheet({ evento, onEdit, onClose }: EventDetailSheetPr
       >
         {/* Handle */}
         <div className="flex shrink-0 justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-[var(--duocal-border)]" />
+          <div className="h-1 w-10 rounded-full bg-(--duocal-border)" />
         </div>
 
         {/* Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-[var(--duocal-border)] px-5 pt-2 pb-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-(--duocal-border) px-5 pt-2 pb-4">
           {/* Cor do evento */}
           <div className="flex min-w-0 items-center gap-3">
             <span
               className="size-3 shrink-0 rounded-full"
               style={{ backgroundColor: cor }}
             />
-            <h2 className="min-w-0 truncate text-lg font-black text-[var(--duocal-text)]">
+            <h2 className="min-w-0 truncate text-lg font-black text-(--duocal-text)">
               {evento.nm_evento}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="ml-3 grid size-9 shrink-0 place-items-center rounded-2xl bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)] transition hover:bg-[rgba(84,102,241,0.08)] hover:text-[var(--duocal-primary)]"
+            className="ml-3 grid size-9 shrink-0 place-items-center rounded-2xl bg-(--duocal-surface-soft) text-(--duocal-muted) transition hover:bg-[rgba(84,102,241,0.08)] hover:text-(--duocal-primary)"
             aria-label="Fechar"
           >
             <X className="size-4" />
@@ -83,13 +83,13 @@ export function EventDetailSheet({ evento, onEdit, onClose }: EventDetailSheetPr
 
             {/* Data e hora */}
             <DetailRow icon={<Calendar className="size-4" style={{ color: cor }} />}>
-              <span className="text-sm text-[var(--duocal-text)]">{dataHora}</span>
+              <span className="text-sm text-(--duocal-text)">{dataHora}</span>
             </DetailRow>
 
             {/* Horário (complemento visual quando não é dia todo) */}
             {!evento.fl_dia_todo && (
-              <DetailRow icon={<Clock className="size-4 text-[var(--duocal-muted)]" />}>
-                <span className="text-sm text-[var(--duocal-muted)]">
+              <DetailRow icon={<Clock className="size-4 text-(--duocal-muted)" />}>
+                <span className="text-sm text-(--duocal-muted)">
                   {new Date(evento.dt_inicio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   {' '}até{' '}
                   {new Date(evento.dt_fim).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -112,21 +112,21 @@ export function EventDetailSheet({ evento, onEdit, onClose }: EventDetailSheetPr
 
             {/* Participantes */}
             {nomes && (
-              <DetailRow icon={<Users className="size-4 text-[var(--duocal-muted)]" />}>
-                <span className="text-sm text-[var(--duocal-text)]">{nomes}</span>
+              <DetailRow icon={<Users className="size-4 text-(--duocal-muted)" />}>
+                <span className="text-sm text-(--duocal-text)">{nomes}</span>
               </DetailRow>
             )}
 
             {/* Recorrência */}
             {recorrencia && (
-              <DetailRow icon={<RefreshCw className="size-4 text-[var(--duocal-primary)]" />}>
-                <span className="text-sm text-[var(--duocal-primary)] font-medium">{recorrencia}</span>
+              <DetailRow icon={<RefreshCw className="size-4 text-(--duocal-primary)" />}>
+                <span className="text-sm text-(--duocal-primary) font-medium">{recorrencia}</span>
               </DetailRow>
             )}
 
             {/* Descrição */}
             {evento.ds_evento && (
-              <p className="mt-1 text-sm leading-5 text-[var(--duocal-muted)]">
+              <p className="mt-1 text-sm leading-5 text-(--duocal-muted)">
                 {evento.ds_evento}
               </p>
             )}
@@ -134,7 +134,7 @@ export function EventDetailSheet({ evento, onEdit, onClose }: EventDetailSheetPr
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 border-t border-[var(--duocal-border)] px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="shrink-0 border-t border-(--duocal-border) px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={onEdit}

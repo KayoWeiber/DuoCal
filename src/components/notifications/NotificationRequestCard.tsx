@@ -20,7 +20,7 @@ export function NotificationRequestCard({
   return (
     <article
       className={[
-        'relative overflow-hidden rounded-[24px] border p-4 shadow-[0_12px_30px_rgba(17,20,74,0.05)]',
+        'relative overflow-hidden rounded-3xl border p-4 shadow-[0_12px_30px_rgba(17,20,74,0.05)]',
         isUnread
           ? 'border-[rgba(84,102,241,0.24)] bg-[rgba(84,102,241,0.06)]'
           : 'border-[rgba(229,231,240,0.86)] bg-white',
@@ -35,7 +35,7 @@ export function NotificationRequestCard({
             'grid size-10 shrink-0 place-items-center rounded-2xl',
             isUnread
               ? 'duocal-gradient text-white'
-              : 'bg-[rgba(84,102,241,0.10)] text-[var(--duocal-primary)]',
+              : 'bg-[rgba(84,102,241,0.10)] text-(--duocal-primary)',
           ].join(' ')}
         >
           <Link2 className="size-5" />
@@ -43,7 +43,7 @@ export function NotificationRequestCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="text-sm font-black leading-5 text-[var(--duocal-text)]">
+            <h3 className="text-sm font-black leading-5 text-(--duocal-text)">
               {solicitacao.nm_usuario_solicitante} quer se conectar com você
             </h3>
             {timeLabel ? (
@@ -53,11 +53,11 @@ export function NotificationRequestCard({
             ) : null}
           </div>
           {isUnread ? (
-            <span className="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--duocal-primary)]">
+            <span className="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-(--duocal-primary)">
               Nova
             </span>
           ) : null}
-          <p className="mt-1 text-xs leading-5 text-[var(--duocal-muted)]">
+          <p className="mt-1 text-xs leading-5 text-(--duocal-muted)">
             Ele solicitou participar do seu workspace compartilhado.
           </p>
 

@@ -68,8 +68,14 @@ export function NotificationsPage() {
     }
   }, [isSessionLoading, session])
 
-  const notificacoes = notificacoesQuery.data ?? []
-  const solicitacoes = solicitacoesQuery.data ?? []
+  const notificacoes = useMemo(
+    () => notificacoesQuery.data ?? [],
+    [notificacoesQuery.data],
+  )
+  const solicitacoes = useMemo(
+    () => solicitacoesQuery.data ?? [],
+    [solicitacoesQuery.data],
+  )
   const unreadCount = notificacoes.filter((notificacao) => !notificacao.fl_lida)
     .length
 
@@ -169,17 +175,17 @@ export function NotificationsPage() {
       <ScreenContainer withBottomNavigation>
         <header className="flex items-start justify-between gap-4 pb-5">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--duocal-muted)]">
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-(--duocal-muted)">
               {unreadCount} {unreadCount === 1 ? 'não lida' : 'não lidas'}
             </p>
-            <h1 className="mt-1 text-3xl font-black text-[var(--duocal-text)]">
+            <h1 className="mt-1 text-3xl font-black text-(--duocal-text)">
               Notificações
             </h1>
           </div>
           <div className="flex items-center gap-2">
             <button
               aria-label="Marcar notificações como lidas"
-              className="grid size-11 place-items-center rounded-full border border-[var(--duocal-border)] bg-white text-[var(--duocal-text)] shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition disabled:opacity-45"
+              className="grid size-11 place-items-center rounded-full border border-(--duocal-border) bg-white text-(--duocal-text) shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition disabled:opacity-45"
               disabled={unreadCount === 0 || marcarTodasLidas.isPending}
               onClick={handleMarkAllRead}
               type="button"
@@ -188,7 +194,7 @@ export function NotificationsPage() {
             </button>
             <button
               aria-label="Silenciar notificações"
-              className="grid size-11 place-items-center rounded-full border border-[var(--duocal-border)] bg-white text-[var(--duocal-text)] shadow-[0_10px_24px_rgba(17,20,74,0.06)]"
+              className="grid size-11 place-items-center rounded-full border border-(--duocal-border) bg-white text-(--duocal-text) shadow-[0_10px_24px_rgba(17,20,74,0.06)]"
               type="button"
             >
               <BellOff className="size-5" />
@@ -202,8 +208,8 @@ export function NotificationsPage() {
               className={[
                 'h-9 shrink-0 rounded-full px-4 text-xs font-black transition',
                 activeFilter === filter
-                  ? 'bg-[var(--duocal-text)] text-white shadow-[0_8px_18px_rgba(17,20,74,0.16)]'
-                  : 'bg-white text-[var(--duocal-muted)] shadow-[0_8px_18px_rgba(17,20,74,0.05)]',
+                  ? 'bg-(--duocal-text) text-white shadow-[0_8px_18px_rgba(17,20,74,0.16)]'
+                  : 'bg-white text-(--duocal-muted) shadow-[0_8px_18px_rgba(17,20,74,0.05)]',
               ].join(' ')}
               key={filter}
               onClick={() => setActiveFilter(filter)}
@@ -289,7 +295,7 @@ function NotificationGroup({
 
   return (
     <section className="mt-5">
-      <h2 className="px-1 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--duocal-muted)]">
+      <h2 className="px-1 text-[11px] font-black uppercase tracking-[0.14em] text-(--duocal-muted)">
         {title}
       </h2>
       <div className="mt-2 space-y-3">
@@ -320,7 +326,7 @@ function LoadingScreen({ message }: { message: string }) {
   return (
     <ScreenContainer className="items-center justify-center">
       <div className="duocal-gradient size-10 animate-pulse rounded-3xl" />
-      <p className="mt-4 text-sm font-medium text-[var(--duocal-muted)]">
+      <p className="mt-4 text-sm font-medium text-(--duocal-muted)">
         {message}
       </p>
     </ScreenContainer>
@@ -364,12 +370,12 @@ function ActionFeedback({
 
 function SkeletonNotification() {
   return (
-    <div className="rounded-[24px] border border-[var(--duocal-border)] bg-white p-4 shadow-[0_12px_30px_rgba(17,20,74,0.05)]">
+    <div className="rounded-3xl border border-(--duocal-border) bg-white p-4 shadow-[0_12px_30px_rgba(17,20,74,0.05)]">
       <div className="flex gap-3">
-        <div className="size-10 animate-pulse rounded-2xl bg-[var(--duocal-surface-soft)]" />
+        <div className="size-10 animate-pulse rounded-2xl bg-(--duocal-surface-soft)" />
         <div className="flex-1">
-          <div className="h-3 w-40 animate-pulse rounded-full bg-[var(--duocal-surface-soft)]" />
-          <div className="mt-3 h-3 w-52 animate-pulse rounded-full bg-[var(--duocal-surface-soft)]" />
+          <div className="h-3 w-40 animate-pulse rounded-full bg-(--duocal-surface-soft)" />
+          <div className="mt-3 h-3 w-52 animate-pulse rounded-full bg-(--duocal-surface-soft)" />
         </div>
       </div>
     </div>

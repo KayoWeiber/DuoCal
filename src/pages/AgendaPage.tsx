@@ -318,11 +318,14 @@ export function AgendaPage() {
   }, [isSessionLoading, session])
 
   useEffect(() => {
-    if (buscarEvento.isError) setEditandoEventoId(null)
+    if (!buscarEvento.isError) return
+
+    const timer = window.setTimeout(() => setEditandoEventoId(null), 0)
+    return () => window.clearTimeout(timer)
   }, [buscarEvento.isError])
 
-  const membros = membrosQuery.data ?? []
-  const categorias = categoriasQuery.data ?? []
+  const membros = useMemo(() => membrosQuery.data ?? [], [membrosQuery.data])
+  const categorias = useMemo(() => categoriasQuery.data ?? [], [categoriasQuery.data])
 
   const eventosServidor = useMemo(
     () => filtrarEventos(eventosQuery.data ?? [], filtro),

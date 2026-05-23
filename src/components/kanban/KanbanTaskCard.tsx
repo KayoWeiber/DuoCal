@@ -1,20 +1,6 @@
 import { Calendar, Flag, Tag, User } from 'lucide-react'
-import type { StatusTarefa, TarefaKanban } from '../../hooks'
-
-// ─── Configurações visuais dos status ────────────────────────────────────────
-
-export const STATUS_CONFIG: Record<StatusTarefa, { label: string; cor: string; bg: string }> = {
-  A_FAZER:      { label: 'A fazer',       cor: '#6B7280', bg: '#6B728015' },
-  EM_ANDAMENTO: { label: 'Em andamento',  cor: '#F59E0B', bg: '#F59E0B15' },
-  PLANEJADO:    { label: 'Planejado',     cor: '#5466F1', bg: '#5466F115' },
-  CONCLUIDO:    { label: 'Concluído',     cor: '#10B981', bg: '#10B98115' },
-}
-
-export const PRIORIDADE_CONFIG = {
-  BAIXA: { label: 'Baixa', cor: '#10B981' },
-  MEDIA: { label: 'Média', cor: '#F59E0B' },
-  ALTA:  { label: 'Alta',  cor: '#EF4444' },
-}
+import type { TarefaKanban } from '../../hooks'
+import { PRIORIDADE_CONFIG, STATUS_CONFIG } from './kanbanConfig'
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
@@ -35,7 +21,7 @@ export function KanbanTaskCard({ tarefa, onClick }: KanbanTaskCardProps) {
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-2xl border border-[var(--duocal-border)] bg-white p-4 text-left transition active:scale-[0.98] active:opacity-80"
+      className="w-full rounded-2xl border border-(--duocal-border) bg-white p-4 text-left transition active:scale-[0.98] active:opacity-80"
     >
       {/* Status + prioridade */}
       <div className="mb-2.5 flex items-center gap-2">
@@ -55,7 +41,7 @@ export function KanbanTaskCard({ tarefa, onClick }: KanbanTaskCardProps) {
 
       {/* Título */}
       <p
-        className="text-sm font-bold leading-snug text-[var(--duocal-text)]"
+        className="text-sm font-bold leading-snug text-(--duocal-text)"
         style={{
           display: '-webkit-box',
           WebkitLineClamp: 2,
@@ -68,7 +54,7 @@ export function KanbanTaskCard({ tarefa, onClick }: KanbanTaskCardProps) {
 
       {/* Descrição (opcional) */}
       {tarefa.descricao && (
-        <p className="mt-1 line-clamp-2 text-xs leading-4 text-[var(--duocal-muted)]">
+        <p className="mt-1 line-clamp-2 text-xs leading-4 text-(--duocal-muted)">
           {tarefa.descricao}
         </p>
       )}
@@ -85,7 +71,7 @@ export function KanbanTaskCard({ tarefa, onClick }: KanbanTaskCardProps) {
         )}
 
         {tarefa.nm_responsavel && (
-          <span className="flex items-center gap-1 text-[var(--duocal-muted)]">
+          <span className="flex items-center gap-1 text-(--duocal-muted)">
             <User className="size-3" />
             <span className="text-[10px] font-medium">
               {tarefa.nm_responsavel.split(' ')[0]}

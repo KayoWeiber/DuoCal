@@ -1,17 +1,32 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: '/',
+  resolve: {
+    tsconfigPaths: true,
+  },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'react-vendor', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/, priority: 30 },
+            { name: 'tanstack-vendor', test: /node_modules[\\/]@tanstack[\\/]/, priority: 20 },
+            { name: 'supabase-vendor', test: /node_modules[\\/]@supabase[\\/]/, priority: 20 },
+            { name: 'vendor', test: /node_modules[\\/]/, priority: 10 },
+          ],
+        },
+      },
+    },
+  },
   plugins: [
     TanStackRouterVite(),
     react(),
     tailwindcss(),
-    tsconfigPaths(),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {

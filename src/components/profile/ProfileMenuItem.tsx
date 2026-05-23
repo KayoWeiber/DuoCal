@@ -14,7 +14,7 @@ export function ProfileMenuItem({ icon, iconBg, label, sublabel, onClick }: Prop
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-[var(--duocal-surface-soft)] active:bg-[var(--duocal-surface-soft)]"
+      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-(--duocal-surface-soft) active:bg-(--duocal-surface-soft)"
     >
       <div
         className="grid size-9 shrink-0 place-items-center rounded-[14px]"
@@ -23,12 +23,12 @@ export function ProfileMenuItem({ icon, iconBg, label, sublabel, onClick }: Prop
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-[var(--duocal-text)]">{label}</p>
+        <p className="truncate text-sm font-semibold text-(--duocal-text)">{label}</p>
         {sublabel ? (
-          <p className="truncate text-xs text-[var(--duocal-muted)]">{sublabel}</p>
+          <p className="truncate text-xs text-(--duocal-muted)">{sublabel}</p>
         ) : null}
       </div>
-      <ChevronRight className="size-4 shrink-0 text-[var(--duocal-border)]" />
+      <ChevronRight className="size-4 shrink-0 text-(--duocal-border)" />
     </button>
   )
 }

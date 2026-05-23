@@ -11,10 +11,10 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 const variants = {
   primary: 'duocal-gradient duocal-soft-shadow text-white hover:brightness-[1.03]',
   secondary:
-    'border border-[var(--duocal-border)] bg-white text-[var(--duocal-text)] shadow-[0_10px_26px_rgba(17,20,74,0.06)] hover:border-[rgba(84,102,241,0.35)]',
+    'border border-(--duocal-border) bg-white text-(--duocal-text) shadow-[0_10px_26px_rgba(17,20,74,0.06)] hover:border-[rgba(84,102,241,0.35)]',
   ghost:
-    'bg-transparent text-[var(--duocal-primary)] hover:bg-[rgba(84,102,241,0.08)]',
-  danger: 'bg-[rgba(255,90,122,0.12)] text-[var(--duocal-danger)]',
+    'bg-transparent text-(--duocal-primary) hover:bg-[rgba(84,102,241,0.08)]',
+  danger: 'bg-[rgba(255,90,122,0.12)] text-(--duocal-danger)',
 }
 
 export function Button({

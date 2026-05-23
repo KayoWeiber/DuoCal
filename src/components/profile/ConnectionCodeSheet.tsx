@@ -49,16 +49,16 @@ export function ConnectionCodeSheet({ codigo, onClose }: Props) {
       <div className="duocal-constrained-width w-full overflow-y-auto rounded-t-[32px] bg-white shadow-[0_-16px_60px_rgba(17,20,74,0.14)]" style={{ maxHeight: 'min(90dvh, 600px)' }}>
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-[var(--duocal-border)]" />
+          <div className="h-1 w-10 rounded-full bg-(--duocal-border)" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[var(--duocal-border)] px-5 pt-2 pb-4">
-          <h3 className="text-lg font-black text-[var(--duocal-text)]">Código de conexão</h3>
+        <div className="flex items-center justify-between border-b border-(--duocal-border) px-5 pt-2 pb-4">
+          <h3 className="text-lg font-black text-(--duocal-text)">Código de conexão</h3>
           <button
             type="button"
             onClick={onClose}
-            className="grid size-9 place-items-center rounded-2xl bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)] transition hover:bg-[rgba(84,102,241,0.08)] hover:text-[var(--duocal-primary)]"
+            className="grid size-9 place-items-center rounded-2xl bg-(--duocal-surface-soft) text-(--duocal-muted) transition hover:bg-[rgba(84,102,241,0.08)] hover:text-(--duocal-primary)"
           >
             <X className="size-4" />
           </button>
@@ -67,24 +67,24 @@ export function ConnectionCodeSheet({ codigo, onClose }: Props) {
         {/* Content */}
         <div className="space-y-4 px-5 py-5">
           {feedback ? (
-            <div className="flex items-center justify-between rounded-2xl bg-[rgba(53,207,165,0.10)] px-4 py-3 text-sm font-semibold text-[var(--duocal-success)]">
+            <div className="flex items-center justify-between rounded-2xl bg-[rgba(53,207,165,0.10)] px-4 py-3 text-sm font-semibold text-(--duocal-success)">
               <span className="min-w-0 break-all">{feedback}</span>
               <button
                 type="button"
                 onClick={() => setFeedback(null)}
-                className="ml-3 shrink-0 text-[var(--duocal-muted)]"
+                className="ml-3 shrink-0 text-(--duocal-muted)"
               >
                 <X className="size-3.5" />
               </button>
             </div>
           ) : null}
 
-          <p className="text-sm leading-5 text-[var(--duocal-muted)]">
+          <p className="text-sm leading-5 text-(--duocal-muted)">
             Compartilhe este código ou link com quem vai dividir o workspace com você.
           </p>
 
-          <div className="rounded-2xl bg-[var(--duocal-surface-soft)] px-5 py-4 text-center">
-            <p className="text-4xl font-black tracking-[0.28em] text-[var(--duocal-primary)]">
+          <div className="rounded-2xl bg-(--duocal-surface-soft) px-5 py-4 text-center">
+            <p className="text-4xl font-black tracking-[0.28em] text-(--duocal-primary)">
               {codigo}
             </p>
           </div>
@@ -93,9 +93,9 @@ export function ConnectionCodeSheet({ codigo, onClose }: Props) {
             <button
               type="button"
               onClick={handleCopy}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--duocal-border)] bg-white px-4 text-sm font-bold text-[var(--duocal-text)] transition hover:bg-[var(--duocal-surface-soft)]"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-(--duocal-border) bg-white px-4 text-sm font-bold text-(--duocal-text) transition hover:bg-(--duocal-surface-soft)"
             >
-              <Copy className="size-4 text-[var(--duocal-muted)]" />
+              <Copy className="size-4 text-(--duocal-muted)" />
               Copiar código
             </button>
             <button

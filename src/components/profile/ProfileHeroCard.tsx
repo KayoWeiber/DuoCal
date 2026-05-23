@@ -38,7 +38,7 @@ export function ProfileHeroCard({ workspace, membros }: Props) {
     >
       {/* Coração decorativo */}
       <Heart
-        className="pointer-events-none absolute -right-4 -top-4 size-28 text-[var(--duocal-violet)]"
+        className="pointer-events-none absolute -right-4 -top-4 size-28 text-(--duocal-violet)"
         style={{ opacity: 0.07 }}
         fill="currentColor"
       />
@@ -61,11 +61,11 @@ export function ProfileHeroCard({ workspace, membros }: Props) {
       )}
 
       {/* Nome e slogan */}
-      <h2 className="text-xl font-black text-[var(--duocal-text)]">
+      <h2 className="text-xl font-black text-(--duocal-text)">
         {workspace.workspace.nm_workspace}
       </h2>
       {workspace.workspace.ds_slogan ? (
-        <p className="mt-1 text-sm italic text-[var(--duocal-muted)]">
+        <p className="mt-1 text-sm italic text-(--duocal-muted)">
           "{workspace.workspace.ds_slogan}"
         </p>
       ) : null}
@@ -82,8 +82,8 @@ export function ProfileHeroCard({ workspace, membros }: Props) {
 function StatCard({ value, label }: { value: string; label: string }) {
   return (
     <div className="flex-1 rounded-2xl bg-white/70 px-3 py-2.5 text-center backdrop-blur-sm">
-      <p className="text-base font-black text-[var(--duocal-text)]">{value}</p>
-      <p className="text-[11px] font-semibold text-[var(--duocal-muted)]">{label}</p>
+      <p className="text-base font-black text-(--duocal-text)">{value}</p>
+      <p className="text-[11px] font-semibold text-(--duocal-muted)">{label}</p>
     </div>
   )
 }

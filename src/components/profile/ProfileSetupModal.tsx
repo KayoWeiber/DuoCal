@@ -45,10 +45,10 @@ export function ProfileSetupModal({ perfil }: ProfileSetupModalProps) {
               <UserRound className="size-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[var(--duocal-text)]">
+              <h2 className="text-lg font-bold text-(--duocal-text)">
                 Complete seu perfil
               </h2>
-              <p className="break-all text-sm text-[var(--duocal-muted)]">
+              <p className="break-all text-sm text-(--duocal-muted)">
                 {perfil.ds_email}
               </p>
             </div>
@@ -65,15 +65,15 @@ export function ProfileSetupModal({ perfil }: ProfileSetupModalProps) {
               value={nmUsuario}
             />
 
-            <div className="rounded-3xl border border-[var(--duocal-border)] bg-[var(--duocal-surface-soft)] p-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-[var(--duocal-text)]">
+            <div className="rounded-3xl border border-(--duocal-border) bg-(--duocal-surface-soft) p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-(--duocal-text)">
                 <KeyRound className="size-4" />
                 Código de conexão
               </div>
-              <p className="mt-2 text-3xl font-black tracking-[0.22em] text-[var(--duocal-primary)]">
+              <p className="mt-2 text-3xl font-black tracking-[0.22em] text-(--duocal-primary)">
                 {perfil.cd_codigo_conexao}
               </p>
-              <p className="mt-2 text-sm leading-5 text-[var(--duocal-muted)]">
+              <p className="mt-2 text-sm leading-5 text-(--duocal-muted)">
                 Este código permite que outra pessoa solicite conexão ao seu
                 workspace compartilhado.
               </p>
