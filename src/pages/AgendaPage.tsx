@@ -12,6 +12,7 @@ import {
   useAuthSession,
   useBuscarEvento,
   useCategoriasEvento,
+  useConfiguracaoWorkspace,
   useCriarEvento,
   useEditarEvento,
   useEventosWorkspace,
@@ -291,6 +292,7 @@ export function AgendaPage() {
   const workspace = workspaceQuery.data ?? null
   const workspaceId = workspace?.workspace.id ?? null
   const { unreadCount } = useUnreadNotificationCount(perfil)
+  const configuracaoQuery = useConfiguracaoWorkspace(workspaceId)
 
   const [diaSelecionado, setDiaSelecionado] = useState<Date>(() => new Date())
   const [filtro, setFiltro] = useState('todos')
@@ -345,6 +347,7 @@ export function AgendaPage() {
   const perfilIncompleto = Boolean(perfil && (!perfil.fl_perfil_completo || !perfil.nm_usuario))
   const isLoading = workspaceQuery.isLoading || eventosQuery.isLoading
   const mesAno = `${MESES_ABREV[diaSelecionado.getMonth()]} ${diaSelecionado.getFullYear()}`
+  const configuracao = configuracaoQuery.data
 
   async function handleSave(payload: CriarEventoPayload) {
     try {
@@ -368,13 +371,10 @@ export function AgendaPage() {
 
   return (
     <>
-      {/* Layout fixo de tela cheia */}
       <div
-        className="duocal-app-shell fixed inset-x-0 top-0 flex flex-col overflow-hidden"
+        className="duocal-app-shell min-h-dvh overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))]"
         style={{
-          height: '100dvh',
           paddingTop: 'env(safe-area-inset-top, 0px)',
-          bottom: 0,
         }}
       >
         {/* Header */}
@@ -433,7 +433,7 @@ export function AgendaPage() {
         )}
 
         {/* Timeline — card branco, flex-1, scroll interno */}
-        <div className="mx-3 flex-1 min-h-0 overflow-hidden rounded-3xl bg-white shadow-[0_4px_24px_rgba(17,20,74,0.07)]">
+        <div className="mx-3 h-[min(68dvh,720px)] min-h-[420px] overflow-hidden rounded-3xl bg-white shadow-[0_4px_24px_rgba(17,20,74,0.07)]">
           {isLoading ? (
             <LoadingTimeline />
           ) : !workspaceId ? (
@@ -443,16 +443,13 @@ export function AgendaPage() {
               eventos={eventosServidor}
               eventosPendentes={eventosPendentesFiltrados}
               diaSelecionado={diaSelecionado}
+              hrInicioDia={configuracao?.hrInicioDia}
+              hrFimDia={configuracao?.hrFimDia}
               onEventoClick={setEventoSelecionado}
             />
           )}
         </div>
 
-        {/* Espaço para a bottom navigation */}
-        <div
-          className="shrink-0"
-          style={{ height: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}
-        />
       </div>
 
       {/* FAB Novo evento */}
