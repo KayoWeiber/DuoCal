@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Bell, ChevronRight, Link2, LogOut, Palette, Plus, Settings, Shield, Tag, UserRound } from 'lucide-react'
+import { Bell, ChevronRight, Link2, LogOut, Plus, Settings, Tag, UserRound } from 'lucide-react'
 import {
   BottomNavigation,
   FeedbackAlert,
@@ -11,6 +11,7 @@ import { CategoryManagementSheet } from '../components/profile/CategoryManagemen
 import { ConnectionCodeSheet } from '../components/profile/ConnectionCodeSheet'
 import { ProfileHeroCard } from '../components/profile/ProfileHeroCard'
 import { ProfileMenuItem } from '../components/profile/ProfileMenuItem'
+import { WorkspaceSettingsSheet } from '../components/profile/WorkspaceSettingsSheet'
 import {
   useAuthSession,
   useMembrosWorkspace,
@@ -41,6 +42,7 @@ export function ProfilePage() {
   const [erro, setErro] = useState<string | null>(null)
   const [codeSheetOpen, setCodeSheetOpen] = useState(false)
   const [categorySheetOpen, setCategorySheetOpen] = useState(false)
+  const [workspaceSettingsOpen, setWorkspaceSettingsOpen] = useState(false)
   const [versionOutdated] = useState(false)
 
   useEffect(() => {
@@ -146,7 +148,7 @@ export function ProfilePage() {
               {/* Convidar membro */}
               <button
                 type="button"
-                onClick={showWip}
+                onClick={() => setCodeSheetOpen(true)}
                 className="flex w-full items-center gap-3 px-4 py-3.5 transition hover:bg-(--duocal-surface-soft)"
               >
                 <div className="grid size-10 shrink-0 place-items-center rounded-full bg-[rgba(182,109,255,0.12)]">
@@ -172,8 +174,8 @@ export function ProfilePage() {
                   icon={<Settings className="size-[17px] text-(--duocal-primary)" />}
                   iconBg="rgba(84,102,241,0.12)"
                   label="Configurações do workspace"
-                  sublabel="Nome, fuso, idioma"
-                  onClick={showWip}
+                  sublabel="Nome, agenda, membros e convite"
+                  onClick={() => setWorkspaceSettingsOpen(true)}
                 />
                 <ProfileMenuItem
                   icon={<Tag className="size-[17px] text-(--duocal-violet)" />}
@@ -201,20 +203,6 @@ export function ProfilePage() {
               iconBg="rgba(255,176,32,0.12)"
               label="Notificações"
               sublabel="Preferências personalizadas"
-              onClick={showWip}
-            />
-            <ProfileMenuItem
-              icon={<Palette className="size-[17px] text-[#FF5A7A]" />}
-              iconBg="rgba(255,90,122,0.10)"
-              label="Tema do app"
-              sublabel="Sistema"
-              onClick={showWip}
-            />
-            <ProfileMenuItem
-              icon={<Shield className="size-[17px] text-(--duocal-muted)" />}
-              iconBg="rgba(107,114,128,0.10)"
-              label="Privacidade & dados"
-              sublabel="Segurança e permissões"
               onClick={showWip}
             />
           </div>
@@ -278,6 +266,16 @@ export function ProfilePage() {
         <CategoryManagementSheet
           workspaceId={workspace.workspace.id}
           onClose={() => setCategorySheetOpen(false)}
+        />
+      ) : null}
+
+      {workspaceSettingsOpen && workspace ? (
+        <WorkspaceSettingsSheet
+          workspaceId={workspace.workspace.id}
+          papelAtual={workspace.tp_papel}
+          membros={membros}
+          codigoConvite={perfil?.cd_codigo_conexao}
+          onClose={() => setWorkspaceSettingsOpen(false)}
         />
       ) : null}
     </>

@@ -1,4 +1,5 @@
 export * from './useAuthSession'
+export * from './useConfiguracaoWorkspace'
 export * from './useCategoriasEvento'
 export * from './useEditarEvento'
 export * from './useEventosWorkspace'

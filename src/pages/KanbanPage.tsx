@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Columns3, Plus } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Columns3, Plus, Search, SlidersHorizontal } from 'lucide-react'
 import {
   BottomNavigation,
   OfflineBar,
@@ -34,59 +34,129 @@ import { STATUS_CONFIG } from '../components/kanban/kanbanConfig'
 
 type FiltroStatus = StatusTarefa | 'TODOS'
 
-const FILTROS: { label: string; value: FiltroStatus }[] = [
-  { label: 'Todos', value: 'TODOS' },
-  { label: 'A fazer', value: 'A_FAZER' },
-  { label: 'Em andamento', value: 'EM_ANDAMENTO' },
-  { label: 'Planejado', value: 'PLANEJADO' },
-  { label: 'Concluído', value: 'CONCLUIDO' },
-]
+const STATUS_ORDEM: StatusTarefa[] = ['A_FAZER', 'EM_ANDAMENTO', 'PLANEJADO', 'CONCLUIDO']
 
-function filtrarTarefas(tarefas: TarefaKanban[], filtro: FiltroStatus): TarefaKanban[] {
-  if (filtro === 'TODOS') return tarefas
-  return tarefas.filter((t) => t.status === filtro)
+function filtrarTarefas(
+  tarefas: TarefaKanban[],
+  filtro: FiltroStatus,
+  busca: string,
+): TarefaKanban[] {
+  const termo = busca.trim().toLocaleLowerCase('pt-BR')
+
+  return tarefas.filter((tarefa) => {
+    const statusOk = filtro === 'TODOS' || tarefa.status === filtro
+    if (!statusOk) return false
+    if (!termo) return true
+
+    return [
+      tarefa.titulo,
+      tarefa.descricao,
+      tarefa.nm_categoria,
+      tarefa.nm_responsavel,
+    ]
+      .filter(Boolean)
+      .some((value) => value!.toLocaleLowerCase('pt-BR').includes(termo))
+  })
 }
 
-function StatusSummaryCards({
-  tarefas,
+function contarPorStatus(tarefas: TarefaKanban[]) {
+  return STATUS_ORDEM.reduce<Record<StatusTarefa, number>>((acc, status) => {
+    acc[status] = tarefas.filter((tarefa) => tarefa.status === status).length
+    return acc
+  }, {
+    A_FAZER: 0,
+    EM_ANDAMENTO: 0,
+    PLANEJADO: 0,
+    CONCLUIDO: 0,
+  })
+}
+
+function KanbanHeader({
+  total,
+  buscaAberta,
+  onToggleBusca,
+}: {
+  total: number
+  buscaAberta: boolean
+  onToggleBusca: () => void
+}) {
+  return (
+    <header className="shrink-0 px-5 pt-3 pb-2">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-(--duocal-muted)">
+            {total} {total === 1 ? 'tarefa no quadro' : 'tarefas no quadro'}
+          </p>
+          <h1 className="mt-0.5 text-[26px] font-black leading-tight text-(--duocal-text)">
+            Kanban
+          </h1>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            aria-label={buscaAberta ? 'Fechar busca' : 'Buscar tarefa'}
+            onClick={onToggleBusca}
+            className="grid size-9 place-items-center rounded-full border border-(--duocal-border) bg-white text-(--duocal-muted) shadow-[0_4px_14px_rgba(17,20,74,0.06)] transition hover:text-(--duocal-primary)"
+          >
+            <Search className="size-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Filtrar tarefas"
+            className="grid size-9 place-items-center rounded-full border border-(--duocal-border) bg-white text-(--duocal-muted) shadow-[0_4px_14px_rgba(17,20,74,0.06)] transition hover:text-(--duocal-primary)"
+          >
+            <SlidersHorizontal className="size-4" />
+          </button>
+        </div>
+      </div>
+    </header>
+  )
+}
+
+function StatusFilterChips({
+  counts,
   filtroAtivo,
   onFiltrar,
 }: {
-  tarefas: TarefaKanban[]
+  counts: Record<StatusTarefa, number>
   filtroAtivo: FiltroStatus
   onFiltrar: (status: FiltroStatus) => void
 }) {
-  const statusOrdem: StatusTarefa[] = ['EM_ANDAMENTO', 'A_FAZER', 'PLANEJADO', 'CONCLUIDO']
-
   return (
-    <div className="grid grid-cols-2 gap-2.5">
-      {statusOrdem.map((s) => {
-        const cfg = STATUS_CONFIG[s]
-        const count = tarefas.filter((t) => t.status === s).length
-        const ativo = filtroAtivo === s
+    <div
+      className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      {STATUS_ORDEM.map((status) => {
+        const cfg = STATUS_CONFIG[status]
+        const ativo = filtroAtivo === status
 
         return (
           <button
-            key={s}
+            key={status}
             type="button"
-            onClick={() => onFiltrar(ativo ? 'TODOS' : s)}
-            className="flex flex-col rounded-2xl border p-3.5 text-left transition active:scale-[0.97]"
+            onClick={() => onFiltrar(ativo ? 'TODOS' : status)}
+            className="inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-black transition active:scale-95"
             style={{
-              backgroundColor: ativo ? cfg.bg : 'white',
-              borderColor: ativo ? cfg.cor + '55' : 'var(--duocal-border)',
+              backgroundColor: ativo ? cfg.cor : '#fff',
+              borderColor: ativo ? cfg.cor : 'var(--duocal-border)',
+              color: ativo ? '#fff' : 'var(--duocal-text)',
+              boxShadow: ativo ? `0 8px 18px ${cfg.cor}30` : '0 4px 14px rgba(17,20,74,0.04)',
             }}
           >
             <span
-              className="mb-1.5 text-2xl font-black"
-              style={{ color: cfg.cor }}
-            >
-              {count}
-            </span>
+              className="size-1.5 rounded-full"
+              style={{ backgroundColor: ativo ? '#fff' : cfg.cor }}
+            />
+            <span>{cfg.label}</span>
             <span
-              className="text-xs font-semibold"
-              style={{ color: ativo ? cfg.cor : 'var(--duocal-muted)' }}
+              className="grid min-w-4 place-items-center rounded-full px-1 text-[9px]"
+              style={{
+                backgroundColor: ativo ? 'rgba(255,255,255,0.22)' : cfg.bg,
+                color: ativo ? '#fff' : cfg.cor,
+              }}
             >
-              {cfg.label}
+              {counts[status]}
             </span>
           </button>
         )
@@ -95,39 +165,41 @@ function StatusSummaryCards({
   )
 }
 
-
-function FiltroChips({
+function StatusSummaryCards({
+  counts,
   filtroAtivo,
   onFiltrar,
 }: {
+  counts: Record<StatusTarefa, number>
   filtroAtivo: FiltroStatus
-  onFiltrar: (f: FiltroStatus) => void
+  onFiltrar: (status: FiltroStatus) => void
 }) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
-      {FILTROS.map((f) => {
-        const ativo = filtroAtivo === f.value
-        const cfg = f.value !== 'TODOS' ? STATUS_CONFIG[f.value as StatusTarefa] : null
+    <div
+      className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      {STATUS_ORDEM.map((status) => {
+        const cfg = STATUS_CONFIG[status]
+        const ativo = filtroAtivo === status
 
         return (
           <button
-            key={f.value}
+            key={status}
             type="button"
-            onClick={() => onFiltrar(f.value)}
-            className="shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition"
-            style={
-              ativo
-                ? {
-                    backgroundColor: cfg ? cfg.cor : 'var(--duocal-primary)',
-                    color: 'white',
-                  }
-                : {
-                    backgroundColor: 'var(--duocal-surface-soft)',
-                    color: 'var(--duocal-muted)',
-                  }
-            }
+            onClick={() => onFiltrar(ativo ? 'TODOS' : status)}
+            className="min-w-[88px] rounded-2xl border bg-white px-3 py-2.5 text-left shadow-[0_10px_24px_rgba(17,20,74,0.05)] transition active:scale-95"
+            style={{
+              borderColor: ativo ? cfg.cor : 'var(--duocal-border)',
+              backgroundColor: ativo ? cfg.bg : '#fff',
+            }}
           >
-            {f.label}
+            <span className="block text-[10px] font-black uppercase" style={{ color: cfg.cor }}>
+              {cfg.label}
+            </span>
+            <span className="mt-1 block text-2xl font-black text-(--duocal-text)">
+              {counts[status]}
+            </span>
           </button>
         )
       })}
@@ -137,23 +209,22 @@ function FiltroChips({
 
 function LoadingKanban() {
   return (
-    <div className="space-y-3 px-4">
+    <div className="space-y-3">
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-24 animate-pulse rounded-2xl bg-(--duocal-surface-soft)"
+          className="h-24 animate-pulse rounded-3xl bg-white shadow-[0_10px_24px_rgba(17,20,74,0.04)]"
         />
       ))}
     </div>
   )
 }
 
-
 function EmptyKanban({ onNova }: { onNova: () => void }) {
   return (
     <div className="flex flex-col items-center gap-4 px-8 py-12 text-center">
-      <div className="grid size-16 place-items-center rounded-3xl bg-(--duocal-surface-soft)">
-        <Columns3 className="size-8 text-(--duocal-primary) opacity-60" />
+      <div className="grid size-16 place-items-center rounded-3xl bg-white shadow-[0_12px_28px_rgba(17,20,74,0.06)]">
+        <Columns3 className="size-8 text-(--duocal-primary) opacity-70" />
       </div>
       <div>
         <p className="font-bold text-(--duocal-text)">Nenhuma tarefa ainda</p>
@@ -164,7 +235,7 @@ function EmptyKanban({ onNova }: { onNova: () => void }) {
       <button
         type="button"
         onClick={onNova}
-        className="rounded-2xl bg-(--duocal-primary) px-6 py-2.5 text-sm font-bold text-white"
+        className="rounded-2xl bg-(--duocal-primary) px-6 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_rgba(84,102,241,0.24)]"
       >
         Criar primeira tarefa
       </button>
@@ -182,10 +253,6 @@ export function KanbanPage() {
   const { unreadCount } = useUnreadNotificationCount(perfil)
   const { isOnline, syncState, pendingCount } = useSyncQueue(workspaceId)
 
-  useEffect(() => {
-    if (!isSessionLoading && !session) window.location.replace('/login')
-  }, [isSessionLoading, session])
-
   const { data: tarefas = [], isLoading, isError } = useTarefasKanban(workspaceId)
   const { data: membros = [] } = useMembrosWorkspace(workspaceId)
   const { data: categorias = [] } = useCategoriasEvento(workspaceId)
@@ -196,12 +263,27 @@ export function KanbanPage() {
   const excluirTarefa = useExcluirTarefa()
 
   const [filtroAtivo, setFiltroAtivo] = useState<FiltroStatus>('TODOS')
+  const [buscaAberta, setBuscaAberta] = useState(false)
+  const [busca, setBusca] = useState('')
   const [formAberto, setFormAberto] = useState(false)
   const [tarefaEditando, setTarefaEditando] = useState<TarefaKanban | null>(null)
   const [versaoDesatualizada, setVersaoDesatualizada] = useState(false)
 
+  useEffect(() => {
+    if (!isSessionLoading && !session) window.location.replace('/login')
+  }, [isSessionLoading, session])
+
   const perfilIncompleto = Boolean(perfil && (!perfil.fl_perfil_completo || !perfil.nm_usuario))
-  const tarefasFiltradas = filtrarTarefas(tarefas, filtroAtivo)
+  const counts = useMemo(() => contarPorStatus(tarefas), [tarefas])
+  const tarefasFiltradas = useMemo(
+    () => filtrarTarefas(tarefas, filtroAtivo, busca),
+    [tarefas, filtroAtivo, busca],
+  )
+
+  function abrirNovaTarefa() {
+    setTarefaEditando(null)
+    setFormAberto(true)
+  }
 
   function abrirEdicao(tarefa: TarefaKanban) {
     setTarefaEditando(tarefa)
@@ -240,7 +322,7 @@ export function KanbanPage() {
   }
 
   async function handleAlterarStatus(tarefa: TarefaKanban, novoStatus: StatusTarefa) {
-    if (!workspaceId) return
+    if (!workspaceId || tarefa.status === novoStatus) return
     try {
       await alterarStatus.mutateAsync({
         tarefaId: tarefa.id,
@@ -258,70 +340,72 @@ export function KanbanPage() {
   return (
     <>
       <div
-        className="duocal-app-shell fixed inset-x-0 top-0 flex flex-col overflow-hidden"
-        style={{
-          height: '100dvh',
-          paddingTop: 'env(safe-area-inset-top, 0px)',
-        }}
+        className="duocal-app-shell fixed inset-x-0 top-0 flex h-dvh flex-col overflow-hidden bg-(--duocal-surface-soft)"
+        style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        {/* Header */}
-        <div className="shrink-0 px-5 pt-4 pb-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-(--duocal-muted)">
-                {workspace?.workspace.nm_workspace ?? 'DuoCal'}
-              </p>
-              <h1 className="text-2xl font-black text-(--duocal-text)">Kanban</h1>
-            </div>
-          </div>
-        </div>
+        <KanbanHeader
+          total={tarefas.length}
+          buscaAberta={buscaAberta}
+          onToggleBusca={() => setBuscaAberta((value) => !value)}
+        />
 
-        {/* Offline bar */}
+        {buscaAberta ? (
+          <div className="shrink-0 px-5 pb-2">
+            <input
+              className="duocal-input h-11 rounded-2xl bg-white text-sm"
+              placeholder="Buscar tarefa, categoria ou responsável"
+              value={busca}
+              onChange={(event) => setBusca(event.target.value)}
+              autoFocus
+            />
+          </div>
+        ) : null}
+
         {(!isOnline || syncState !== 'idle' || pendingCount > 0) && (
-          <div className="shrink-0 px-4 pb-1">
+          <div className="shrink-0 px-5 pb-2">
             <OfflineBar isOnline={isOnline} syncState={syncState} pendingCount={pendingCount} />
           </div>
         )}
 
-        {/* Conteúdo com scroll */}
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-[calc(76px+env(safe-area-inset-bottom))] scrollbar-hide">
-          <div className="px-4 py-2 space-y-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-[calc(9rem+env(safe-area-inset-bottom,0px))] pt-1 scrollbar-hide">
+          <div className="space-y-3">
+            <StatusFilterChips
+              counts={counts}
+              filtroAtivo={filtroAtivo}
+              onFiltrar={setFiltroAtivo}
+            />
 
-            {/* Resumo por status */}
-            {!isLoading && tarefas.length > 0 && (
-              <StatusSummaryCards
-                tarefas={tarefas}
-                filtroAtivo={filtroAtivo}
-                onFiltrar={(s) => setFiltroAtivo(s === filtroAtivo ? 'TODOS' : s)}
-              />
-            )}
+            <StatusSummaryCards
+              counts={counts}
+              filtroAtivo={filtroAtivo}
+              onFiltrar={setFiltroAtivo}
+            />
 
-            {/* Chips de filtro */}
-            {!isLoading && tarefas.length > 0 && (
-              <FiltroChips filtroAtivo={filtroAtivo} onFiltrar={setFiltroAtivo} />
-            )}
-
-            {/* Lista de tarefas */}
             {isLoading ? (
               <LoadingKanban />
             ) : isError ? (
-              <div className="rounded-2xl bg-red-50 p-4 text-center text-sm text-red-600">
+              <div className="rounded-3xl bg-red-50 p-4 text-center text-sm font-semibold text-red-600">
                 Erro ao carregar tarefas. Tente novamente.
               </div>
             ) : tarefas.length === 0 ? (
-              <EmptyKanban onNova={() => setFormAberto(true)} />
+              <EmptyKanban onNova={abrirNovaTarefa} />
             ) : tarefasFiltradas.length === 0 ? (
-              <div className="py-8 text-center text-sm text-(--duocal-muted)">
+              <div className="rounded-3xl bg-white px-6 py-8 text-center text-sm font-semibold text-(--duocal-muted)">
                 Nenhuma tarefa com este filtro.
               </div>
             ) : (
               <div className="space-y-2.5">
                 {tarefasFiltradas.map((tarefa) => (
-                  <KanbanTaskCardComStatus
+                  <KanbanTaskCard
                     key={tarefa.id}
                     tarefa={tarefa}
-                    onEdit={() => abrirEdicao(tarefa)}
-                    onAlterarStatus={(s) => handleAlterarStatus(tarefa, s)}
+                    onOpen={() => abrirEdicao(tarefa)}
+                    onToggleDone={() => {
+                      void handleAlterarStatus(
+                        tarefa,
+                        tarefa.status === 'CONCLUIDO' ? 'A_FAZER' : 'CONCLUIDO',
+                      )
+                    }}
                   />
                 ))}
               </div>
@@ -330,26 +414,22 @@ export function KanbanPage() {
         </div>
       </div>
 
-      {/* FAB */}
-      <button
-        type="button"
-        onClick={() => { setTarefaEditando(null); setFormAberto(true) }}
-        aria-label="Nova tarefa"
-        className="duocal-constrained-width fixed bottom-[calc(76px+env(safe-area-inset-bottom))] left-1/2 z-20 -translate-x-1/2"
-        style={{ pointerEvents: 'none' }}
+      <div
+        className="duocal-constrained-width pointer-events-none fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px))] left-1/2 z-20 flex w-full -translate-x-1/2 justify-end px-4"
       >
-        <span
-          className="pointer-events-auto absolute right-4 bottom-4 flex size-14 items-center justify-center rounded-full shadow-[0_8px_30px_rgba(84,102,241,0.38)] transition active:scale-95"
+        <button
+          type="button"
+          onClick={abrirNovaTarefa}
+          className="pointer-events-auto inline-flex min-h-12 items-center gap-2 rounded-full px-4 text-sm font-black text-white shadow-[0_12px_30px_rgba(84,102,241,0.42)] transition active:scale-95"
           style={{ background: 'linear-gradient(135deg,#5466F1,#B66DFF)' }}
         >
-          <Plus className="size-6 text-white" strokeWidth={2.5} />
-        </span>
-      </button>
+          <Plus className="size-4" strokeWidth={2.6} />
+          Nova tarefa
+        </button>
+      </div>
 
-      {/* Bottom nav */}
       <BottomNavigation activeTab="kanban" unreadCount={unreadCount} />
 
-      {/* Form sheet */}
       {formAberto && workspaceId && (
         <KanbanTaskFormSheet
           workspaceId={workspaceId}
@@ -363,65 +443,8 @@ export function KanbanPage() {
         />
       )}
 
-      {/* Modais de sistema */}
-      {perfilIncompleto && perfil && <ProfileSetupModal perfil={perfil} />}
+      {perfilIncompleto && perfil ? <ProfileSetupModal perfil={perfil} /> : null}
       <VersionOutdatedModal open={versaoDesatualizada} />
     </>
-  )
-}
-
-// ─── Card com botões de mudança de status rápida ──────────────────────────────
-
-function KanbanTaskCardComStatus({
-  tarefa,
-  onEdit,
-  onAlterarStatus,
-}: {
-  tarefa: TarefaKanban
-  onEdit: () => void
-  onAlterarStatus: (status: StatusTarefa) => void
-}) {
-  const [expandido, setExpandido] = useState(false)
-  const statusOrdem: StatusTarefa[] = ['A_FAZER', 'EM_ANDAMENTO', 'PLANEJADO', 'CONCLUIDO']
-
-  return (
-    <div>
-      <KanbanTaskCard tarefa={tarefa} onClick={onEdit} />
-
-      {/* Ação rápida de status ao pressionar longamente — simplificado como toggle */}
-      <div className="mt-1 flex gap-1.5 px-1">
-        <button
-          type="button"
-          onClick={() => setExpandido((v) => !v)}
-          className="text-[10px] font-semibold text-(--duocal-muted) underline"
-        >
-          {expandido ? 'Ocultar status' : 'Mudar status'}
-        </button>
-      </div>
-
-      {expandido && (
-        <div className="mt-1.5 flex flex-wrap gap-1.5 px-1">
-          {statusOrdem.map((s) => {
-            const cfg = STATUS_CONFIG[s]
-            const ativo = tarefa.status === s
-            return (
-              <button
-                key={s}
-                type="button"
-                disabled={ativo}
-                onClick={() => { onAlterarStatus(s); setExpandido(false) }}
-                className="rounded-full px-3 py-1 text-[10px] font-bold transition disabled:opacity-50"
-                style={{
-                  backgroundColor: ativo ? cfg.cor : cfg.bg,
-                  color: ativo ? 'white' : cfg.cor,
-                }}
-              >
-                {cfg.label}
-              </button>
-            )
-          })}
-        </div>
-      )}
-    </div>
   )
 }

@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CloudOff, RefreshCw } from 'lucide-react'
 import type { EventoWorkspace } from '../../hooks'
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
-
-const HORA_INICIO = 6
-const HORA_FIM = 23
+const HORA_INICIO_PADRAO = 6
+const HORA_FIM_PADRAO = 23
 const PX_POR_HORA = 64
 const COLUNA_HORA_PX = 48
+const MS_POR_HORA = 60 * 60 * 1000
 
-const HORAS = Array.from(
-  { length: HORA_FIM - HORA_INICIO + 1 },
-  (_, i) => i + HORA_INICIO,
-)
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
+type TimelineRange = {
+  startHour: number
+  endHour: number
+  endExclusiveHour: number
+  hours: number[]
+  totalHeight: number
+}
 
 type EventoLayoutado = {
   evento: EventoWorkspace
@@ -25,83 +25,190 @@ type EventoLayoutado = {
   isPending: boolean
 }
 
-// ─── Utilitários de posição ───────────────────────────────────────────────────
-
-function calcTop(iso: string): number {
-  const d = new Date(iso)
-  const h = Math.max(d.getHours() + d.getMinutes() / 60, HORA_INICIO)
-  return (h - HORA_INICIO) * PX_POR_HORA
+type EventoComIntervalo = {
+  evento: EventoWorkspace
+  isPending: boolean
+  startMs: number
+  endMs: number
+  startHour: number
+  endHour: number
 }
 
-function calcHeight(dtInicio: string, dtFim: string, flDiaTodo: boolean): number {
-  if (flDiaTodo) return (HORA_FIM - HORA_INICIO) * PX_POR_HORA
-
-  const ini = new Date(dtInicio)
-  const fim = new Date(dtFim)
-  const iniH = Math.max(ini.getHours() + ini.getMinutes() / 60, HORA_INICIO)
-  const fimH = Math.min(fim.getHours() + fim.getMinutes() / 60, HORA_FIM)
-  return Math.max((fimH - iniH) * PX_POR_HORA, 36)
+export type AgendaTimelineProps = {
+  eventos: EventoWorkspace[]
+  eventosPendentes: EventoWorkspace[]
+  diaSelecionado: Date
+  hrInicioDia?: string
+  hrFimDia?: string
+  autoScrollToCurrent?: boolean
+  onEventoClick: (evento: EventoWorkspace) => void
 }
 
-function calcTopAtual(): number {
+function toISODate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
+function parseHoraLabel(value: string | null | undefined, fallback: number) {
+  if (!value) return fallback
+  const [hora] = value.split(':')
+  const parsed = Number(hora)
+  return Number.isFinite(parsed) ? clamp(parsed, 0, 23) : fallback
+}
+
+function criarRange(startHour: number, endHour: number): TimelineRange {
+  const normalizedStart = clamp(startHour, 0, 23)
+  const normalizedEnd = clamp(Math.max(endHour, normalizedStart), normalizedStart, 23)
+  const hours = Array.from(
+    { length: normalizedEnd - normalizedStart + 1 },
+    (_, i) => i + normalizedStart,
+  )
+
+  return {
+    startHour: normalizedStart,
+    endHour: normalizedEnd,
+    endExclusiveHour: normalizedEnd + 1,
+    hours,
+    totalHeight: (normalizedEnd - normalizedStart + 1) * PX_POR_HORA,
+  }
+}
+
+function getDayBounds(dia: Date) {
+  const inicio = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate())
+  const fim = new Date(inicio.getTime() + 24 * MS_POR_HORA)
+  return { inicio, fim }
+}
+
+function getHourInDay(ms: number, dayStartMs: number) {
+  return (ms - dayStartMs) / MS_POR_HORA
+}
+
+function getEventoIntervalo(
+  evento: EventoWorkspace,
+  diaSelecionado: Date,
+  isPending: boolean,
+): EventoComIntervalo | null {
+  const { inicio, fim } = getDayBounds(diaSelecionado)
+  const dayStartMs = inicio.getTime()
+  const dayEndMs = fim.getTime()
+  const rawStartMs = evento.fl_dia_todo ? dayStartMs : new Date(evento.dt_inicio).getTime()
+  const rawEndMs = evento.fl_dia_todo ? dayEndMs : new Date(evento.dt_fim).getTime()
+  const startMs = Math.max(rawStartMs, dayStartMs)
+  const endMs = Math.min(rawEndMs, dayEndMs)
+
+  if (endMs <= startMs) return null
+
+  return {
+    evento,
+    isPending,
+    startMs,
+    endMs,
+    startHour: getHourInDay(startMs, dayStartMs),
+    endHour: getHourInDay(endMs, dayStartMs),
+  }
+}
+
+function resolverRangeTimeline({
+  eventos,
+  eventosPendentes,
+  diaSelecionado,
+  hrInicioDia,
+  hrFimDia,
+}: Pick<AgendaTimelineProps, 'eventos' | 'eventosPendentes' | 'diaSelecionado' | 'hrInicioDia' | 'hrFimDia'>) {
+  const inicioConfigurado = parseHoraLabel(hrInicioDia, HORA_INICIO_PADRAO)
+  const fimConfigurado = parseHoraLabel(hrFimDia, HORA_FIM_PADRAO)
+  const intervalos = [
+    ...eventos.map((evento) => getEventoIntervalo(evento, diaSelecionado, false)),
+    ...eventosPendentes.map((evento) => getEventoIntervalo(evento, diaSelecionado, true)),
+  ].filter((intervalo): intervalo is EventoComIntervalo => Boolean(intervalo))
+
+  const temEventoNaMadrugada = intervalos.some(
+    ({ evento, startHour }) => !evento.fl_dia_todo && startHour < inicioConfigurado,
+  )
+
+  const fimComEventos = intervalos.reduce((maiorFim, { evento, endHour }) => {
+    if (evento.fl_dia_todo) return maiorFim
+    return Math.max(maiorFim, Math.ceil(endHour) - 1)
+  }, fimConfigurado)
+
+  return criarRange(
+    temEventoNaMadrugada ? 0 : inicioConfigurado,
+    Math.max(fimConfigurado, fimComEventos),
+  )
+}
+
+function calcTopAtual(range: TimelineRange): number {
   const agora = new Date()
-  const h = agora.getHours() + agora.getMinutes() / 60
-  if (h < HORA_INICIO || h > HORA_FIM) return -1
-  return (h - HORA_INICIO) * PX_POR_HORA
+  const horaAtual = agora.getHours() + agora.getMinutes() / 60
+  if (horaAtual < range.startHour || horaAtual > range.endExclusiveHour) return -1
+  return (horaAtual - range.startHour) * PX_POR_HORA
 }
 
-function eVisivelNaTimeline(e: EventoWorkspace): boolean {
-  if (e.fl_dia_todo) return true
-  const h = new Date(e.dt_inicio).getHours() + new Date(e.dt_inicio).getMinutes() / 60
-  const hf = new Date(e.dt_fim).getHours() + new Date(e.dt_fim).getMinutes() / 60
-  return hf > HORA_INICIO && h < HORA_FIM
+function calcTop(intervalo: EventoComIntervalo, range: TimelineRange): number {
+  const startHour = clamp(intervalo.startHour, range.startHour, range.endExclusiveHour)
+  return (startHour - range.startHour) * PX_POR_HORA
+}
+
+function calcHeight(intervalo: EventoComIntervalo, range: TimelineRange): number {
+  if (intervalo.evento.fl_dia_todo) return range.totalHeight
+
+  const startHour = clamp(intervalo.startHour, range.startHour, range.endExclusiveHour)
+  const endHour = clamp(intervalo.endHour, range.startHour, range.endExclusiveHour)
+  return Math.max((endHour - startHour) * PX_POR_HORA, 36)
 }
 
 function calcLayout(
   eventos: EventoWorkspace[],
   pendentes: EventoWorkspace[],
+  diaSelecionado: Date,
+  range: TimelineRange,
 ): EventoLayoutado[] {
   const todos = [
-    ...eventos.filter(eVisivelNaTimeline).map(e => ({ e, p: false })),
-    ...pendentes.filter(eVisivelNaTimeline).map(e => ({ e, p: true })),
-  ].sort((a, b) => new Date(a.e.dt_inicio).getTime() - new Date(b.e.dt_inicio).getTime())
+    ...eventos.map((evento) => getEventoIntervalo(evento, diaSelecionado, false)),
+    ...pendentes.map((evento) => getEventoIntervalo(evento, diaSelecionado, true)),
+  ]
+    .filter((intervalo): intervalo is EventoComIntervalo => Boolean(intervalo))
+    .filter((intervalo) => (
+      intervalo.endHour > range.startHour && intervalo.startHour < range.endExclusiveHour
+    ))
+    .sort((a, b) => a.startMs - b.startMs)
 
   if (todos.length === 0) return []
 
-  // Greedy column assignment
   const colFim: number[] = []
   const assigned: number[] = []
 
-  todos.forEach(({ e }, i) => {
-    const ini = new Date(e.dt_inicio).getTime()
-    const fim = new Date(e.dt_fim).getTime()
-    let col = colFim.findIndex(f => f <= ini)
-    if (col === -1) { col = colFim.length; colFim.push(fim) }
-    else colFim[col] = Math.max(colFim[col], fim)
+  todos.forEach(({ startMs, endMs }, i) => {
+    let col = colFim.findIndex((fim) => fim <= startMs)
+    if (col === -1) {
+      col = colFim.length
+      colFim.push(endMs)
+    } else {
+      colFim[col] = Math.max(colFim[col], endMs)
+    }
     assigned[i] = col
   })
 
-  // totalColunas = max col among overlapping events + 1
-  return todos.map(({ e, p }, i) => {
-    const ini = new Date(e.dt_inicio).getTime()
-    const fim = new Date(e.dt_fim).getTime()
-    const maxCol = todos.reduce((mx, { e: b }, j) => {
-      const bi = new Date(b.dt_inicio).getTime()
-      const bf = new Date(b.dt_fim).getTime()
-      return bi < fim && bf > ini ? Math.max(mx, assigned[j]) : mx
+  return todos.map((intervalo, i) => {
+    const maxCol = todos.reduce((maiorColuna, outroIntervalo, j) => {
+      const sobrepoe =
+        outroIntervalo.startMs < intervalo.endMs && outroIntervalo.endMs > intervalo.startMs
+      return sobrepoe ? Math.max(maiorColuna, assigned[j]) : maiorColuna
     }, 0)
+
     return {
-      evento: e,
-      top: calcTop(e.dt_inicio),
-      height: calcHeight(e.dt_inicio, e.dt_fim, e.fl_dia_todo),
+      evento: intervalo.evento,
+      top: calcTop(intervalo, range),
+      height: calcHeight(intervalo, range),
       coluna: assigned[i],
       totalColunas: maxCol + 1,
-      isPending: p,
+      isPending: intervalo.isPending,
     }
   })
 }
-
-// ─── Evento na timeline ───────────────────────────────────────────────────────
 
 function EventoTimeline({
   evento,
@@ -114,10 +221,12 @@ function EventoTimeline({
 }: EventoLayoutado & { onClick?: () => void }) {
   const cor = evento.cd_cor_categoria ?? '#5466F1'
   const tini = new Date(evento.dt_inicio).toLocaleTimeString('pt-BR', {
-    hour: '2-digit', minute: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   })
   const tfim = new Date(evento.dt_fim).toLocaleTimeString('pt-BR', {
-    hour: '2-digit', minute: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   })
   const curto = height < 52
 
@@ -129,7 +238,7 @@ function EventoTimeline({
       className="absolute flex flex-col overflow-hidden rounded-xl text-left transition active:scale-[0.98] active:opacity-70"
       style={{
         top: top + 2,
-        height: height - 4,
+        height: Math.max(height - 4, 32),
         left: `calc(${(coluna / totalColunas) * 100}% + 2px)`,
         width: `calc(${(1 / totalColunas) * 100}% - 4px)`,
         backgroundColor: `${cor}1F`,
@@ -145,7 +254,7 @@ function EventoTimeline({
       ) : (
         <>
           <p className="shrink-0 text-[10px] leading-none" style={{ color: `${cor}99` }}>
-            {evento.fl_dia_todo ? 'Dia todo' : `${tini}–${tfim}`}
+            {evento.fl_dia_todo ? 'Dia todo' : `${tini}-${tfim}`}
           </p>
           <p
             className="mt-0.5 font-bold leading-snug"
@@ -188,56 +297,65 @@ function EventoTimeline({
   )
 }
 
-// ─── Timeline ────────────────────────────────────────────────────────────────
-
-export type AgendaTimelineProps = {
-  eventos: EventoWorkspace[]
-  eventosPendentes: EventoWorkspace[]
-  diaSelecionado: Date
-  onEventoClick: (evento: EventoWorkspace) => void
-}
-
-function toISODate(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 export function AgendaTimeline({
   eventos,
   eventosPendentes,
   diaSelecionado,
+  hrInicioDia,
+  hrFimDia,
+  autoScrollToCurrent = true,
   onEventoClick,
 }: AgendaTimelineProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [topAtual, setTopAtual] = useState(calcTopAtual)
-
   const eHoje = toISODate(diaSelecionado) === toISODate(new Date())
+  const range = useMemo(
+    () => resolverRangeTimeline({
+      eventos,
+      eventosPendentes,
+      diaSelecionado,
+      hrInicioDia,
+      hrFimDia,
+    }),
+    [eventos, eventosPendentes, diaSelecionado, hrInicioDia, hrFimDia],
+  )
+  const layoutados = useMemo(
+    () => calcLayout(eventos, eventosPendentes, diaSelecionado, range),
+    [eventos, eventosPendentes, diaSelecionado, range],
+  )
+  const [topAtual, setTopAtual] = useState(() => calcTopAtual(range))
 
   useEffect(() => {
-    const id = setInterval(() => setTopAtual(calcTopAtual()), 60_000)
-    return () => clearInterval(id)
-  }, [])
+    const refreshTopAtual = () => setTopAtual(calcTopAtual(range))
+    const timer = window.setTimeout(refreshTopAtual, 0)
+    const id = window.setInterval(refreshTopAtual, 60_000)
+    return () => {
+      window.clearTimeout(timer)
+      window.clearInterval(id)
+    }
+  }, [range])
 
-  // Scroll para o horário atual ao trocar de dia
   useEffect(() => {
     if (!scrollRef.current) return
-    const top = calcTopAtual()
-    scrollRef.current.scrollTop = eHoje && top >= 0 ? Math.max(top - 100, 0) : 0
-  }, [diaSelecionado, eHoje])
-
-  const layoutados = calcLayout(eventos, eventosPendentes)
-  const alturaTotal = (HORA_FIM - HORA_INICIO + 1) * PX_POR_HORA
+    const top = calcTopAtual(range)
+    scrollRef.current.scrollTop =
+      autoScrollToCurrent && eHoje && top >= 0 ? Math.max(top - 100, 0) : 0
+  }, [autoScrollToCurrent, diaSelecionado, eHoje, range])
 
   return (
     <div
       ref={scrollRef}
-      className="h-full overflow-y-auto overflow-x-hidden scrollbar-hide transition-colors duration-200"
-      style={{ backgroundColor: eHoje ? '#ffffff' : 'var(--duocal-surface-soft)' }}
+      className="h-full overflow-y-auto overflow-x-hidden overscroll-contain scrollbar-hide transition-colors duration-200"
+      style={{
+        backgroundColor: eHoje ? '#ffffff' : 'var(--duocal-surface-soft)',
+        WebkitOverflowScrolling: 'touch',
+      }}
     >
-      <div className="relative flex pb-6" style={{ minHeight: alturaTotal }}>
-
-        {/* Coluna de horas */}
+      <div
+        className="relative flex pb-[calc(6rem+env(safe-area-inset-bottom))]"
+        style={{ minHeight: range.totalHeight }}
+      >
         <div className="shrink-0 select-none" style={{ width: COLUNA_HORA_PX }}>
-          {HORAS.map((hora) => (
+          {range.hours.map((hora) => (
             <div
               key={hora}
               className="flex items-start justify-end pr-3"
@@ -256,24 +374,21 @@ export function AgendaTimeline({
           ))}
         </div>
 
-        {/* Grade + eventos */}
         <div
-          className="relative flex-1 min-w-0"
-          style={{ height: alturaTotal, opacity: eHoje ? 1 : 0.72 }}
+          className="relative min-w-0 flex-1"
+          style={{ height: range.totalHeight, opacity: eHoje ? 1 : 0.72 }}
         >
-          {/* Linhas de hora */}
-          {HORAS.map((hora) => (
+          {range.hours.map((hora) => (
             <div
               key={hora}
               className="pointer-events-none absolute inset-x-0"
               style={{
-                top: (hora - HORA_INICIO) * PX_POR_HORA,
+                top: (hora - range.startHour) * PX_POR_HORA,
                 borderTop: '1px solid var(--duocal-border)',
               }}
             />
           ))}
 
-          {/* Linha do horário atual — apenas no dia de hoje */}
           {eHoje && topAtual >= 0 && (
             <div
               className="pointer-events-none absolute inset-x-0 z-10 flex items-center"
@@ -287,12 +402,11 @@ export function AgendaTimeline({
             </div>
           )}
 
-          {/* Eventos */}
-          {layoutados.map((l) => (
+          {layoutados.map((layout) => (
             <EventoTimeline
-              key={`${l.evento.id}-${l.top}`}
-              {...l}
-              onClick={l.isPending ? undefined : () => onEventoClick(l.evento)}
+              key={`${layout.evento.id}-${layout.top}`}
+              {...layout}
+              onClick={layout.isPending ? undefined : () => onEventoClick(layout.evento)}
             />
           ))}
         </div>

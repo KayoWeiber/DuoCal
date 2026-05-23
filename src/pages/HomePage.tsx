@@ -2,9 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Bell,
   CalendarDays,
-  Clock,
   DoorOpen,
-  Heart,
   KeyRound,
   Link2,
   Plus,
@@ -14,36 +12,26 @@ import { Link } from '@tanstack/react-router'
 import {
   BottomNavigation,
   Button,
-  EventCard,
-  EventDetailSheet,
-  EventFormSheet,
   FeedbackAlert,
+  HomeDashboard,
   ProfileSetupModal,
   ScreenContainer,
   VersionOutdatedModal,
 } from '../components'
 import {
-  eventosHoje,
-  proximoEvento,
   useAuthSession,
-  useBuscarEvento,
   useCategoriasEvento,
   useCriarEvento,
-  useEditarEvento,
   useEventosWorkspace,
   useMembrosWorkspace,
   useMeuPerfil,
   useRegistrarLoginUsuario,
   useSolicitarConexaoPorCodigo,
+  useSyncQueue,
+  useTarefasKanban,
   useCriarWorkspaceInicial,
   useUnreadNotificationCount,
   useWorkspaceAtual,
-  type AtualizarEventoPayload,
-  type CategoriaEvento,
-  type CriarEventoPayload,
-  type EventoWorkspace,
-  type MembroWorkspace,
-  type WorkspaceAtual,
 } from '../hooks'
 import {
   clearPendingConnectionCode,
@@ -88,6 +76,8 @@ export function HomePage() {
   const eventosQuery = useEventosWorkspace(workspaceId, dtInicio, dtFim)
   const membrosQuery = useMembrosWorkspace(workspaceId)
   const categoriasQuery = useCategoriasEvento(workspaceId)
+  const tarefasQuery = useTarefasKanban(workspaceId)
+  const syncQueue = useSyncQueue(workspaceId)
   const criarEvento = useCriarEvento()
 
   useEffect(() => {
@@ -235,14 +225,19 @@ export function HomePage() {
         {workspaceQuery.isLoading ? (
           <WorkspaceLoadingSection />
         ) : temWorkspace ? (
-          <DashboardComWorkspace
+          <HomeDashboard
             workspace={workspaceAtual!}
             eventos={eventosQuery.data ?? []}
+            tarefas={tarefasQuery.data ?? []}
             membros={membrosQuery.data ?? []}
             categorias={categoriasQuery.data ?? []}
             usuarioAtualId={perfil.id}
             isSavingEvento={criarEvento.isPending}
             isLoadingEventos={eventosQuery.isLoading}
+            isLoadingTarefas={tarefasQuery.isLoading}
+            isOnline={syncQueue.isOnline}
+            pendingCount={syncQueue.pendingCount}
+            syncState={syncQueue.syncState}
             showEventForm={showEventForm}
             onOpenEventForm={() => setShowEventForm(true)}
             onCloseEventForm={() => setShowEventForm(false)}
@@ -297,284 +292,6 @@ export function HomePage() {
       {perfilIncompleto ? <ProfileSetupModal perfil={perfil} /> : null}
       <VersionOutdatedModal open={versionOutdated} />
     </>
-  )
-}
-
-// ─── Dashboard com workspace ──────────────────────────────────────────────────
-
-function DashboardComWorkspace({
-  workspace,
-  eventos,
-  membros,
-  categorias,
-  usuarioAtualId,
-  isSavingEvento,
-  isLoadingEventos,
-  showEventForm,
-  onOpenEventForm,
-  onCloseEventForm,
-  onSaveEvento,
-}: {
-  workspace: WorkspaceAtual
-  eventos: EventoWorkspace[]
-  membros: MembroWorkspace[]
-  categorias: CategoriaEvento[]
-  usuarioAtualId: string
-  isSavingEvento: boolean
-  isLoadingEventos: boolean
-  showEventForm: boolean
-  onOpenEventForm: () => void
-  onCloseEventForm: () => void
-  onSaveEvento: (payload: CriarEventoPayload) => Promise<void>
-}) {
-  const workspaceId = workspace.workspace.id
-  const [eventoSelecionado, setEventoSelecionado] = useState<EventoWorkspace | null>(null)
-  const [editandoEventoId, setEditandoEventoId] = useState<string | null>(null)
-  const buscarEvento = useBuscarEvento(editandoEventoId, workspaceId)
-  const editarEvento = useEditarEvento()
-
-  useEffect(() => {
-    if (buscarEvento.isError) {
-      const timer = window.setTimeout(() => setEditandoEventoId(null), 0)
-      return () => window.clearTimeout(timer)
-    }
-  }, [buscarEvento.isError])
-
-  async function handleSaveEdit(payload: CriarEventoPayload) {
-    await editarEvento.mutateAsync(payload as AtualizarEventoPayload)
-    setEditandoEventoId(null)
-  }
-
-  const agora = new Date()
-  const hoje = eventosHoje(eventos)
-  const proximo = proximoEvento(eventos)
-  const proximos7Dias = eventos.filter(
-    (e) => new Date(e.dt_fim) > agora,
-  ).slice(0, 5)
-
-  function formatarHorario(iso: string) {
-    return new Date(iso).toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Card do workspace */}
-      <section className="duocal-gradient rounded-[30px] p-5 text-white shadow-[0_18px_50px_rgba(84,102,241,0.22)]">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-white/78">
-              Workspace compartilhado
-            </p>
-            <h2 className="mt-1 truncate text-2xl font-black">
-              {workspace.workspace.nm_workspace}
-            </h2>
-            {workspace.workspace.ds_slogan ? (
-              <p className="mt-1 text-sm text-white/70">
-                {workspace.workspace.ds_slogan}
-              </p>
-            ) : null}
-          </div>
-          <div className="shrink-0 flex flex-col items-end gap-1.5">
-            <div className="flex -space-x-2">
-              {membros.slice(0, 3).map((m) => (
-                <MemberAvatar key={m.usuario_id} nome={m.nm_usuario} />
-              ))}
-            </div>
-            <p className="text-[11px] font-semibold text-white/70">
-              {workspace.total_membros === 1 ? '1 membro' : `${workspace.total_membros} membros`}
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-white/14 px-3.5 py-2.5">
-          <span className="size-2 rounded-full bg-[#35CFA5]" />
-          <p className="text-xs font-semibold text-white/88">Sincronizado · há instantes</p>
-        </div>
-      </section>
-
-      {/* Resumo do dia */}
-      <div className="grid grid-cols-2 gap-3">
-        <SummaryCard
-          icon={<CalendarDays className="size-5" />}
-          label="Eventos hoje"
-          value={isLoadingEventos ? '...' : String(hoje.length)}
-        />
-        <SummaryCard
-          icon={<Clock className="size-5" />}
-          label="Próximo evento"
-          value={
-            isLoadingEventos
-              ? '...'
-              : proximo
-                ? formatarHorario(proximo.dt_inicio)
-                : 'Nenhum'
-          }
-        />
-      </div>
-
-      {/* Card nosso tempo */}
-      <section className="duocal-card p-5">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-[18px] bg-[rgba(182,109,255,0.12)] text-(--duocal-violet)">
-            <Heart className="size-5" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-bold text-(--duocal-text)">Nosso tempo</p>
-            <p className="text-xs text-(--duocal-muted)">
-              {hoje.length === 0
-                ? 'Comece criando seus primeiros eventos'
-                : `${hoje.length} momento${hoje.length > 1 ? 's' : ''} planejado${hoje.length > 1 ? 's' : ''} hoje`}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Próximos compromissos */}
-      <section className="duocal-card p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-black text-(--duocal-text)">
-            Próximos compromissos
-          </h3>
-          <Link
-            to="/agenda"
-            className="text-xs font-semibold text-(--duocal-primary)"
-          >
-            Ver agenda
-          </Link>
-        </div>
-
-        {isLoadingEventos ? (
-          <div className="flex items-center gap-1.5 py-4">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="size-1.5 rounded-full bg-(--duocal-primary) animate-pulse"
-                style={{ animationDelay: `${i * 0.15}s` }}
-              />
-            ))}
-          </div>
-        ) : proximos7Dias.length === 0 ? (
-          <div className="py-3 text-center">
-            <p className="text-sm text-(--duocal-muted)">Nenhum evento próximo.</p>
-            <p className="mt-1 text-xs text-(--duocal-muted)">
-              Crie seu primeiro compromisso compartilhado.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {proximos7Dias.map((evento) => (
-              <div key={evento.id} className="flex items-start gap-3">
-                <div className="mt-1 flex flex-col items-center gap-0.5 text-center">
-                  <span className="text-[11px] font-semibold text-(--duocal-muted)">
-                    {new Date(evento.dt_inicio).toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3)}
-                  </span>
-                  <span className="text-lg font-black leading-none text-(--duocal-text)">
-                    {new Date(evento.dt_inicio).getDate()}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <EventCard evento={evento} onClick={() => setEventoSelecionado(evento)} />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Botão novo evento */}
-      <Button
-        className="w-full"
-        icon={<Plus className="size-4" />}
-        onClick={onOpenEventForm}
-      >
-        Novo evento
-      </Button>
-
-      {showEventForm && (
-        <EventFormSheet
-          key="create"
-          workspaceId={workspace.workspace.id}
-          membros={membros}
-          categorias={categorias}
-          usuarioAtualId={usuarioAtualId}
-          isSaving={isSavingEvento}
-          onSave={onSaveEvento}
-          onClose={onCloseEventForm}
-        />
-      )}
-
-      {eventoSelecionado && (
-        <EventDetailSheet
-          evento={eventoSelecionado}
-          onEdit={() => {
-            const id = eventoSelecionado.id
-            setEventoSelecionado(null)
-            setEditandoEventoId(id)
-          }}
-          onClose={() => setEventoSelecionado(null)}
-        />
-      )}
-
-      {editandoEventoId && buscarEvento.isLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,20,74,0.18)] backdrop-blur-[2px]">
-          <div className="flex gap-1.5">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="size-2 rounded-full bg-(--duocal-primary) animate-pulse"
-                style={{ animationDelay: `${i * 0.15}s` }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {editandoEventoId && buscarEvento.data && (
-        <EventFormSheet
-          key={`edit-${editandoEventoId}`}
-          workspaceId={workspace.workspace.id}
-          membros={membros}
-          categorias={categorias}
-          usuarioAtualId={usuarioAtualId}
-          eventoParaEditar={buscarEvento.data}
-          isSaving={editarEvento.isPending}
-          onSave={handleSaveEdit}
-          onClose={() => setEditandoEventoId(null)}
-        />
-      )}
-    </div>
-  )
-}
-
-function MemberAvatar({ nome }: { nome: string | null }) {
-  const iniciais = nome
-    ? nome.trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join('').toUpperCase()
-    : '?'
-
-  return (
-    <div className="grid size-8 place-items-center rounded-full bg-white/30 text-xs font-black text-white ring-2 ring-white/30">
-      {iniciais}
-    </div>
-  )
-}
-
-function SummaryCard({
-  icon,
-  label,
-  value,
-}: {
-  icon: ReactNode
-  label: string
-  value: string
-}) {
-  return (
-    <section className="duocal-card rounded-3xl p-4">
-      <div className="text-(--duocal-primary)">{icon}</div>
-      <p className="mt-3 text-sm text-(--duocal-muted)">{label}</p>
-      <p className="mt-1 text-xl font-black text-(--duocal-text)">{value}</p>
-    </section>
   )
 }
 
@@ -830,3 +547,4 @@ function validarCodigo(codigo: string, codigoProprio: string | undefined) {
     codigo: codigoLimpo,
   }
 }
+
