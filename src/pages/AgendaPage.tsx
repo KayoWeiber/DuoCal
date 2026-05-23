@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
-import { CalendarDays, Plus, Search } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronDown, Filter, Plus, Search } from 'lucide-react'
 import {
   BottomNavigation,
-  EmptyState,
-  EventCard,
   EventDetailSheet,
   EventFormSheet,
   OfflineBar,
   ProfileSetupModal,
-  ScreenContainer,
   VersionOutdatedModal,
 } from '../components'
 import {
@@ -25,16 +22,30 @@ import {
   useWorkspaceAtual,
 } from '../hooks'
 import { isVersionOutdatedError } from '../lib'
-import type { AtualizarEventoPayload, CategoriaEvento, CriarEventoPayload, EventoWorkspace, MembroWorkspace } from '../hooks'
+import type {
+  AtualizarEventoPayload,
+  CategoriaEvento,
+  CriarEventoPayload,
+  EventoWorkspace,
+  MembroWorkspace,
+} from '../hooks'
 import type { SyncQueueItem } from '../lib'
+import { AgendaTimeline } from '../components/agenda/AgendaTimeline'
+
+// ─── Constantes ───────────────────────────────────────────────────────────────
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
-const MESES = [
-  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+const MESES_ABREV = [
+  'JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN',
+  'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ',
 ]
 
-function gerarDias(base: Date, qtd = 14) {
+// Cores por índice de membro (até 2 membros no MVP)
+const MEMBRO_CORES = ['var(--duocal-kayo)', 'var(--duocal-athina)']
+
+// ─── Helpers de data ──────────────────────────────────────────────────────────
+
+function gerarDias(base: Date, qtd = 14): Date[] {
   return Array.from({ length: qtd }, (_, i) => {
     const d = new Date(base)
     d.setDate(base.getDate() - 3 + i)
@@ -42,17 +53,19 @@ function gerarDias(base: Date, qtd = 14) {
   })
 }
 
-function toDateISO(d: Date) {
+function toDateISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function toTimestampStart(d: Date) {
+function toTimestampStart(d: Date): string {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).toISOString()
 }
 
-function toTimestampEnd(d: Date) {
+function toTimestampEnd(d: Date): string {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59).toISOString()
 }
+
+// ─── Helpers de eventos pendentes ─────────────────────────────────────────────
 
 function pendingItemToEvento(
   item: SyncQueueItem,
@@ -61,7 +74,6 @@ function pendingItemToEvento(
 ): EventoWorkspace {
   const p = item.payload as CriarEventoPayload
   const categoria = categorias.find((c) => c.id === p.categoriaId)
-
   return {
     id: `local:${item.local_id}`,
     workspace_id: item.workspace_id,
@@ -95,14 +107,181 @@ function pendingItemsForDay(
 ): SyncQueueItem[] {
   const inicio = new Date(dtInicioDay)
   const fim = new Date(dtFimDay)
-
   return items.filter((item) => {
     const p = item.payload as CriarEventoPayload
-    const eventoInicio = new Date(p.dtInicio)
-    const eventoFim = new Date(p.dtFim)
-    return eventoInicio < fim && eventoFim > inicio
+    return new Date(p.dtInicio) < fim && new Date(p.dtFim) > inicio
   })
 }
+
+function filtrarEventos(eventos: EventoWorkspace[], filtro: string): EventoWorkspace[] {
+  if (filtro === 'todos') return eventos
+  if (filtro === 'casal') return eventos.filter(e => (e.participantes ?? []).length > 1)
+  return eventos.filter(e => (e.participantes ?? []).some(p => p.usuario_id === filtro))
+}
+
+// ─── Subcomponente: Seletor de dias ──────────────────────────────────────────
+
+function AgendaDayStrip({
+  dias,
+  diaSelecionado,
+  hoje,
+  onSelect,
+}: {
+  dias: Date[]
+  diaSelecionado: Date
+  hoje: Date
+  onSelect: (d: Date) => void
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const selISO = toDateISO(diaSelecionado)
+  const hojeISO = toDateISO(hoje)
+
+  // Scroll para o dia selecionado
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const btn = container.querySelector<HTMLButtonElement>('[data-selected="true"]')
+    btn?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' })
+  }, [selISO])
+
+  return (
+    <div
+      ref={scrollRef}
+      className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      {dias.map((dia) => {
+        const iso = toDateISO(dia)
+        const selected = iso === selISO
+        const isHoje = iso === hojeISO
+
+        return (
+          <button
+            key={iso}
+            type="button"
+            data-selected={selected}
+            onClick={() => onSelect(dia)}
+            className="flex shrink-0 flex-col items-center gap-0.5 rounded-2xl px-2 py-2 transition-all"
+            style={
+              selected
+                ? { background: 'linear-gradient(135deg,#5466F1,#B66DFF)', color: '#fff', minWidth: 44 }
+                : isHoje
+                  ? { background: 'rgba(84,102,241,0.10)', color: 'var(--duocal-primary)', minWidth: 44 }
+                  : { color: 'var(--duocal-muted)', minWidth: 44 }
+            }
+          >
+            <span className="text-[10px] font-semibold leading-none">
+              {DIAS_SEMANA[dia.getDay()]}
+            </span>
+            <span
+              className="text-base font-black leading-none"
+              style={{ color: selected ? '#fff' : isHoje ? 'var(--duocal-primary)' : 'var(--duocal-text)' }}
+            >
+              {dia.getDate()}
+            </span>
+            {isHoje && !selected && (
+              <span className="size-1 rounded-full bg-(--duocal-primary)" />
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Subcomponente: Chips de filtro ──────────────────────────────────────────
+
+function AgendaFiltroChips({
+  membros,
+  filtro,
+  onFiltro,
+}: {
+  membros: MembroWorkspace[]
+  filtro: string
+  onFiltro: (f: string) => void
+}) {
+  return (
+    <div
+      className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      <ChipBtn label="Todos" active={filtro === 'todos'} onClick={() => onFiltro('todos')} />
+      {membros.map((m, i) => (
+        <ChipBtn
+          key={m.usuario_id}
+          label={primeiroNome(m.nm_usuario)}
+          active={filtro === m.usuario_id}
+          cor={MEMBRO_CORES[i] ?? 'var(--duocal-primary)'}
+          onClick={() => onFiltro(m.usuario_id)}
+        />
+      ))}
+      {membros.length > 1 && (
+        <ChipBtn
+          label="Casal"
+          active={filtro === 'casal'}
+          cor="var(--duocal-casal)"
+          onClick={() => onFiltro('casal')}
+        />
+      )}
+    </div>
+  )
+}
+
+function ChipBtn({
+  label,
+  active,
+  cor,
+  onClick,
+}: {
+  label: string
+  active: boolean
+  cor?: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all"
+      style={
+        active
+          ? { background: 'linear-gradient(135deg,#5466F1,#B66DFF)', color: '#fff' }
+          : { background: 'var(--duocal-surface)', color: 'var(--duocal-muted)', border: '1px solid var(--duocal-border)' }
+      }
+    >
+      {cor && !active && (
+        <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: cor }} />
+      )}
+      {label}
+    </button>
+  )
+}
+
+// ─── Subcomponentes: estados da timeline ──────────────────────────────────────
+
+function LoadingTimeline() {
+  return (
+    <div className="flex h-full items-center justify-center gap-1.5">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="size-2 animate-pulse rounded-full bg-(--duocal-primary)"
+          style={{ animationDelay: `${i * 0.15}s` }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function EmptyTimeline({ message }: { message: string }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-2 px-8 text-center">
+      <p className="text-sm text-(--duocal-muted)">{message}</p>
+    </div>
+  )
+}
+
+// ─── Página principal ─────────────────────────────────────────────────────────
 
 export function AgendaPage() {
   const { session, isLoading: isSessionLoading } = useAuthSession()
@@ -114,7 +293,7 @@ export function AgendaPage() {
   const { unreadCount } = useUnreadNotificationCount(perfil)
 
   const [diaSelecionado, setDiaSelecionado] = useState<Date>(() => new Date())
-  const [filtroCadMembro, setFiltroCadMembro] = useState<string>('todos')
+  const [filtro, setFiltro] = useState('todos')
   const [showForm, setShowForm] = useState(false)
   const [versionOutdated, setVersionOutdated] = useState(false)
   const [eventoSelecionado, setEventoSelecionado] = useState<EventoWorkspace | null>(null)
@@ -122,7 +301,6 @@ export function AgendaPage() {
 
   const hoje = new Date()
   const dias = gerarDias(hoje)
-
   const dtInicio = toTimestampStart(diaSelecionado)
   const dtFim = toTimestampEnd(diaSelecionado)
 
@@ -132,58 +310,45 @@ export function AgendaPage() {
   const criarEvento = useCriarEvento()
   const editarEvento = useEditarEvento()
   const buscarEvento = useBuscarEvento(editandoEventoId, workspaceId)
-
   const { isOnline, syncState, pendingItems, pendingCount, reloadPending } =
     useSyncQueue(workspaceId)
 
   useEffect(() => {
-    if (!isSessionLoading && !session) {
-      window.location.replace('/login')
-    }
+    if (!isSessionLoading && !session) window.location.replace('/login')
   }, [isSessionLoading, session])
 
   useEffect(() => {
-    if (buscarEvento.isError) {
-      setEditandoEventoId(null)
-    }
+    if (buscarEvento.isError) setEditandoEventoId(null)
   }, [buscarEvento.isError])
 
   const membros = membrosQuery.data ?? []
   const categorias = categoriasQuery.data ?? []
-  let eventosServidor = eventosQuery.data ?? []
-  if (filtroCadMembro !== 'todos') {
-    eventosServidor = eventosServidor.filter((e) =>
-      (e.participantes ?? []).some((p) => p.usuario_id === filtroCadMembro),
-    )
-  }
 
-  const eventosPendentes = useMemo(() => {
-    const itemsDoDia = pendingItemsForDay(pendingItems, dtInicio, dtFim)
-    return itemsDoDia.map((item) => pendingItemToEvento(item, membros, categorias))
-  }, [pendingItems, dtInicio, dtFim, membros, categorias])
-
-  const eventosPendentesFiltrados = useMemo(() => {
-    if (filtroCadMembro === 'todos') return eventosPendentes
-    return eventosPendentes.filter((e) =>
-      (e.participantes ?? []).some((p) => p.usuario_id === filtroCadMembro),
-    )
-  }, [eventosPendentes, filtroCadMembro])
-
-  const perfilIncompleto = Boolean(
-    perfil && (!perfil.fl_perfil_completo || !perfil.nm_usuario),
+  const eventosServidor = useMemo(
+    () => filtrarEventos(eventosQuery.data ?? [], filtro),
+    [eventosQuery.data, filtro],
   )
 
-  const mesAno = `${MESES[diaSelecionado.getMonth()]} ${diaSelecionado.getFullYear()}`
+  const eventosPendentes = useMemo(() => {
+    const itens = pendingItemsForDay(pendingItems, dtInicio, dtFim)
+    return itens.map(item => pendingItemToEvento(item, membros, categorias))
+  }, [pendingItems, dtInicio, dtFim, membros, categorias])
+
+  const eventosPendentesFiltrados = useMemo(
+    () => filtrarEventos(eventosPendentes, filtro),
+    [eventosPendentes, filtro],
+  )
+
+  const perfilIncompleto = Boolean(perfil && (!perfil.fl_perfil_completo || !perfil.nm_usuario))
+  const isLoading = workspaceQuery.isLoading || eventosQuery.isLoading
+  const mesAno = `${MESES_ABREV[diaSelecionado.getMonth()]} ${diaSelecionado.getFullYear()}`
 
   async function handleSave(payload: CriarEventoPayload) {
     try {
       await criarEvento.mutateAsync(payload)
       await reloadPending()
     } catch (error) {
-      if (isVersionOutdatedError(error)) {
-        setVersionOutdated(true)
-        throw error
-      }
+      if (isVersionOutdatedError(error)) { setVersionOutdated(true); throw error }
       throw error
     }
   }
@@ -193,138 +358,115 @@ export function AgendaPage() {
       await editarEvento.mutateAsync(payload as AtualizarEventoPayload)
       setEditandoEventoId(null)
     } catch (error) {
-      if (isVersionOutdatedError(error)) {
-        setVersionOutdated(true)
-        throw error
-      }
+      if (isVersionOutdatedError(error)) { setVersionOutdated(true); throw error }
       throw error
     }
   }
 
-  const isLoading = workspaceQuery.isLoading || eventosQuery.isLoading
-  const temEventos = eventosServidor.length > 0 || eventosPendentesFiltrados.length > 0
-
   return (
     <>
-      <ScreenContainer withBottomNavigation>
+      {/* Layout fixo de tela cheia */}
+      <div
+        className="duocal-app-shell fixed inset-x-0 top-0 flex flex-col overflow-hidden"
+        style={{
+          height: '100dvh',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          bottom: 0,
+        }}
+      >
         {/* Header */}
-        <header className="flex items-center justify-between gap-3 pb-2">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-(--duocal-muted)">{mesAno}</p>
-            <h1 className="text-3xl font-black text-(--duocal-text)">Agenda</h1>
-          </div>
-          <button
-            type="button"
-            className="grid size-11 shrink-0 place-items-center rounded-full border border-(--duocal-border) bg-white text-(--duocal-muted) shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition hover:text-(--duocal-primary)"
-            aria-label="Buscar evento"
-          >
-            <Search className="size-5" />
-          </button>
-        </header>
-
-        {/* Indicador offline/sync */}
-        {((!isOnline || syncState !== 'idle' || pendingCount > 0)) && (
-          <div className="mt-2">
-            <OfflineBar
-              isOnline={isOnline}
-              syncState={syncState}
-              pendingCount={pendingCount}
-            />
-          </div>
-        )}
-
-        {/* Strip de dias */}
-        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-          {dias.map((dia) => {
-            const iso = toDateISO(dia)
-            const isHoje = toDateISO(hoje) === iso
-            const isSel = toDateISO(diaSelecionado) === iso
-
-            return (
+        <div className="shrink-0 px-5 pt-3 pb-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-(--duocal-muted)">
+                {mesAno}
+              </p>
+              <h1 className="flex items-center gap-0.5 text-[26px] font-black leading-tight text-(--duocal-text)">
+                Agenda
+                <ChevronDown className="size-5 shrink-0 text-(--duocal-muted)" />
+              </h1>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
               <button
-                key={iso}
                 type="button"
-                onClick={() => setDiaSelecionado(dia)}
-                className="flex shrink-0 min-w-11.5 flex-col items-center gap-1 rounded-[18px] py-2.5 px-1.5 transition"
-                style={
-                  isSel
-                    ? { background: 'linear-gradient(135deg,#5466F1,#B66DFF)', color: '#fff' }
-                    : isHoje
-                      ? { background: 'rgba(84,102,241,0.08)', color: 'var(--duocal-primary)' }
-                      : { color: 'var(--duocal-muted)' }
-                }
+                aria-label="Buscar evento"
+                className="grid size-9 place-items-center rounded-full border border-(--duocal-border) bg-white text-(--duocal-muted) shadow-[0_2px_8px_rgba(17,20,74,0.07)] transition hover:text-(--duocal-primary)"
               >
-                <span className="text-[11px] font-semibold">
-                  {DIAS_SEMANA[dia.getDay()]}
-                </span>
-                <span className="text-lg font-black leading-none">
-                  {dia.getDate()}
-                </span>
+                <Search className="size-4" />
               </button>
-            )
-          })}
+              <button
+                type="button"
+                aria-label="Filtrar"
+                className="grid size-9 place-items-center rounded-full border border-(--duocal-border) bg-white text-(--duocal-muted) shadow-[0_2px_8px_rgba(17,20,74,0.07)] transition hover:text-(--duocal-primary)"
+              >
+                <Filter className="size-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Filtro por membro */}
-        {membros.length > 0 && (
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-            <PillButton
-              label="Todos"
-              active={filtroCadMembro === 'todos'}
-              onClick={() => setFiltroCadMembro('todos')}
-            />
-            {membros.map((m) => (
-              <PillButton
-                key={m.usuario_id}
-                label={primeiroNome(m.nm_usuario)}
-                active={filtroCadMembro === m.usuario_id}
-                onClick={() => setFiltroCadMembro(m.usuario_id)}
-              />
-            ))}
+        {/* Offline bar */}
+        {(!isOnline || syncState !== 'idle' || pendingCount > 0) && (
+          <div className="shrink-0 px-5 pb-2">
+            <OfflineBar isOnline={isOnline} syncState={syncState} pendingCount={pendingCount} />
           </div>
         )}
 
-        {/* Conteúdo */}
-        <div className="mt-5 space-y-3">
+        {/* Seletor de dias */}
+        <div className="shrink-0 px-5 pb-2">
+          <AgendaDayStrip
+            dias={dias}
+            diaSelecionado={diaSelecionado}
+            hoje={hoje}
+            onSelect={setDiaSelecionado}
+          />
+        </div>
+
+        {/* Chips de filtro */}
+        {membros.length > 0 && (
+          <div className="shrink-0 px-5 pb-3">
+            <AgendaFiltroChips membros={membros} filtro={filtro} onFiltro={setFiltro} />
+          </div>
+        )}
+
+        {/* Timeline — card branco, flex-1, scroll interno */}
+        <div className="mx-3 flex-1 min-h-0 overflow-hidden rounded-3xl bg-white shadow-[0_4px_24px_rgba(17,20,74,0.07)]">
           {isLoading ? (
-            <LoadingDots />
+            <LoadingTimeline />
           ) : !workspaceId ? (
-            <EmptyState
-              icon={<CalendarDays className="size-5" />}
-              title="Sem workspace"
-              description="Conecte-se a um workspace para ver eventos na agenda."
-            />
-          ) : !temEventos ? (
-            <EmptyState
-              icon={<CalendarDays className="size-5" />}
-              title="Nenhum evento"
-              description="Não há eventos para este dia. Crie o primeiro compromisso compartilhado."
-            />
+            <EmptyTimeline message="Conecte-se a um workspace para ver seus eventos." />
           ) : (
-            <>
-              {/* Eventos pendentes (criados offline) aparecem primeiro */}
-              {eventosPendentesFiltrados.map((evento) => (
-                <EventCard key={evento.id} evento={evento} isPending />
-              ))}
-              {eventosServidor.map((evento) => (
-                <EventCard
-                  key={evento.id}
-                  evento={evento}
-                  onClick={() => setEventoSelecionado(evento)}
-                />
-              ))}
-            </>
+            <AgendaTimeline
+              eventos={eventosServidor}
+              eventosPendentes={eventosPendentesFiltrados}
+              diaSelecionado={diaSelecionado}
+              onEventoClick={setEventoSelecionado}
+            />
           )}
         </div>
-      </ScreenContainer>
+
+        {/* Espaço para a bottom navigation */}
+        <div
+          className="shrink-0"
+          style={{ height: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}
+        />
+      </div>
 
       {/* FAB Novo evento */}
       {workspaceId && (
-        <div className="duocal-constrained-width fixed bottom-[calc(env(safe-area-inset-bottom)+80px)] left-1/2 z-20 flex w-full -translate-x-1/2 justify-end px-5">
+        <div
+          className="duocal-constrained-width fixed z-20 flex w-full justify-end px-5"
+          style={{
+            bottom: 'calc(60px + env(safe-area-inset-bottom, 0px) + 16px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+        >
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="duocal-gradient inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-white shadow-[0_10px_28px_rgba(84,102,241,0.38)] transition hover:shadow-[0_14px_34px_rgba(84,102,241,0.46)]"
+            className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-white shadow-[0_10px_28px_rgba(84,102,241,0.38)] transition hover:shadow-[0_14px_34px_rgba(84,102,241,0.46)]"
+            style={{ background: 'linear-gradient(135deg,#5466F1,#B66DFF)' }}
           >
             <Plus className="size-4" />
             Novo evento
@@ -334,6 +476,7 @@ export function AgendaPage() {
 
       <BottomNavigation activeTab="agenda" unreadCount={unreadCount} />
 
+      {/* Formulário de criação */}
       {showForm && workspaceId && perfil && (
         <EventFormSheet
           key="create"
@@ -347,6 +490,7 @@ export function AgendaPage() {
         />
       )}
 
+      {/* Detail sheet ao clicar num evento */}
       {eventoSelecionado && (
         <EventDetailSheet
           evento={eventoSelecionado}
@@ -359,14 +503,14 @@ export function AgendaPage() {
         />
       )}
 
-      {/* Carregando dados para edição */}
+      {/* Loading enquanto busca dados para edição */}
       {editandoEventoId && buscarEvento.isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,20,74,0.18)] backdrop-blur-[2px]">
           <div className="flex gap-1.5">
             {[0, 1, 2].map((i) => (
               <span
                 key={i}
-                className="size-2 rounded-full bg-(--duocal-primary) animate-pulse"
+                className="size-2 animate-pulse rounded-full bg-(--duocal-primary)"
                 style={{ animationDelay: `${i * 0.15}s` }}
               />
             ))}
@@ -374,6 +518,7 @@ export function AgendaPage() {
         </div>
       )}
 
+      {/* Formulário de edição */}
       {editandoEventoId && buscarEvento.data && workspaceId && perfil && (
         <EventFormSheet
           key={`edit-${editandoEventoId}`}
@@ -394,48 +539,8 @@ export function AgendaPage() {
   )
 }
 
-function PillButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string
-  active: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition"
-      style={
-        active
-          ? { background: 'linear-gradient(135deg,#5466F1,#B66DFF)', color: '#fff' }
-          : {
-              background: 'var(--duocal-surface-soft)',
-              color: 'var(--duocal-muted)',
-            }
-      }
-    >
-      {label}
-    </button>
-  )
-}
+// ─── Helper ───────────────────────────────────────────────────────────────────
 
-function LoadingDots() {
-  return (
-    <div className="flex items-center justify-center gap-1.5 py-10">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="size-2 rounded-full bg-(--duocal-primary) animate-pulse"
-          style={{ animationDelay: `${i * 0.15}s` }}
-        />
-      ))}
-    </div>
-  )
-}
-
-function primeiroNome(nome: string | null) {
+function primeiroNome(nome: string | null): string {
   return nome?.trim().split(/\s+/)[0] ?? 'Membro'
 }
