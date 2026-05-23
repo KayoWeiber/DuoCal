@@ -253,13 +253,13 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
                 </div>
 
                 {/* Preview */}
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center gap-2 pt-1 min-w-0 overflow-hidden">
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
+                    className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold"
                     style={{ backgroundColor: cor + '22', color: cor }}
                   >
-                    <span className="size-2 rounded-full" style={{ backgroundColor: cor }} />
-                    {nome.trim() || 'Prévia'}
+                    <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: cor }} />
+                    <span className="truncate">{nome.trim() || 'Prévia'}</span>
                   </span>
                 </div>
               </div>

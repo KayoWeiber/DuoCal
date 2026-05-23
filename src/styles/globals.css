@@ -26,11 +26,15 @@ html {
   color: var(--duocal-text);
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
+  overflow-x: hidden;
 }
 
 body {
   min-width: 320px;
   min-height: 100dvh;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
   background:
     radial-gradient(circle at top, rgba(84, 102, 241, 0.10), transparent 32%),
     linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%);
@@ -48,6 +52,8 @@ body {
 
 #root {
   min-height: 100dvh;
+  max-width: 100%;
+  overflow-x: hidden;
   display: flex;
   justify-content: center;
 }
@@ -57,6 +63,14 @@ input {
   font: inherit;
 }
 
+/* Oculta a scrollbar visual mantendo o scroll funcional */
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 ::selection {
   background: rgba(84, 102, 241, 0.18);
 }
@@ -64,7 +78,9 @@ input {
 /* Desktop app shell — moldura elegante em telas maiores */
 .duocal-app-shell {
   width: 100%;
+  max-width: 100%;
   min-height: 100dvh;
+  overflow-x: hidden;
   position: relative;
 }
 

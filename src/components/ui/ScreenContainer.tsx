@@ -14,7 +14,7 @@ export function ScreenContainer({
   return (
     <main
       className={cn(
-        'duocal-ios-shell flex min-h-dvh w-full flex-col px-5 pt-[max(1rem,env(safe-area-inset-top))] text-[var(--duocal-text)]',
+        'duocal-ios-shell flex min-h-dvh w-full max-w-full flex-col overflow-x-hidden px-5 pt-[max(1rem,env(safe-area-inset-top))] text-[var(--duocal-text)]',
         withBottomNavigation
           ? 'pb-[calc(104px+env(safe-area-inset-bottom))]'
           : 'pb-8',

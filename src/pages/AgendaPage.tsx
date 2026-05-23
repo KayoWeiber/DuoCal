@@ -209,7 +209,7 @@ export function AgendaPage() {
         )}
 
         {/* Strip de dias */}
-        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
           {dias.map((dia) => {
             const iso = toDateISO(dia)
             const isHoje = toDateISO(hoje) === iso
@@ -220,7 +220,7 @@ export function AgendaPage() {
                 key={iso}
                 type="button"
                 onClick={() => setDiaSelecionado(dia)}
-                className="flex min-w-11.5 flex-col items-center gap-1 rounded-[18px] py-2.5 px-1.5 transition"
+                className="flex shrink-0 min-w-11.5 flex-col items-center gap-1 rounded-[18px] py-2.5 px-1.5 transition"
                 style={
                   isSel
                     ? { background: 'linear-gradient(135deg,#5466F1,#B66DFF)', color: '#fff' }
@@ -242,7 +242,7 @@ export function AgendaPage() {
 
         {/* Filtro por membro */}
         {membros.length > 0 && (
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
             <PillButton
               label="Todos"
               active={filtroCadMembro === 'todos'}
