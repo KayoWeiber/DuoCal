@@ -300,6 +300,7 @@ export function AgendaPage() {
   const [versionOutdated, setVersionOutdated] = useState(false)
   const [eventoSelecionado, setEventoSelecionado] = useState<EventoWorkspace | null>(null)
   const [editandoEventoId, setEditandoEventoId] = useState<string | null>(null)
+  const [timelineExpanded, setTimelineExpanded] = useState(false)
 
   const hoje = new Date()
   const dias = gerarDias(hoje)
@@ -378,18 +379,35 @@ export function AgendaPage() {
         }}
       >
         {/* Header */}
-        <div className="shrink-0 px-5 pt-3 pb-2">
+        <div className="shrink-0 px-5 pt-3 pb-1">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-(--duocal-muted)">
-                {mesAno}
-              </p>
-              <h1 className="flex items-center gap-0.5 text-[26px] font-black leading-tight text-(--duocal-text)">
+              {!timelineExpanded ? (
+                <p className="text-[10px] font-bold uppercase tracking-widest text-(--duocal-muted)">
+                  {mesAno}
+                </p>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setTimelineExpanded((expanded) => !expanded)}
+                aria-expanded={!timelineExpanded}
+                aria-label={timelineExpanded ? 'Mostrar calendário da agenda' : 'Ocultar calendário da agenda'}
+                className="flex min-w-0 items-center gap-0.5 text-left text-[26px] font-black leading-none text-(--duocal-text)"
+              >
                 Agenda
-                <ChevronDown className="size-5 shrink-0 text-(--duocal-muted)" />
-              </h1>
+                <ChevronDown
+                  className="size-5 shrink-0 text-(--duocal-muted) transition-transform"
+                  style={{ transform: timelineExpanded ? 'rotate(-90deg)' : 'rotate(0deg)' }}
+                />
+              </button>
+              {timelineExpanded ? (
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-(--duocal-muted)">
+                  Dia completo · 00h-23h
+                </p>
+              ) : null}
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            {!timelineExpanded ? (
+              <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
                 aria-label="Buscar evento"
@@ -404,7 +422,8 @@ export function AgendaPage() {
               >
                 <Filter className="size-4" />
               </button>
-            </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -415,25 +434,37 @@ export function AgendaPage() {
           </div>
         )}
 
-        {/* Seletor de dias */}
-        <div className="shrink-0 px-5 pb-2">
-          <AgendaDayStrip
-            dias={dias}
-            diaSelecionado={diaSelecionado}
-            hoje={hoje}
-            onSelect={setDiaSelecionado}
-          />
-        </div>
+        {!timelineExpanded ? (
+          <>
+            {/* Seletor de dias */}
+            <div className="shrink-0 px-5 pb-1">
+              <AgendaDayStrip
+                dias={dias}
+                diaSelecionado={diaSelecionado}
+                hoje={hoje}
+                onSelect={setDiaSelecionado}
+              />
+            </div>
 
-        {/* Chips de filtro */}
-        {membros.length > 0 && (
-          <div className="shrink-0 px-5 pb-3">
-            <AgendaFiltroChips membros={membros} filtro={filtro} onFiltro={setFiltro} />
-          </div>
+            {/* Chips de filtro */}
+            {membros.length > 0 && (
+              <div className="shrink-0 px-5 pb-3">
+                <AgendaFiltroChips membros={membros} filtro={filtro} onFiltro={setFiltro} />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="h-1 shrink-0" />
         )}
 
-        {/* Timeline — card branco, flex-1, scroll interno */}
-        <div className="mx-3 h-[min(68dvh,720px)] min-h-[420px] overflow-hidden rounded-3xl bg-white shadow-[0_4px_24px_rgba(17,20,74,0.07)]">
+        <div
+          className={[
+            'mx-3 overflow-hidden rounded-3xl bg-white shadow-[0_4px_24px_rgba(17,20,74,0.07)]',
+            timelineExpanded
+              ? 'h-[calc(100dvh-8.75rem-env(safe-area-inset-bottom,0px))] min-h-[520px]'
+              : 'h-[min(68dvh,720px)] min-h-[420px]',
+          ].join(' ')}
+        >
           {isLoading ? (
             <LoadingTimeline />
           ) : !workspaceId ? (
@@ -443,8 +474,9 @@ export function AgendaPage() {
               eventos={eventosServidor}
               eventosPendentes={eventosPendentesFiltrados}
               diaSelecionado={diaSelecionado}
-              hrInicioDia={configuracao?.hrInicioDia}
-              hrFimDia={configuracao?.hrFimDia}
+              hrInicioDia={timelineExpanded ? '00:00' : configuracao?.hrInicioDia}
+              hrFimDia={timelineExpanded ? '23:00' : configuracao?.hrFimDia}
+              autoScrollToCurrent={!timelineExpanded}
               onEventoClick={setEventoSelecionado}
             />
           )}

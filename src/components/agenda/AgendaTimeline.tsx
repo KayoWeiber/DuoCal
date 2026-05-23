@@ -40,6 +40,7 @@ export type AgendaTimelineProps = {
   diaSelecionado: Date
   hrInicioDia?: string
   hrFimDia?: string
+  autoScrollToCurrent?: boolean
   onEventoClick: (evento: EventoWorkspace) => void
 }
 
@@ -302,6 +303,7 @@ export function AgendaTimeline({
   diaSelecionado,
   hrInicioDia,
   hrFimDia,
+  autoScrollToCurrent = true,
   onEventoClick,
 }: AgendaTimelineProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -335,8 +337,9 @@ export function AgendaTimeline({
   useEffect(() => {
     if (!scrollRef.current) return
     const top = calcTopAtual(range)
-    scrollRef.current.scrollTop = eHoje && top >= 0 ? Math.max(top - 100, 0) : 0
-  }, [diaSelecionado, eHoje, range])
+    scrollRef.current.scrollTop =
+      autoScrollToCurrent && eHoje && top >= 0 ? Math.max(top - 100, 0) : 0
+  }, [autoScrollToCurrent, diaSelecionado, eHoje, range])
 
   return (
     <div
