@@ -48,7 +48,7 @@ export function ProfileSetupModal({ perfil }: ProfileSetupModalProps) {
               <h2 className="text-lg font-bold text-[var(--duocal-text)]">
                 Complete seu perfil
               </h2>
-              <p className="text-sm text-[var(--duocal-muted)]">
+              <p className="break-all text-sm text-[var(--duocal-muted)]">
                 {perfil.ds_email}
               </p>
             </div>

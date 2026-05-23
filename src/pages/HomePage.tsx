@@ -15,6 +15,7 @@ import {
   BottomNavigation,
   Button,
   EventCard,
+  EventDetailSheet,
   EventFormSheet,
   FeedbackAlert,
   ProfileSetupModal,
@@ -25,8 +26,10 @@ import {
   eventosHoje,
   proximoEvento,
   useAuthSession,
+  useBuscarEvento,
   useCategoriasEvento,
   useCriarEvento,
+  useEditarEvento,
   useEventosWorkspace,
   useMembrosWorkspace,
   useMeuPerfil,
@@ -35,6 +38,7 @@ import {
   useCriarWorkspaceInicial,
   useUnreadNotificationCount,
   useWorkspaceAtual,
+  type AtualizarEventoPayload,
   type CategoriaEvento,
   type CriarEventoPayload,
   type EventoWorkspace,
@@ -322,6 +326,23 @@ function DashboardComWorkspace({
   onCloseEventForm: () => void
   onSaveEvento: (payload: CriarEventoPayload) => Promise<void>
 }) {
+  const workspaceId = workspace.workspace.id
+  const [eventoSelecionado, setEventoSelecionado] = useState<EventoWorkspace | null>(null)
+  const [editandoEventoId, setEditandoEventoId] = useState<string | null>(null)
+  const buscarEvento = useBuscarEvento(editandoEventoId, workspaceId)
+  const editarEvento = useEditarEvento()
+
+  useEffect(() => {
+    if (buscarEvento.isError) {
+      setEditandoEventoId(null)
+    }
+  }, [buscarEvento.isError])
+
+  async function handleSaveEdit(payload: CriarEventoPayload) {
+    await editarEvento.mutateAsync(payload as AtualizarEventoPayload)
+    setEditandoEventoId(null)
+  }
+
   const agora = new Date()
   const hoje = eventosHoje(eventos)
   const proximo = proximoEvento(eventos)
@@ -452,7 +473,7 @@ function DashboardComWorkspace({
                   </span>
                 </div>
                 <div className="flex-1">
-                  <EventCard evento={evento} />
+                  <EventCard evento={evento} onClick={() => setEventoSelecionado(evento)} />
                 </div>
               </div>
             ))}
@@ -471,6 +492,7 @@ function DashboardComWorkspace({
 
       {showEventForm && (
         <EventFormSheet
+          key="create"
           workspaceId={workspace.workspace.id}
           membros={membros}
           categorias={categorias}
@@ -478,6 +500,46 @@ function DashboardComWorkspace({
           isSaving={isSavingEvento}
           onSave={onSaveEvento}
           onClose={onCloseEventForm}
+        />
+      )}
+
+      {eventoSelecionado && (
+        <EventDetailSheet
+          evento={eventoSelecionado}
+          onEdit={() => {
+            const id = eventoSelecionado.id
+            setEventoSelecionado(null)
+            setEditandoEventoId(id)
+          }}
+          onClose={() => setEventoSelecionado(null)}
+        />
+      )}
+
+      {editandoEventoId && buscarEvento.isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,20,74,0.18)] backdrop-blur-[2px]">
+          <div className="flex gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="size-2 rounded-full bg-(--duocal-primary) animate-pulse"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {editandoEventoId && buscarEvento.data && (
+        <EventFormSheet
+          key={`edit-${editandoEventoId}`}
+          workspaceId={workspace.workspace.id}
+          membros={membros}
+          categorias={categorias}
+          usuarioAtualId={usuarioAtualId}
+          eventoParaEditar={buscarEvento.data}
+          isSaving={editarEvento.isPending}
+          onSave={handleSaveEdit}
+          onClose={() => setEditandoEventoId(null)}
         />
       )}
     </div>

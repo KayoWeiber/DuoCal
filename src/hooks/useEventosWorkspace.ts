@@ -31,6 +31,11 @@ export type EventoWorkspace = {
   cd_cor_categoria: string | null
   cd_icone_categoria: string | null
   participantes: ParticipanteEvento[]
+  // Campos de recorrência — presentes em eventos recorrentes, null nos demais
+  tp_frequencia?: string | null
+  intervalo?: number | null
+  dias_semana?: number[] | null
+  dt_fim_recorrencia?: string | null
 }
 
 export type MembroWorkspace = {
@@ -56,6 +61,12 @@ export type CriarEventoPayload = {
   intervalo?: number
   diasSemana?: number[]
   dtFimRecorrencia?: string
+  // Presente apenas no modo de edição
+  eventoId?: string
+}
+
+export type AtualizarEventoPayload = CriarEventoPayload & {
+  eventoId: string
 }
 
 export type CriarEventoResult =
@@ -155,6 +166,7 @@ export function useCriarEvento() {
       queryClient.invalidateQueries({
         queryKey: ['duocal', appVersion, 'eventos-workspace', variables.workspaceId],
         exact: false,
+        refetchType: 'all',
       })
     },
   })

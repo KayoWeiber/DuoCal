@@ -1,4 +1,4 @@
-import { CloudOff } from 'lucide-react'
+import { CloudOff, RefreshCw } from 'lucide-react'
 import type { EventoWorkspace } from '../../hooks'
 
 type EventCardProps = {
@@ -61,6 +61,11 @@ export function EventCard({ evento, onClick, isPending = false }: EventCardProps
               {evento.nm_categoria}
             </span>
           ) : null}
+          {evento.fl_recorrente && (
+            <div className="mt-1 flex items-center justify-end">
+              <RefreshCw className="size-3 opacity-60" style={{ color: cor }} />
+            </div>
+          )}
         </div>
       </div>
     </button>

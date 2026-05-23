@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { KanbanPlaceholderPage } from '../pages/AppTabPlaceholderPage'
+import { KanbanPage } from '../pages/KanbanPage'
 
 export const Route = createFileRoute('/kanban')({
-  component: KanbanPlaceholderPage,
+  component: KanbanPage,
 })
