@@ -4,6 +4,7 @@ import {
   BottomNavigation,
   EmptyState,
   EventCard,
+  EventDetailSheet,
   EventFormSheet,
   OfflineBar,
   ProfileSetupModal,
@@ -12,8 +13,10 @@ import {
 } from '../components'
 import {
   useAuthSession,
+  useBuscarEvento,
   useCategoriasEvento,
   useCriarEvento,
+  useEditarEvento,
   useEventosWorkspace,
   useMembrosWorkspace,
   useMeuPerfil,
@@ -22,7 +25,7 @@ import {
   useWorkspaceAtual,
 } from '../hooks'
 import { isVersionOutdatedError } from '../lib'
-import type { CategoriaEvento, CriarEventoPayload, EventoWorkspace, MembroWorkspace } from '../hooks'
+import type { AtualizarEventoPayload, CategoriaEvento, CriarEventoPayload, EventoWorkspace, MembroWorkspace } from '../hooks'
 import type { SyncQueueItem } from '../lib'
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -114,6 +117,8 @@ export function AgendaPage() {
   const [filtroCadMembro, setFiltroCadMembro] = useState<string>('todos')
   const [showForm, setShowForm] = useState(false)
   const [versionOutdated, setVersionOutdated] = useState(false)
+  const [eventoSelecionado, setEventoSelecionado] = useState<EventoWorkspace | null>(null)
+  const [editandoEventoId, setEditandoEventoId] = useState<string | null>(null)
 
   const hoje = new Date()
   const dias = gerarDias(hoje)
@@ -125,6 +130,8 @@ export function AgendaPage() {
   const membrosQuery = useMembrosWorkspace(workspaceId)
   const categoriasQuery = useCategoriasEvento(workspaceId)
   const criarEvento = useCriarEvento()
+  const editarEvento = useEditarEvento()
+  const buscarEvento = useBuscarEvento(editandoEventoId, workspaceId)
 
   const { isOnline, syncState, pendingItems, pendingCount, reloadPending } =
     useSyncQueue(workspaceId)
@@ -134,6 +141,12 @@ export function AgendaPage() {
       window.location.replace('/login')
     }
   }, [isSessionLoading, session])
+
+  useEffect(() => {
+    if (buscarEvento.isError) {
+      setEditandoEventoId(null)
+    }
+  }, [buscarEvento.isError])
 
   const membros = membrosQuery.data ?? []
   const categorias = categoriasQuery.data ?? []
@@ -165,8 +178,20 @@ export function AgendaPage() {
   async function handleSave(payload: CriarEventoPayload) {
     try {
       await criarEvento.mutateAsync(payload)
-
       await reloadPending()
+    } catch (error) {
+      if (isVersionOutdatedError(error)) {
+        setVersionOutdated(true)
+        throw error
+      }
+      throw error
+    }
+  }
+
+  async function handleSaveEdit(payload: CriarEventoPayload) {
+    try {
+      await editarEvento.mutateAsync(payload as AtualizarEventoPayload)
+      setEditandoEventoId(null)
     } catch (error) {
       if (isVersionOutdatedError(error)) {
         setVersionOutdated(true)
@@ -282,7 +307,11 @@ export function AgendaPage() {
                 <EventCard key={evento.id} evento={evento} isPending />
               ))}
               {eventosServidor.map((evento) => (
-                <EventCard key={evento.id} evento={evento} />
+                <EventCard
+                  key={evento.id}
+                  evento={evento}
+                  onClick={() => setEventoSelecionado(evento)}
+                />
               ))}
             </>
           )}
@@ -307,6 +336,7 @@ export function AgendaPage() {
 
       {showForm && workspaceId && perfil && (
         <EventFormSheet
+          key="create"
           workspaceId={workspaceId}
           membros={membros}
           categorias={categorias}
@@ -314,6 +344,47 @@ export function AgendaPage() {
           isSaving={criarEvento.isPending}
           onSave={handleSave}
           onClose={() => setShowForm(false)}
+        />
+      )}
+
+      {eventoSelecionado && (
+        <EventDetailSheet
+          evento={eventoSelecionado}
+          onEdit={() => {
+            const id = eventoSelecionado.id
+            setEventoSelecionado(null)
+            setEditandoEventoId(id)
+          }}
+          onClose={() => setEventoSelecionado(null)}
+        />
+      )}
+
+      {/* Carregando dados para edição */}
+      {editandoEventoId && buscarEvento.isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(17,20,74,0.18)] backdrop-blur-[2px]">
+          <div className="flex gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="size-2 rounded-full bg-(--duocal-primary) animate-pulse"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {editandoEventoId && buscarEvento.data && workspaceId && perfil && (
+        <EventFormSheet
+          key={`edit-${editandoEventoId}`}
+          workspaceId={workspaceId}
+          membros={membros}
+          categorias={categorias}
+          usuarioAtualId={perfil.id}
+          eventoParaEditar={buscarEvento.data}
+          isSaving={editarEvento.isPending}
+          onSave={handleSaveEdit}
+          onClose={() => setEditandoEventoId(null)}
         />
       )}
 

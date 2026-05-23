@@ -1,5 +1,6 @@
 export * from './useAuthSession'
 export * from './useCategoriasEvento'
+export * from './useEditarEvento'
 export * from './useEventosWorkspace'
 export * from './useGerenciarCategorias'
 export * from './useMeuPerfil'
