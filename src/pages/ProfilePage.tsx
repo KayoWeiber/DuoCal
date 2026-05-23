@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Bell, ChevronRight, Link2, LogOut, Palette, Plus, Settings, Shield, Tag, UserRound } from 'lucide-react'
+import { Bell, ChevronRight, Link2, LogOut, Plus, Settings, Tag, UserRound } from 'lucide-react'
 import {
   BottomNavigation,
   FeedbackAlert,
@@ -203,20 +203,6 @@ export function ProfilePage() {
               iconBg="rgba(255,176,32,0.12)"
               label="Notificações"
               sublabel="Preferências personalizadas"
-              onClick={showWip}
-            />
-            <ProfileMenuItem
-              icon={<Palette className="size-[17px] text-[#FF5A7A]" />}
-              iconBg="rgba(255,90,122,0.10)"
-              label="Tema do app"
-              sublabel="Sistema"
-              onClick={showWip}
-            />
-            <ProfileMenuItem
-              icon={<Shield className="size-[17px] text-(--duocal-muted)" />}
-              iconBg="rgba(107,114,128,0.10)"
-              label="Privacidade & dados"
-              sublabel="Segurança e permissões"
               onClick={showWip}
             />
           </div>
