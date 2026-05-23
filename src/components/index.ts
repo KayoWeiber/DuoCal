@@ -1,4 +1,5 @@
 export * from './events'
+export * from './home'
 export * from './notifications'
 export * from './profile/CategoryManagementSheet'
 export * from './profile/ConnectionCodeSheet'
