@@ -84,15 +84,15 @@ export function LoginPage() {
               alt="DuoCal"
               className="mx-auto h-16 w-auto"
             />
-            <h1 className="mt-4 text-3xl font-black text-[var(--duocal-text)]">
+            <h1 className="mt-4 text-3xl font-black text-(--duocal-text)">
               DuoCal
             </h1>
-            <p className="mt-2 text-sm text-[var(--duocal-muted)]">
+            <p className="mt-2 text-sm text-(--duocal-muted)">
               Sincronia é a base de tudo.
             </p>
           </div>
 
-          <div className="mb-5 grid grid-cols-2 rounded-[18px] bg-[var(--duocal-surface-soft)] p-1">
+          <div className="mb-5 grid grid-cols-2 rounded-[18px] bg-(--duocal-surface-soft) p-1">
             <button
               className={modeButtonClass(true)}
               type="button"
@@ -123,7 +123,7 @@ export function LoginPage() {
               value={email}
             />
             <div className="space-y-2">
-              <span className="text-sm font-medium text-[var(--duocal-text)]">
+              <span className="text-sm font-medium text-(--duocal-text)">
                 Senha
               </span>
               <div className="relative">
@@ -139,7 +139,7 @@ export function LoginPage() {
                 />
                 <button
                   aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                  className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-[var(--duocal-muted)] transition hover:bg-white hover:text-[var(--duocal-primary)]"
+                  className="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-xl text-(--duocal-muted) transition hover:bg-white hover:text-(--duocal-primary)"
                   onClick={() => setShowPassword((value) => !value)}
                   type="button"
                 >
@@ -186,17 +186,17 @@ export function LoginPage() {
         >
           <div className="duocal-card w-full max-w-sm overflow-y-auto p-6 text-center" style={{ maxHeight: 'min(90dvh, 480px)' }}>
             <h2
-              className="text-xl font-black text-[var(--duocal-text)]"
+              className="text-xl font-black text-(--duocal-text)"
               id="signup-unavailable-title"
             >
               Cadastro indisponível
             </h2>
-            <p className="mt-3 text-sm leading-6 text-[var(--duocal-muted)]">
+            <p className="mt-3 text-sm leading-6 text-(--duocal-muted)">
               A criação de conta ainda não está disponível nesta versão do
               DuoCal. Caso precise de acesso, entre em contato com Kayo Weiber
               pelo e-mail{' '}
               <a
-                className="font-bold text-[var(--duocal-primary)]"
+                className="font-bold text-(--duocal-primary)"
                 href="mailto:caioveiber598@gmail.com"
               >
                 caioveiber598@gmail.com
@@ -223,7 +223,7 @@ function modeButtonClass(active: boolean) {
     'h-10 rounded-[14px] text-sm font-bold transition',
     active
       ? 'duocal-gradient text-white shadow-[0_8px_20px_rgba(84,102,241,0.24)]'
-      : 'text-[var(--duocal-muted)]',
+      : 'text-(--duocal-muted)',
   ].join(' ')
 }
 

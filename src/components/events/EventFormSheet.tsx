@@ -231,18 +231,18 @@ export function EventFormSheet({
         >
           {/* Handle */}
           <div className="flex shrink-0 justify-center pt-3 pb-1">
-            <div className="h-1 w-10 rounded-full bg-[var(--duocal-border)]" />
+            <div className="h-1 w-10 rounded-full bg-(--duocal-border)" />
           </div>
 
           {/* Header */}
-          <div className="flex shrink-0 items-center justify-between border-b border-[var(--duocal-border)] px-5 pt-2 pb-4">
-            <h2 className="text-xl font-black text-[var(--duocal-text)]">
+          <div className="flex shrink-0 items-center justify-between border-b border-(--duocal-border) px-5 pt-2 pb-4">
+            <h2 className="text-xl font-black text-(--duocal-text)">
               {modoEdicao ? 'Editar evento' : 'Novo evento'}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="grid size-9 shrink-0 place-items-center rounded-2xl bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)] transition hover:bg-[rgba(84,102,241,0.08)] hover:text-[var(--duocal-primary)]"
+              className="grid size-9 shrink-0 place-items-center rounded-2xl bg-(--duocal-surface-soft) text-(--duocal-muted) transition hover:bg-[rgba(84,102,241,0.08)] hover:text-(--duocal-primary)"
             >
               <X className="size-4" />
             </button>
@@ -261,8 +261,8 @@ export function EventFormSheet({
 
               {/* Título */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-[var(--duocal-text)]">
-                  Título <span className="text-[var(--duocal-danger)]">*</span>
+                <label className="text-sm font-semibold text-(--duocal-text)">
+                  Título <span className="text-(--duocal-danger)">*</span>
                 </label>
                 <input
                   className="duocal-input"
@@ -275,9 +275,9 @@ export function EventFormSheet({
 
               {/* Descrição */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-[var(--duocal-text)]">
+                <label className="text-sm font-semibold text-(--duocal-text)">
                   Descrição{' '}
-                  <span className="text-xs font-normal text-[var(--duocal-muted)]">(opcional)</span>
+                  <span className="text-xs font-normal text-(--duocal-muted)">(opcional)</span>
                 </label>
                 <textarea
                   className="duocal-input h-auto min-h-[72px] resize-none py-3 text-sm leading-5"
@@ -292,8 +292,8 @@ export function EventFormSheet({
               {/* Data e horários */}
               <div className="space-y-3">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-[var(--duocal-text)]">
-                    Data <span className="text-[var(--duocal-danger)]">*</span>
+                  <label className="text-sm font-semibold text-(--duocal-text)">
+                    Data <span className="text-(--duocal-danger)">*</span>
                   </label>
                   <PickerButton
                     icon={Calendar}
@@ -305,8 +305,8 @@ export function EventFormSheet({
                 {!form.flDiaTodo && (
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-[var(--duocal-text)]">
-                        Início <span className="text-[var(--duocal-danger)]">*</span>
+                      <label className="text-sm font-semibold text-(--duocal-text)">
+                        Início <span className="text-(--duocal-danger)">*</span>
                       </label>
                       <PickerButton
                         icon={Clock}
@@ -315,8 +315,8 @@ export function EventFormSheet({
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-[var(--duocal-text)]">
-                        Fim <span className="text-[var(--duocal-danger)]">*</span>
+                      <label className="text-sm font-semibold text-(--duocal-text)">
+                        Fim <span className="text-(--duocal-danger)">*</span>
                       </label>
                       <PickerButton
                         icon={Clock}
@@ -329,7 +329,7 @@ export function EventFormSheet({
               </div>
 
               {/* Toggles */}
-              <div className="w-full overflow-hidden rounded-2xl border border-[var(--duocal-border)] divide-y divide-[var(--duocal-border)]">
+              <div className="w-full overflow-hidden rounded-2xl border border-(--duocal-border) divide-y divide-(--duocal-border)">
                 <ToggleRow
                   label="Dia todo"
                   checked={form.flDiaTodo}
@@ -360,7 +360,7 @@ export function EventFormSheet({
 
                   {/* Tipo de frequência */}
                   <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-[var(--duocal-text)]">
+                    <label className="text-sm font-semibold text-(--duocal-text)">
                       Frequência
                     </label>
                     <div className="flex gap-2">
@@ -372,8 +372,8 @@ export function EventFormSheet({
                           className={cn(
                             'flex-1 rounded-2xl py-2.5 text-sm font-semibold transition',
                             form.tpFrequencia === tp
-                              ? 'bg-[var(--duocal-primary)] text-white'
-                              : 'bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)]',
+                              ? 'bg-(--duocal-primary) text-white'
+                              : 'bg-(--duocal-surface-soft) text-(--duocal-muted)',
                           )}
                         >
                           {tp === 'DIARIA' ? 'Diária' : tp === 'SEMANAL' ? 'Semanal' : 'Mensal'}
@@ -385,9 +385,9 @@ export function EventFormSheet({
                   {/* Seletor de dias da semana (apenas SEMANAL) */}
                   {form.tpFrequencia === 'SEMANAL' && (
                     <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-[var(--duocal-text)]">
+                      <label className="text-sm font-semibold text-(--duocal-text)">
                         Dias da semana{' '}
-                        <span className="text-[var(--duocal-danger)]">*</span>
+                        <span className="text-(--duocal-danger)">*</span>
                       </label>
                       <WeekDayPicker
                         value={form.diasSemana}
@@ -398,9 +398,9 @@ export function EventFormSheet({
 
                   {/* Data de fim da recorrência (opcional) */}
                   <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-[var(--duocal-text)]">
+                    <label className="text-sm font-semibold text-(--duocal-text)">
                       Repetir até{' '}
-                      <span className="text-xs font-normal text-[var(--duocal-muted)]">(opcional)</span>
+                      <span className="text-xs font-normal text-(--duocal-muted)">(opcional)</span>
                     </label>
                     <PickerButton
                       icon={Calendar}
@@ -410,7 +410,7 @@ export function EventFormSheet({
                     {form.dtFimRecorrencia && (
                       <button
                         type="button"
-                        className="text-xs font-semibold text-[var(--duocal-danger)] underline"
+                        className="text-xs font-semibold text-(--duocal-danger) underline"
                         onClick={() => set('dtFimRecorrencia', '')}
                       >
                         Remover data de término
@@ -423,9 +423,9 @@ export function EventFormSheet({
               {/* Categoria */}
               {categorias.length > 0 && (
                 <div className="space-y-1.5">
-                  <label className="text-sm font-semibold text-[var(--duocal-text)]">
+                  <label className="text-sm font-semibold text-(--duocal-text)">
                     Categoria{' '}
-                    <span className="text-xs font-normal text-[var(--duocal-muted)]">(opcional)</span>
+                    <span className="text-xs font-normal text-(--duocal-muted)">(opcional)</span>
                   </label>
                   <CategoryPicker
                     categorias={categorias}
@@ -437,8 +437,8 @@ export function EventFormSheet({
 
               {/* Participantes */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-[var(--duocal-text)]">
-                  Participantes <span className="text-[var(--duocal-danger)]">*</span>
+                <label className="text-sm font-semibold text-(--duocal-text)">
+                  Participantes <span className="text-(--duocal-danger)">*</span>
                 </label>
                 <MemberPicker
                   membros={membros}
@@ -452,7 +452,7 @@ export function EventFormSheet({
           </div>
 
           {/* Footer */}
-          <div className="shrink-0 border-t border-[var(--duocal-border)] px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div className="shrink-0 border-t border-(--duocal-border) px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <Button className="w-full" isLoading={isSaving} onClick={handleSave}>
               {modoEdicao ? 'Salvar alterações' : 'Salvar evento'}
             </Button>
@@ -510,10 +510,10 @@ function PickerButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex h-12 w-full cursor-pointer items-center justify-between rounded-[18px] border border-[var(--duocal-border)] bg-[var(--duocal-surface-soft)] px-4 text-sm text-[var(--duocal-text)] transition hover:border-[var(--duocal-primary)] hover:bg-[var(--duocal-surface)]"
+      className="flex h-12 w-full cursor-pointer items-center justify-between rounded-[18px] border border-(--duocal-border) bg-(--duocal-surface-soft) px-4 text-sm text-(--duocal-text) transition hover:border-(--duocal-primary) hover:bg-(--duocal-surface)"
     >
       <span>{value}</span>
-      <Icon className="size-[18px] shrink-0 text-[var(--duocal-muted)]" />
+      <Icon className="size-[18px] shrink-0 text-(--duocal-muted)" />
     </button>
   )
 }

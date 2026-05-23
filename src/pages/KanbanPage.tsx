@@ -15,7 +15,7 @@ import {
   useExcluirTarefa,
   useMembrosWorkspace,
   useMeuPerfil,
-  useOnlineStatus,
+  useSyncQueue,
   useTarefasKanban,
   useUnreadNotificationCount,
   useWorkspaceAtual,
@@ -28,8 +28,9 @@ import type {
   StatusTarefa,
   TarefaKanban,
 } from '../hooks'
-import { KanbanTaskCard, STATUS_CONFIG } from '../components/kanban/KanbanTaskCard'
+import { KanbanTaskCard } from '../components/kanban/KanbanTaskCard'
 import { KanbanTaskFormSheet } from '../components/kanban/KanbanTaskFormSheet'
+import { STATUS_CONFIG } from '../components/kanban/kanbanConfig'
 
 type FiltroStatus = StatusTarefa | 'TODOS'
 
@@ -140,7 +141,7 @@ function LoadingKanban() {
       {[1, 2, 3].map((i) => (
         <div
           key={i}
-          className="h-24 animate-pulse rounded-2xl bg-[var(--duocal-surface-soft)]"
+          className="h-24 animate-pulse rounded-2xl bg-(--duocal-surface-soft)"
         />
       ))}
     </div>
@@ -151,12 +152,12 @@ function LoadingKanban() {
 function EmptyKanban({ onNova }: { onNova: () => void }) {
   return (
     <div className="flex flex-col items-center gap-4 px-8 py-12 text-center">
-      <div className="grid size-16 place-items-center rounded-3xl bg-[var(--duocal-surface-soft)]">
-        <Columns3 className="size-8 text-[var(--duocal-primary)] opacity-60" />
+      <div className="grid size-16 place-items-center rounded-3xl bg-(--duocal-surface-soft)">
+        <Columns3 className="size-8 text-(--duocal-primary) opacity-60" />
       </div>
       <div>
-        <p className="font-bold text-[var(--duocal-text)]">Nenhuma tarefa ainda</p>
-        <p className="mt-1 text-sm text-[var(--duocal-muted)]">
+        <p className="font-bold text-(--duocal-text)">Nenhuma tarefa ainda</p>
+        <p className="mt-1 text-sm text-(--duocal-muted)">
           Crie uma tarefa para organizar o que vocês têm a fazer.
         </p>
       </div>
@@ -179,7 +180,7 @@ export function KanbanPage() {
   const workspace = workspaceQuery.data ?? null
   const workspaceId = workspace?.workspace.id ?? null
   const { unreadCount } = useUnreadNotificationCount(perfil)
-  const isOnline = useOnlineStatus()
+  const { isOnline, syncState, pendingCount } = useSyncQueue(workspaceId)
 
   useEffect(() => {
     if (!isSessionLoading && !session) window.location.replace('/login')
@@ -267,18 +268,18 @@ export function KanbanPage() {
         <div className="shrink-0 px-5 pt-4 pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--duocal-muted)]">
+              <p className="text-xs font-semibold uppercase tracking-widest text-(--duocal-muted)">
                 {workspace?.workspace.nm_workspace ?? 'DuoCal'}
               </p>
-              <h1 className="text-2xl font-black text-[var(--duocal-text)]">Kanban</h1>
+              <h1 className="text-2xl font-black text-(--duocal-text)">Kanban</h1>
             </div>
           </div>
         </div>
 
         {/* Offline bar */}
-        {!isOnline && (
+        {(!isOnline || syncState !== 'idle' || pendingCount > 0) && (
           <div className="shrink-0 px-4 pb-1">
-            <OfflineBar />
+            <OfflineBar isOnline={isOnline} syncState={syncState} pendingCount={pendingCount} />
           </div>
         )}
 
@@ -310,7 +311,7 @@ export function KanbanPage() {
             ) : tarefas.length === 0 ? (
               <EmptyKanban onNova={() => setFormAberto(true)} />
             ) : tarefasFiltradas.length === 0 ? (
-              <div className="py-8 text-center text-sm text-[var(--duocal-muted)]">
+              <div className="py-8 text-center text-sm text-(--duocal-muted)">
                 Nenhuma tarefa com este filtro.
               </div>
             ) : (
@@ -364,7 +365,7 @@ export function KanbanPage() {
 
       {/* Modais de sistema */}
       {perfilIncompleto && perfil && <ProfileSetupModal perfil={perfil} />}
-      {versaoDesatualizada && <VersionOutdatedModal />}
+      <VersionOutdatedModal open={versaoDesatualizada} />
     </>
   )
 }
@@ -392,7 +393,7 @@ function KanbanTaskCardComStatus({
         <button
           type="button"
           onClick={() => setExpandido((v) => !v)}
-          className="text-[10px] font-semibold text-[var(--duocal-muted)] underline"
+          className="text-[10px] font-semibold text-(--duocal-muted) underline"
         >
           {expandido ? 'Ocultar status' : 'Mudar status'}
         </button>

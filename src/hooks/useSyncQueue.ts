@@ -62,7 +62,11 @@ export function useSyncQueue(workspaceId: string | null | undefined) {
   }, [workspaceId])
 
   useEffect(() => {
-    reloadPending()
+    const timer = window.setTimeout(() => {
+      void reloadPending()
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [reloadPending])
 
   const processQueue = useCallback(async () => {
@@ -105,7 +109,11 @@ export function useSyncQueue(workspaceId: string | null | undefined) {
 
   useEffect(() => {
     if (isOnline && workspaceId) {
-      processQueue()
+      const timer = window.setTimeout(() => {
+        void processQueue()
+      }, 0)
+
+      return () => window.clearTimeout(timer)
     }
   }, [isOnline, workspaceId, processQueue])
 

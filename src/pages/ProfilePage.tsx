@@ -68,8 +68,8 @@ export function ProfilePage() {
       <ScreenContainer withBottomNavigation>
         {/* Header */}
         <header className="pb-5">
-          <p className="text-sm font-semibold text-[var(--duocal-muted)]">Conta</p>
-          <h1 className="mt-1 text-3xl font-black text-[var(--duocal-text)]">Perfil</h1>
+          <p className="text-sm font-semibold text-(--duocal-muted)">Conta</p>
+          <h1 className="mt-1 text-3xl font-black text-(--duocal-text)">Perfil</h1>
         </header>
 
         {/* Feedback */}
@@ -92,10 +92,10 @@ export function ProfilePage() {
                 <UserRound className="size-7" />
               </div>
               <div className="min-w-0">
-                <h2 className="truncate text-lg font-black text-[var(--duocal-text)]">
+                <h2 className="truncate text-lg font-black text-(--duocal-text)">
                   {perfil?.nm_usuario ?? 'Seu perfil'}
                 </h2>
-                <p className="truncate text-sm text-[var(--duocal-muted)]">
+                <p className="truncate text-sm text-(--duocal-muted)">
                   {perfil?.ds_email ?? session?.user.email ?? ''}
                 </p>
               </div>
@@ -106,10 +106,10 @@ export function ProfilePage() {
         {/* — Seção Membros (só com workspace) — */}
         {workspace ? (
           <section className="mt-5">
-            <p className="mb-2 px-1 text-[11px] font-bold tracking-widest text-[var(--duocal-muted)]">
+            <p className="mb-2 px-1 text-[11px] font-bold tracking-widest text-(--duocal-muted)">
               MEMBROS
             </p>
-            <div className="duocal-card overflow-hidden divide-y divide-[var(--duocal-border)]">
+            <div className="duocal-card overflow-hidden divide-y divide-(--duocal-border)">
               {membros.map((membro) => {
                 const ehVoce = membro.usuario_id === perfil?.id
                 const papelLabel = membro.tp_papel === 'ADMIN' ? 'Admin' : 'Membro'
@@ -129,16 +129,16 @@ export function ProfilePage() {
                       {getIniciais(membro.nm_usuario)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[var(--duocal-text)]">
+                      <p className="truncate text-sm font-semibold text-(--duocal-text)">
                         {membro.nm_usuario}
                       </p>
-                      <p className="truncate text-xs text-[var(--duocal-muted)]">
+                      <p className="truncate text-xs text-(--duocal-muted)">
                         {ehVoce
                           ? `Você · ${papelLabel} · ${membro.ds_email}`
                           : `${papelLabel} · ${membro.ds_email}`}
                       </p>
                     </div>
-                    <ChevronRight className="size-4 shrink-0 text-[var(--duocal-border)]" />
+                    <ChevronRight className="size-4 shrink-0 text-(--duocal-border)" />
                   </div>
                 )
               })}
@@ -147,12 +147,12 @@ export function ProfilePage() {
               <button
                 type="button"
                 onClick={showWip}
-                className="flex w-full items-center gap-3 px-4 py-3.5 transition hover:bg-[var(--duocal-surface-soft)]"
+                className="flex w-full items-center gap-3 px-4 py-3.5 transition hover:bg-(--duocal-surface-soft)"
               >
                 <div className="grid size-10 shrink-0 place-items-center rounded-full bg-[rgba(182,109,255,0.12)]">
-                  <Plus className="size-5 text-[var(--duocal-violet)]" />
+                  <Plus className="size-5 text-(--duocal-violet)" />
                 </div>
-                <span className="text-sm font-semibold text-[var(--duocal-primary)]">
+                <span className="text-sm font-semibold text-(--duocal-primary)">
                   Convidar membro
                 </span>
               </button>
@@ -162,21 +162,21 @@ export function ProfilePage() {
 
         {/* — Seção Workspace / Configurações — */}
         <section className="mt-5">
-          <p className="mb-2 px-1 text-[11px] font-bold tracking-widest text-[var(--duocal-muted)]">
+          <p className="mb-2 px-1 text-[11px] font-bold tracking-widest text-(--duocal-muted)">
             {workspace ? 'WORKSPACE' : 'CONFIGURAÇÕES'}
           </p>
-          <div className="duocal-card overflow-hidden divide-y divide-[var(--duocal-border)]">
+          <div className="duocal-card overflow-hidden divide-y divide-(--duocal-border)">
             {workspace ? (
               <>
                 <ProfileMenuItem
-                  icon={<Settings className="size-[17px] text-[var(--duocal-primary)]" />}
+                  icon={<Settings className="size-[17px] text-(--duocal-primary)" />}
                   iconBg="rgba(84,102,241,0.12)"
                   label="Configurações do workspace"
                   sublabel="Nome, fuso, idioma"
                   onClick={showWip}
                 />
                 <ProfileMenuItem
-                  icon={<Tag className="size-[17px] text-[var(--duocal-violet)]" />}
+                  icon={<Tag className="size-[17px] text-(--duocal-violet)" />}
                   iconBg="rgba(182,109,255,0.12)"
                   label="Categorias"
                   sublabel="Organize seus eventos"
@@ -186,7 +186,7 @@ export function ProfilePage() {
             ) : null}
 
             <ProfileMenuItem
-              icon={<Link2 className="size-[17px] text-[var(--duocal-success)]" />}
+              icon={<Link2 className="size-[17px] text-(--duocal-success)" />}
               iconBg="rgba(53,207,165,0.12)"
               label="Convite por código"
               sublabel={
@@ -197,7 +197,7 @@ export function ProfilePage() {
               onClick={() => setCodeSheetOpen(true)}
             />
             <ProfileMenuItem
-              icon={<Bell className="size-[17px] text-[var(--duocal-warning)]" />}
+              icon={<Bell className="size-[17px] text-(--duocal-warning)" />}
               iconBg="rgba(255,176,32,0.12)"
               label="Notificações"
               sublabel="Preferências personalizadas"
@@ -211,7 +211,7 @@ export function ProfilePage() {
               onClick={showWip}
             />
             <ProfileMenuItem
-              icon={<Shield className="size-[17px] text-[var(--duocal-muted)]" />}
+              icon={<Shield className="size-[17px] text-(--duocal-muted)" />}
               iconBg="rgba(107,114,128,0.10)"
               label="Privacidade & dados"
               sublabel="Segurança e permissões"
@@ -248,7 +248,7 @@ export function ProfilePage() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex w-full items-center justify-center gap-2 rounded-[24px] border border-[rgba(255,90,122,0.20)] bg-white py-4 text-sm font-bold text-[var(--duocal-danger)] shadow-[0_4px_16px_rgba(255,90,122,0.06)] transition hover:bg-[rgba(255,90,122,0.04)]"
+            className="flex w-full items-center justify-center gap-2 rounded-3xl border border-[rgba(255,90,122,0.20)] bg-white py-4 text-sm font-bold text-(--duocal-danger) shadow-[0_4px_16px_rgba(255,90,122,0.06)] transition hover:bg-[rgba(255,90,122,0.04)]"
           >
             <LogOut className="size-4" />
             Sair da conta
@@ -257,7 +257,7 @@ export function ProfilePage() {
 
         {/* — Versão — */}
         <div className="mt-6 pb-2 text-center">
-          <p className="text-[11px] font-bold tracking-widest text-[var(--duocal-border)]">
+          <p className="text-[11px] font-bold tracking-widest text-(--duocal-border)">
             DUOCAL · {appVersion}
           </p>
         </div>

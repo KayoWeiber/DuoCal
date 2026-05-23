@@ -113,7 +113,8 @@ export function HomePage() {
     const codigoSalvo = getPendingConnectionCode()
 
     if (codigoSalvo) {
-      setCodigoPendente(codigoSalvo)
+      const timer = window.setTimeout(() => setCodigoPendente(codigoSalvo), 0)
+      return () => window.clearTimeout(timer)
     }
   }, [codigoPendente, perfil?.fl_perfil_completo])
 
@@ -214,16 +215,16 @@ export function HomePage() {
         {/* Header comum */}
         <header className="flex items-center justify-between gap-3 pb-5">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[var(--duocal-muted)]">
+            <p className="text-sm font-semibold text-(--duocal-muted)">
               Olá, {perfil.nm_usuario ?? 'bem-vindo'}
             </p>
-            <h1 className="truncate text-3xl font-black text-[var(--duocal-text)]">
+            <h1 className="truncate text-3xl font-black text-(--duocal-text)">
               DuoCal
             </h1>
           </div>
           <Link
             aria-label="Abrir notificações"
-            className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-[var(--duocal-border)] bg-white text-[var(--duocal-muted)] shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition hover:text-[var(--duocal-primary)]"
+            className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-(--duocal-border) bg-white text-(--duocal-muted) shadow-[0_10px_24px_rgba(17,20,74,0.06)] transition hover:text-(--duocal-primary)"
             to="/notificacoes"
           >
             <Bell className="size-5" />
@@ -334,7 +335,8 @@ function DashboardComWorkspace({
 
   useEffect(() => {
     if (buscarEvento.isError) {
-      setEditandoEventoId(null)
+      const timer = window.setTimeout(() => setEditandoEventoId(null), 0)
+      return () => window.clearTimeout(timer)
     }
   }, [buscarEvento.isError])
 
@@ -415,12 +417,12 @@ function DashboardComWorkspace({
       {/* Card nosso tempo */}
       <section className="duocal-card p-5">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-[18px] bg-[rgba(182,109,255,0.12)] text-[var(--duocal-violet)]">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-[18px] bg-[rgba(182,109,255,0.12)] text-(--duocal-violet)">
             <Heart className="size-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-[var(--duocal-text)]">Nosso tempo</p>
-            <p className="text-xs text-[var(--duocal-muted)]">
+            <p className="text-sm font-bold text-(--duocal-text)">Nosso tempo</p>
+            <p className="text-xs text-(--duocal-muted)">
               {hoje.length === 0
                 ? 'Comece criando seus primeiros eventos'
                 : `${hoje.length} momento${hoje.length > 1 ? 's' : ''} planejado${hoje.length > 1 ? 's' : ''} hoje`}
@@ -432,12 +434,12 @@ function DashboardComWorkspace({
       {/* Próximos compromissos */}
       <section className="duocal-card p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-black text-[var(--duocal-text)]">
+          <h3 className="text-base font-black text-(--duocal-text)">
             Próximos compromissos
           </h3>
           <Link
             to="/agenda"
-            className="text-xs font-semibold text-[var(--duocal-primary)]"
+            className="text-xs font-semibold text-(--duocal-primary)"
           >
             Ver agenda
           </Link>
@@ -448,15 +450,15 @@ function DashboardComWorkspace({
             {[0, 1, 2].map((i) => (
               <span
                 key={i}
-                className="size-1.5 rounded-full bg-[var(--duocal-primary)] animate-pulse"
+                className="size-1.5 rounded-full bg-(--duocal-primary) animate-pulse"
                 style={{ animationDelay: `${i * 0.15}s` }}
               />
             ))}
           </div>
         ) : proximos7Dias.length === 0 ? (
           <div className="py-3 text-center">
-            <p className="text-sm text-[var(--duocal-muted)]">Nenhum evento próximo.</p>
-            <p className="mt-1 text-xs text-[var(--duocal-muted)]">
+            <p className="text-sm text-(--duocal-muted)">Nenhum evento próximo.</p>
+            <p className="mt-1 text-xs text-(--duocal-muted)">
               Crie seu primeiro compromisso compartilhado.
             </p>
           </div>
@@ -465,10 +467,10 @@ function DashboardComWorkspace({
             {proximos7Dias.map((evento) => (
               <div key={evento.id} className="flex items-start gap-3">
                 <div className="mt-1 flex flex-col items-center gap-0.5 text-center">
-                  <span className="text-[11px] font-semibold text-[var(--duocal-muted)]">
+                  <span className="text-[11px] font-semibold text-(--duocal-muted)">
                     {new Date(evento.dt_inicio).toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3)}
                   </span>
-                  <span className="text-lg font-black leading-none text-[var(--duocal-text)]">
+                  <span className="text-lg font-black leading-none text-(--duocal-text)">
                     {new Date(evento.dt_inicio).getDate()}
                   </span>
                 </div>
@@ -568,10 +570,10 @@ function SummaryCard({
   value: string
 }) {
   return (
-    <section className="duocal-card rounded-[24px] p-4">
-      <div className="text-[var(--duocal-primary)]">{icon}</div>
-      <p className="mt-3 text-sm text-[var(--duocal-muted)]">{label}</p>
-      <p className="mt-1 text-xl font-black text-[var(--duocal-text)]">{value}</p>
+    <section className="duocal-card rounded-3xl p-4">
+      <div className="text-(--duocal-primary)">{icon}</div>
+      <p className="mt-3 text-sm text-(--duocal-muted)">{label}</p>
+      <p className="mt-1 text-xl font-black text-(--duocal-text)">{value}</p>
     </section>
   )
 }
@@ -617,17 +619,17 @@ function SemWorkspaceSection({
         <div className="duocal-gradient flex size-12 items-center justify-center rounded-2xl text-white shadow-[0_10px_24px_rgba(84,102,241,0.22)]">
           <Link2 className="size-6" />
         </div>
-        <h2 className="mt-4 text-xl font-black text-[var(--duocal-text)]">
+        <h2 className="mt-4 text-xl font-black text-(--duocal-text)">
           Workspace compartilhado
         </h2>
-        <p className="mt-2 text-sm leading-6 text-[var(--duocal-muted)]">
+        <p className="mt-2 text-sm leading-6 text-(--duocal-muted)">
           Você ainda não possui um workspace compartilhado. Digite o código de
           conexão recebido para enviar uma solicitação.
         </p>
 
         <div className="mt-5 space-y-3">
           <label className="block space-y-2">
-            <span className="text-sm font-semibold text-[var(--duocal-text)]">
+            <span className="text-sm font-semibold text-(--duocal-text)">
               Conectar com outra pessoa
             </span>
             <input
@@ -650,7 +652,7 @@ function SemWorkspaceSection({
           </Button>
         </div>
 
-        <div className="my-5 h-px bg-[var(--duocal-border)]" />
+        <div className="my-5 h-px bg-(--duocal-border)" />
 
         <div className="space-y-3">
           <input
@@ -695,8 +697,8 @@ function WorkspaceLoadingSection() {
       <div className="flex items-center gap-3">
         <div className="duocal-gradient size-10 animate-pulse rounded-2xl" />
         <div className="space-y-2">
-          <div className="h-3 w-32 animate-pulse rounded-full bg-[var(--duocal-border)]" />
-          <div className="h-2 w-20 animate-pulse rounded-full bg-[var(--duocal-border)]" />
+          <div className="h-3 w-32 animate-pulse rounded-full bg-(--duocal-border)" />
+          <div className="h-2 w-20 animate-pulse rounded-full bg-(--duocal-border)" />
         </div>
       </div>
     </div>
@@ -707,7 +709,7 @@ function LoadingScreen({ message }: { message: string }) {
   return (
     <ScreenContainer className="items-center justify-center">
       <div className="duocal-gradient size-10 animate-pulse rounded-3xl" />
-      <p className="mt-4 text-sm font-medium text-[var(--duocal-muted)]">
+      <p className="mt-4 text-sm font-medium text-(--duocal-muted)">
         {message}
       </p>
     </ScreenContainer>
@@ -718,7 +720,7 @@ function NotificationBadge({ count }: { count: number }) {
   const label = count > 9 ? '9+' : String(count)
 
   return (
-    <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-[var(--duocal-danger)] px-1 text-[10px] font-black leading-4 text-white ring-2 ring-white">
+    <span className="absolute -right-1 -top-1 grid min-w-4 place-items-center rounded-full bg-(--duocal-danger) px-1 text-[10px] font-black leading-4 text-white ring-2 ring-white">
       {label}
     </span>
   )
@@ -735,11 +737,11 @@ function StateBlock({
 }) {
   return (
     <section className="duocal-card p-5">
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-[rgba(84,102,241,0.10)] text-[var(--duocal-primary)]">
+      <div className="flex size-12 items-center justify-center rounded-2xl bg-[rgba(84,102,241,0.10)] text-(--duocal-primary)">
         {icon}
       </div>
-      <h2 className="mt-4 text-lg font-bold text-[var(--duocal-text)]">{title}</h2>
-      <p className="mt-2 text-sm leading-6 text-[var(--duocal-muted)]">{description}</p>
+      <h2 className="mt-4 text-lg font-bold text-(--duocal-text)">{title}</h2>
+      <p className="mt-2 text-sm leading-6 text-(--duocal-muted)">{description}</p>
     </section>
   )
 }
@@ -754,10 +756,10 @@ function SmallStatusCard({
   value: string
 }) {
   return (
-    <section className="duocal-card rounded-[24px] p-4">
-      <div className="text-[var(--duocal-primary)]">{icon}</div>
-      <p className="mt-3 text-sm text-[var(--duocal-muted)]">{label}</p>
-      <p className="mt-1 text-base font-bold text-[var(--duocal-text)]">{value}</p>
+    <section className="duocal-card rounded-3xl p-4">
+      <div className="text-(--duocal-primary)">{icon}</div>
+      <p className="mt-3 text-sm text-(--duocal-muted)">{label}</p>
+      <p className="mt-1 text-base font-bold text-(--duocal-text)">{value}</p>
     </section>
   )
 }
@@ -783,12 +785,12 @@ function PendingConnectionModal({
         <div className="duocal-gradient flex size-12 items-center justify-center rounded-2xl text-white">
           <Link2 className="size-6" />
         </div>
-        <h2 className="mt-4 text-xl font-black text-[var(--duocal-text)]">
+        <h2 className="mt-4 text-xl font-black text-(--duocal-text)">
           Solicitar conexão?
         </h2>
-        <p className="mt-2 text-sm leading-6 text-[var(--duocal-muted)]">
+        <p className="mt-2 text-sm leading-6 text-(--duocal-muted)">
           Enviar solicitação para o código{' '}
-          <span className="font-black tracking-[0.18em] text-[var(--duocal-text)]">
+          <span className="font-black tracking-[0.18em] text-(--duocal-text)">
             {codigo}
           </span>
           ?

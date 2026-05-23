@@ -85,8 +85,8 @@ function BottomNavigationLink({
       className={cn(
         'group flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-[18px] text-[11px] font-semibold transition',
         active
-          ? 'bg-[rgba(84,102,241,0.10)] text-[var(--duocal-primary)]'
-          : 'text-[rgba(107,114,128,0.82)] hover:bg-[rgba(84,102,241,0.06)] hover:text-[var(--duocal-primary)]',
+          ? 'bg-[rgba(84,102,241,0.10)] text-(--duocal-primary)'
+          : 'text-[rgba(107,114,128,0.82)] hover:bg-[rgba(84,102,241,0.06)] hover:text-(--duocal-primary)',
       )}
       to={href}
     >
@@ -103,7 +103,7 @@ function NotificationBadge({ count }: { count: number }) {
   const label = count > 9 ? '9+' : String(count)
 
   return (
-    <span className="absolute -right-2 -top-2 grid min-w-4 place-items-center rounded-full bg-[var(--duocal-danger)] px-1 text-[10px] font-black leading-4 text-white ring-2 ring-white">
+    <span className="absolute -right-2 -top-2 grid min-w-4 place-items-center rounded-full bg-(--duocal-danger) px-1 text-[10px] font-black leading-4 text-white ring-2 ring-white">
       {label}
     </span>
   )

@@ -29,10 +29,10 @@ export function EventTimePickerSheet({ title, value, onConfirm, onClose }: Props
       <div className="duocal-constrained-width w-full overflow-y-auto rounded-t-[32px] bg-white shadow-[0_-16px_60px_rgba(17,20,74,0.14)]" style={{ maxHeight: 'min(90dvh, 520px)' }}>
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-2">
-          <div className="h-1 w-10 rounded-full bg-[var(--duocal-border)]" />
+          <div className="h-1 w-10 rounded-full bg-(--duocal-border)" />
         </div>
 
-        <h3 className="px-5 pb-3 text-center text-lg font-bold text-[var(--duocal-text)]">
+        <h3 className="px-5 pb-3 text-center text-lg font-bold text-(--duocal-text)">
           {title}
         </h3>
 
@@ -50,7 +50,7 @@ export function EventTimePickerSheet({ title, value, onConfirm, onClose }: Props
                   'w-full rounded-2xl px-4 py-3 text-center text-base font-semibold transition-all',
                   sel
                     ? 'text-white shadow-md'
-                    : 'text-[var(--duocal-text)] hover:bg-[var(--duocal-surface-soft)]',
+                    : 'text-(--duocal-text) hover:bg-(--duocal-surface-soft)',
                 )}
                 style={
                   sel
@@ -65,11 +65,11 @@ export function EventTimePickerSheet({ title, value, onConfirm, onClose }: Props
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 border-t border-[var(--duocal-border)] px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="flex gap-3 border-t border-(--duocal-border) px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-2xl border border-[var(--duocal-border)] py-3 text-sm font-semibold text-[var(--duocal-muted)] transition hover:bg-[var(--duocal-surface-soft)]"
+            className="flex-1 rounded-2xl border border-(--duocal-border) py-3 text-sm font-semibold text-(--duocal-muted) transition hover:bg-(--duocal-surface-soft)"
           >
             Cancelar
           </button>

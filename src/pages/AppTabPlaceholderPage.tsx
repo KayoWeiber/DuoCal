@@ -86,10 +86,10 @@ export function ProfilePlaceholderPage() {
     <>
       <ScreenContainer withBottomNavigation>
         <header className="pb-5">
-          <p className="text-sm font-semibold text-[var(--duocal-muted)]">
+          <p className="text-sm font-semibold text-(--duocal-muted)">
             Conta
           </p>
-          <h1 className="mt-1 text-3xl font-black text-[var(--duocal-text)]">
+          <h1 className="mt-1 text-3xl font-black text-(--duocal-text)">
             Perfil
           </h1>
         </header>
@@ -100,10 +100,10 @@ export function ProfilePlaceholderPage() {
               <UserRound className="size-6" />
             </div>
             <div className="min-w-0">
-              <h2 className="truncate text-lg font-black text-[var(--duocal-text)]">
+              <h2 className="truncate text-lg font-black text-(--duocal-text)">
                 {perfil?.nm_usuario ?? 'Seu perfil'}
               </h2>
-              <p className="truncate text-sm text-[var(--duocal-muted)]">
+              <p className="truncate text-sm text-(--duocal-muted)">
                 {perfil?.ds_email ?? session?.user.email ?? 'DuoCal'}
               </p>
             </div>
@@ -111,10 +111,10 @@ export function ProfilePlaceholderPage() {
         </section>
 
         <section className="mt-4 duocal-card p-5">
-          <h2 className="text-base font-black text-[var(--duocal-text)]">
+          <h2 className="text-base font-black text-(--duocal-text)">
             Sessão
           </h2>
-          <p className="mt-1 text-sm leading-6 text-[var(--duocal-muted)]">
+          <p className="mt-1 text-sm leading-6 text-(--duocal-muted)">
             Gerencie o acesso desta conta no dispositivo atual.
           </p>
           <Button

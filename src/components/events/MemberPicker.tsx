@@ -30,14 +30,14 @@ export function MemberPicker({ membros, value, onChange }: MemberPickerProps) {
             className={cn(
               'inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition-all',
               selected
-                ? 'bg-[rgba(84,102,241,0.12)] text-[var(--duocal-primary)] ring-2 ring-[var(--duocal-primary)] ring-offset-1'
-                : 'bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)] hover:bg-[rgba(84,102,241,0.07)]',
+                ? 'bg-[rgba(84,102,241,0.12)] text-(--duocal-primary) ring-2 ring-(--duocal-primary) ring-offset-1'
+                : 'bg-(--duocal-surface-soft) text-(--duocal-muted) hover:bg-[rgba(84,102,241,0.07)]',
             )}
           >
             <span
               className={cn(
                 'grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-black text-white',
-                selected ? 'bg-[var(--duocal-primary)]' : 'bg-[var(--duocal-muted)]',
+                selected ? 'bg-(--duocal-primary)' : 'bg-(--duocal-muted)',
               )}
             >
               {iniciais}
@@ -54,8 +54,8 @@ export function MemberPicker({ membros, value, onChange }: MemberPickerProps) {
           className={cn(
             'inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold transition-all',
             value.length === membros.length
-              ? 'bg-[rgba(182,109,255,0.12)] text-[var(--duocal-violet)] ring-2 ring-[var(--duocal-violet)] ring-offset-1'
-              : 'bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)] hover:bg-[rgba(182,109,255,0.07)]',
+              ? 'bg-[rgba(182,109,255,0.12)] text-(--duocal-violet) ring-2 ring-(--duocal-violet) ring-offset-1'
+              : 'bg-(--duocal-surface-soft) text-(--duocal-muted) hover:bg-[rgba(182,109,255,0.07)]',
           )}
         >
           <span className="grid size-6 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[var(--duocal-primary)] to-[var(--duocal-violet)] text-[10px] font-black text-white">

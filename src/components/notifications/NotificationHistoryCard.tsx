@@ -7,7 +7,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import type { NotificacaoSolicitacaoWorkspace } from '../../hooks'
-import { formatRelativeTime } from './NotificationCenterCard'
+import { formatRelativeTime } from './notificationUtils'
 
 type NotificationHistoryCardProps = {
   notificacao: NotificacaoSolicitacaoWorkspace
@@ -19,12 +19,11 @@ export function NotificationHistoryCard({
   onMarkRead,
 }: NotificationHistoryCardProps) {
   const unread = !notificacao.fl_lida
-  const Icon = getNotificationIcon(notificacao.tp_notificacao)
 
   return (
     <button
       className={[
-        'relative w-full overflow-hidden rounded-[24px] border p-4 text-left shadow-[0_12px_30px_rgba(17,20,74,0.05)] transition active:scale-[0.99]',
+        'relative w-full overflow-hidden rounded-3xl border p-4 text-left shadow-[0_12px_30px_rgba(17,20,74,0.05)] transition active:scale-[0.99]',
         unread
           ? 'border-[rgba(84,102,241,0.24)] bg-[rgba(84,102,241,0.06)]'
           : 'border-[rgba(229,231,240,0.86)] bg-white',
@@ -45,17 +44,17 @@ export function NotificationHistoryCard({
             'grid size-10 shrink-0 place-items-center rounded-2xl',
             unread
               ? 'duocal-gradient text-white'
-              : 'bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)]',
+              : 'bg-(--duocal-surface-soft) text-(--duocal-muted)',
           ].join(' ')}
         >
-          <Icon className="size-5" />
+          <NotificationHistoryIcon tpNotificacao={notificacao.tp_notificacao} />
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <h3
               className={[
-                'text-sm leading-5 text-[var(--duocal-text)]',
+                'text-sm leading-5 text-(--duocal-text)',
                 unread ? 'font-black' : 'font-bold',
               ].join(' ')}
             >
@@ -66,11 +65,11 @@ export function NotificationHistoryCard({
             </span>
           </div>
           {unread ? (
-            <span className="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--duocal-primary)]">
+            <span className="mt-1 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-(--duocal-primary)">
               Nova
             </span>
           ) : null}
-          <p className="mt-1 text-xs leading-5 text-[var(--duocal-muted)]">
+          <p className="mt-1 text-xs leading-5 text-(--duocal-muted)">
             {notificacao.ds_mensagem}
           </p>
         </div>
@@ -79,26 +78,26 @@ export function NotificationHistoryCard({
   )
 }
 
-function getNotificationIcon(tpNotificacao: string) {
+function NotificationHistoryIcon({ tpNotificacao }: { tpNotificacao: string }) {
   if (tpNotificacao.includes('ACEITA')) {
-    return CheckCircle2
+    return <CheckCircle2 className="size-5" />
   }
 
   if (tpNotificacao.includes('RECUSADA')) {
-    return XCircle
+    return <XCircle className="size-5" />
   }
 
   if (tpNotificacao.startsWith('SOLICITACAO') || tpNotificacao.includes('CONVITE')) {
-    return HeartHandshake
+    return <HeartHandshake className="size-5" />
   }
 
   if (tpNotificacao.startsWith('EVENTO') || tpNotificacao.includes('LEMBRETE')) {
-    return CalendarDays
+    return <CalendarDays className="size-5" />
   }
 
   if (tpNotificacao.startsWith('TAREFA')) {
-    return ClipboardList
+    return <ClipboardList className="size-5" />
   }
 
-  return Bell
+  return <Bell className="size-5" />
 }

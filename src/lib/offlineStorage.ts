@@ -85,6 +85,7 @@ export async function cacheEventos(
       req.onerror = () => reject(req.error)
     })
   } catch {
+    return
   }
 }
 

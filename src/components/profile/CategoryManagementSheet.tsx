@@ -120,16 +120,16 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
       >
         {/* Handle */}
         <div className="flex shrink-0 justify-center pt-3 pb-1">
-          <div className="h-1 w-10 rounded-full bg-[var(--duocal-border)]" />
+          <div className="h-1 w-10 rounded-full bg-(--duocal-border)" />
         </div>
 
         {/* Header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-[var(--duocal-border)] px-5 pt-2 pb-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-(--duocal-border) px-5 pt-2 pb-4">
           {isFormMode ? (
             <button
               type="button"
               onClick={voltarLista}
-              className="grid size-9 shrink-0 place-items-center rounded-2xl bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)] transition hover:bg-[rgba(84,102,241,0.08)] hover:text-[var(--duocal-primary)]"
+              className="grid size-9 shrink-0 place-items-center rounded-2xl bg-(--duocal-surface-soft) text-(--duocal-muted) transition hover:bg-[rgba(84,102,241,0.08)] hover:text-(--duocal-primary)"
               aria-label="Voltar"
             >
               <ArrowLeft className="size-4" />
@@ -138,14 +138,14 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
             <div className="size-9" />
           )}
 
-          <h2 className="text-xl font-black text-[var(--duocal-text)]">
+          <h2 className="text-xl font-black text-(--duocal-text)">
             {isListMode ? 'Categorias' : editando ? 'Editar categoria' : 'Nova categoria'}
           </h2>
 
           <button
             type="button"
             onClick={onClose}
-            className="grid size-9 shrink-0 place-items-center rounded-2xl bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)] transition hover:bg-[rgba(84,102,241,0.08)] hover:text-[var(--duocal-primary)]"
+            className="grid size-9 shrink-0 place-items-center rounded-2xl bg-(--duocal-surface-soft) text-(--duocal-muted) transition hover:bg-[rgba(84,102,241,0.08)] hover:text-(--duocal-primary)"
             aria-label="Fechar"
           >
             <X className="size-4" />
@@ -159,30 +159,30 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
           {isListMode && (
             <div className="space-y-2">
               {categoriasQuery.isLoading ? (
-                <p className="py-6 text-center text-sm text-[var(--duocal-muted)]">
+                <p className="py-6 text-center text-sm text-(--duocal-muted)">
                   Carregando...
                 </p>
               ) : categorias.length === 0 ? (
-                <p className="py-6 text-center text-sm text-[var(--duocal-muted)]">
+                <p className="py-6 text-center text-sm text-(--duocal-muted)">
                   Nenhuma categoria ainda.
                 </p>
               ) : (
                 categorias.map((cat) => (
                   <div
                     key={cat.id}
-                    className="flex items-center gap-3 rounded-[18px] border border-[var(--duocal-border)] bg-[var(--duocal-surface-soft)] px-4 py-3"
+                    className="flex items-center gap-3 rounded-[18px] border border-(--duocal-border) bg-(--duocal-surface-soft) px-4 py-3"
                   >
                     <span
                       className="size-4 shrink-0 rounded-full"
                       style={{ backgroundColor: cat.cd_cor }}
                     />
-                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[var(--duocal-text)]">
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-(--duocal-text)">
                       {cat.nm_categoria}
                     </span>
                     <button
                       type="button"
                       onClick={() => abrirEdicao(cat)}
-                      className="grid size-8 shrink-0 place-items-center rounded-xl text-[var(--duocal-muted)] transition hover:bg-[rgba(84,102,241,0.08)] hover:text-[var(--duocal-primary)]"
+                      className="grid size-8 shrink-0 place-items-center rounded-xl text-(--duocal-muted) transition hover:bg-[rgba(84,102,241,0.08)] hover:text-(--duocal-primary)"
                       aria-label={`Editar ${cat.nm_categoria}`}
                     >
                       <Pencil className="size-3.5" />
@@ -195,7 +195,7 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
               <button
                 type="button"
                 onClick={abrirNova}
-                className="mt-2 flex w-full items-center gap-2 rounded-[18px] border border-dashed border-[var(--duocal-border)] px-4 py-3 text-sm font-semibold text-[var(--duocal-primary)] transition hover:bg-[rgba(84,102,241,0.06)]"
+                className="mt-2 flex w-full items-center gap-2 rounded-[18px] border border-dashed border-(--duocal-border) px-4 py-3 text-sm font-semibold text-(--duocal-primary) transition hover:bg-[rgba(84,102,241,0.06)]"
               >
                 <Plus className="size-4" />
                 Nova categoria
@@ -216,8 +216,8 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
 
               {/* Nome */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-[var(--duocal-text)]">
-                  Nome <span className="text-[var(--duocal-danger)]">*</span>
+                <label className="text-sm font-semibold text-(--duocal-text)">
+                  Nome <span className="text-(--duocal-danger)">*</span>
                 </label>
                 <input
                   className="duocal-input"
@@ -231,7 +231,7 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
 
               {/* Cor */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-[var(--duocal-text)]">
+                <label className="text-sm font-semibold text-(--duocal-text)">
                   Cor
                 </label>
                 <div className="grid grid-cols-6 gap-2.5">
@@ -269,17 +269,17 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
                 <div className="pt-2">
                   {confirmandoId === editando.id ? (
                     <div className="rounded-2xl border border-[rgba(255,90,122,0.20)] bg-[rgba(255,90,122,0.04)] p-4 space-y-3">
-                      <p className="text-sm font-semibold text-[var(--duocal-danger)]">
+                      <p className="text-sm font-semibold text-(--duocal-danger)">
                         Remover &ldquo;{editando.nm_categoria}&rdquo;?
                       </p>
-                      <p className="text-xs text-[var(--duocal-muted)]">
+                      <p className="text-xs text-(--duocal-muted)">
                         Eventos com esta categoria não serão afetados, mas a categoria não estará mais disponível para novos eventos.
                       </p>
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={() => setConfirmandoId(null)}
-                          className="flex-1 rounded-2xl border border-[var(--duocal-border)] py-2 text-sm font-semibold text-[var(--duocal-muted)] transition hover:bg-[var(--duocal-surface-soft)]"
+                          className="flex-1 rounded-2xl border border-(--duocal-border) py-2 text-sm font-semibold text-(--duocal-muted) transition hover:bg-(--duocal-surface-soft)"
                         >
                           Cancelar
                         </button>
@@ -287,7 +287,7 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
                           type="button"
                           onClick={() => desativar(editando)}
                           disabled={desativarCategoria.isPending}
-                          className="flex-1 rounded-2xl bg-[var(--duocal-danger)] py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-60"
+                          className="flex-1 rounded-2xl bg-(--duocal-danger) py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-60"
                         >
                           {desativarCategoria.isPending ? 'Removendo...' : 'Remover'}
                         </button>
@@ -297,7 +297,7 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
                     <button
                       type="button"
                       onClick={() => setConfirmandoId(editando.id)}
-                      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[rgba(255,90,122,0.20)] py-2.5 text-sm font-semibold text-[var(--duocal-danger)] transition hover:bg-[rgba(255,90,122,0.04)]"
+                      className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[rgba(255,90,122,0.20)] py-2.5 text-sm font-semibold text-(--duocal-danger) transition hover:bg-[rgba(255,90,122,0.04)]"
                     >
                       <Trash2 className="size-4" />
                       Remover categoria
@@ -313,7 +313,7 @@ export function CategoryManagementSheet({ workspaceId, onClose }: Props) {
 
         {/* Footer (apenas no formulário) */}
         {isFormMode && (
-          <div className="shrink-0 border-t border-[var(--duocal-border)] px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <div className="shrink-0 border-t border-(--duocal-border) px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
             <Button className="w-full" isLoading={isSaving} onClick={salvar}>
               Salvar
             </Button>

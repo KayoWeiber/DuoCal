@@ -74,10 +74,10 @@ export function EventDatePickerSheet({ value, onConfirm, onClose }: Props) {
       <div className="duocal-constrained-width w-full overflow-y-auto rounded-t-[32px] bg-white shadow-[0_-16px_60px_rgba(17,20,74,0.14)]" style={{ maxHeight: 'min(90dvh, 640px)' }}>
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-2">
-          <div className="h-1 w-10 rounded-full bg-[var(--duocal-border)]" />
+          <div className="h-1 w-10 rounded-full bg-(--duocal-border)" />
         </div>
 
-        <h3 className="px-5 pb-4 text-center text-lg font-bold text-[var(--duocal-text)]">
+        <h3 className="px-5 pb-4 text-center text-lg font-bold text-(--duocal-text)">
           Selecionar data
         </h3>
 
@@ -86,17 +86,17 @@ export function EventDatePickerSheet({ value, onConfirm, onClose }: Props) {
           <button
             type="button"
             onClick={prevMonth}
-            className="grid size-9 place-items-center rounded-2xl bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)] transition hover:bg-[rgba(84,102,241,0.08)] hover:text-[var(--duocal-primary)]"
+            className="grid size-9 place-items-center rounded-2xl bg-(--duocal-surface-soft) text-(--duocal-muted) transition hover:bg-[rgba(84,102,241,0.08)] hover:text-(--duocal-primary)"
           >
             <ChevronLeft className="size-4" />
           </button>
-          <span className="text-base font-bold text-[var(--duocal-text)]">
+          <span className="text-base font-bold text-(--duocal-text)">
             {MONTHS[viewMonth]} {viewYear}
           </span>
           <button
             type="button"
             onClick={nextMonth}
-            className="grid size-9 place-items-center rounded-2xl bg-[var(--duocal-surface-soft)] text-[var(--duocal-muted)] transition hover:bg-[rgba(84,102,241,0.08)] hover:text-[var(--duocal-primary)]"
+            className="grid size-9 place-items-center rounded-2xl bg-(--duocal-surface-soft) text-(--duocal-muted) transition hover:bg-[rgba(84,102,241,0.08)] hover:text-(--duocal-primary)"
           >
             <ChevronRight className="size-4" />
           </button>
@@ -107,7 +107,7 @@ export function EventDatePickerSheet({ value, onConfirm, onClose }: Props) {
           {WEEK_DAYS.map((d) => (
             <div
               key={d}
-              className="py-1 text-center text-[11px] font-semibold text-[var(--duocal-muted)]"
+              className="py-1 text-center text-[11px] font-semibold text-(--duocal-muted)"
             >
               {d}
             </div>
@@ -129,8 +129,8 @@ export function EventDatePickerSheet({ value, onConfirm, onClose }: Props) {
                   isSel(day)
                     ? 'text-white shadow-md'
                     : isToday(day)
-                    ? 'bg-[rgba(84,102,241,0.10)] text-[var(--duocal-primary)]'
-                    : 'text-[var(--duocal-text)] hover:bg-[var(--duocal-surface-soft)]',
+                    ? 'bg-[rgba(84,102,241,0.10)] text-(--duocal-primary)'
+                    : 'text-(--duocal-text) hover:bg-(--duocal-surface-soft)',
                 )}
                 style={
                   isSel(day)
@@ -145,11 +145,11 @@ export function EventDatePickerSheet({ value, onConfirm, onClose }: Props) {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 border-t border-[var(--duocal-border)] px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="flex gap-3 border-t border-(--duocal-border) px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-2xl border border-[var(--duocal-border)] py-3 text-sm font-semibold text-[var(--duocal-muted)] transition hover:bg-[var(--duocal-surface-soft)]"
+            className="flex-1 rounded-2xl border border-(--duocal-border) py-3 text-sm font-semibold text-(--duocal-muted) transition hover:bg-(--duocal-surface-soft)"
           >
             Cancelar
           </button>
