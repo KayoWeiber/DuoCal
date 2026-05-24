@@ -8,6 +8,7 @@ import {
   ProfileSetupModal,
   VersionOutdatedModal,
 } from '../components'
+import { AvatarImage } from '../components/profile/AvatarImage'
 import {
   useAuthSession,
   useBuscarEvento,
@@ -260,15 +261,25 @@ function ChipBtn({
       style={active ? activeStyle : inactiveStyle}
     >
       {visual ? (
-        <span
-          className="grid size-5 shrink-0 place-items-center rounded-full text-[9px] font-black"
-          style={{
-            background: active ? 'rgba(255,255,255,0.22)' : visual.solidBackground,
-            color: '#fff',
-          }}
-        >
-          {visual.initials}
-        </span>
+        visual.avatarPath ? (
+          <AvatarImage
+            avatarPath={visual.avatarPath}
+            nome={visual.label}
+            size={20}
+            background={visual.solidBackground}
+            className="shrink-0"
+          />
+        ) : (
+          <span
+            className="grid size-5 shrink-0 place-items-center rounded-full text-[9px] font-black"
+            style={{
+              background: active ? 'rgba(255,255,255,0.22)' : visual.solidBackground,
+              color: '#fff',
+            }}
+          >
+            {visual.initials}
+          </span>
+        )
       ) : null}
       <span className="max-w-28 truncate">{visual?.label ?? label}</span>
     </button>

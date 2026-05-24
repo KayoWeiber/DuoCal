@@ -28,3 +28,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
   },
 })
+
+export function getAvatarUrl(avatarPath: string): string {
+  const { data } = supabase.storage.from('avatars').getPublicUrl(avatarPath)
+  return data.publicUrl
+}
+
+export function buildAvatarPath(workspaceId: string, userId: string): string {
+  return `workspaces/${workspaceId}/users/${userId}/avatar.webp`
+}

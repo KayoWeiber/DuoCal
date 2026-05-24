@@ -1,16 +1,10 @@
 import { Heart } from 'lucide-react'
 import type { WorkspaceAtual, MembroWorkspace } from '../../hooks'
+import { AvatarImage } from './AvatarImage'
 
 type Props = {
   workspace: WorkspaceAtual
   membros: MembroWorkspace[]
-}
-
-function getIniciais(nome: string | null): string {
-  if (!nome) return '?'
-  const partes = nome.trim().split(/\s+/)
-  if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase()
-  return nome.slice(0, 2).toUpperCase()
 }
 
 function calcJuntos(dtEntrada: string): string {
@@ -43,18 +37,19 @@ export function ProfileHeroCard({ workspace, membros }: Props) {
         fill="currentColor"
       />
 
-      {/* Avatares sobrepostos */}
+      {/* Avatares sobrepostos dos membros */}
       {membros.length > 0 && (
         <div className="mb-4 flex items-center">
           <div className="flex -space-x-2.5">
             {membros.slice(0, 3).map((m, i) => (
-              <div
+              <AvatarImage
                 key={m.usuario_id}
-                className="flex size-11 items-center justify-center rounded-full text-sm font-black text-white ring-2 ring-white"
-                style={{ background: AVATAR_COLORS[i] ?? 'var(--duocal-muted)', zIndex: 10 - i }}
-              >
-                {getIniciais(m.nm_usuario)}
-              </div>
+                avatarPath={m.avatar_path}
+                nome={m.nm_usuario}
+                size={44}
+                background={AVATAR_COLORS[i] ?? 'var(--duocal-muted)'}
+                className="ring-2 ring-white"
+              />
             ))}
           </div>
         </div>

@@ -10,6 +10,7 @@ export type AgendaResponsavelVisual = {
   solidBackground: string
   text: string
   type: 'casal' | 'membro' | 'sem-responsavel'
+  avatarPath?: string | null
 }
 
 export type AgendaVisualMap = {
@@ -101,6 +102,7 @@ export function buildAgendaVisualMap(membros: MembroWorkspace[]): AgendaVisualMa
       initials: getInitials(membro.nm_usuario),
       label: getFirstName(membro.nm_usuario),
       type: 'membro',
+      avatarPath: membro.avatar_path ?? null,
     }
   })
 
