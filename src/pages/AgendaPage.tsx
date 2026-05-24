@@ -32,6 +32,11 @@ import type {
 } from '../hooks'
 import type { SyncQueueItem } from '../lib'
 import { AgendaTimeline } from '../components/agenda/AgendaTimeline'
+import {
+  buildAgendaVisualMap,
+  type AgendaResponsavelVisual,
+  type AgendaVisualMap,
+} from '../components/agenda/agendaVisual'
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -40,9 +45,6 @@ const MESES_ABREV = [
   'JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN',
   'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ',
 ]
-
-// Cores por índice de membro (até 2 membros no MVP)
-const MEMBRO_CORES = ['var(--duocal-kayo)', 'var(--duocal-athina)']
 
 // ─── Helpers de data ──────────────────────────────────────────────────────────
 
@@ -195,10 +197,12 @@ function AgendaDayStrip({
 function AgendaFiltroChips({
   membros,
   filtro,
+  visualMap,
   onFiltro,
 }: {
   membros: MembroWorkspace[]
   filtro: string
+  visualMap: AgendaVisualMap
   onFiltro: (f: string) => void
 }) {
   return (
@@ -206,21 +210,23 @@ function AgendaFiltroChips({
       className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
-      <ChipBtn label="Todos" active={filtro === 'todos'} onClick={() => onFiltro('todos')} />
-      {membros.map((m, i) => (
+      <ChipBtn
+        label="Todos"
+        active={filtro === 'todos'}
+        onClick={() => onFiltro('todos')}
+      />
+      {membros.map((m) => (
         <ChipBtn
           key={m.usuario_id}
-          label={primeiroNome(m.nm_usuario)}
           active={filtro === m.usuario_id}
-          cor={MEMBRO_CORES[i] ?? 'var(--duocal-primary)'}
+          visual={visualMap.byMemberId[m.usuario_id]}
           onClick={() => onFiltro(m.usuario_id)}
         />
       ))}
       {membros.length > 1 && (
         <ChipBtn
-          label="Casal"
           active={filtro === 'casal'}
-          cor="var(--duocal-casal)"
+          visual={visualMap.casal}
           onClick={() => onFiltro('casal')}
         />
       )}
@@ -229,31 +235,48 @@ function AgendaFiltroChips({
 }
 
 function ChipBtn({
-  label,
   active,
-  cor,
+  label = 'Todos',
+  visual,
   onClick,
 }: {
-  label: string
   active: boolean
-  cor?: string
+  label?: string
+  visual?: AgendaResponsavelVisual
   onClick: () => void
 }) {
+  const activeStyle = visual
+    ? { background: visual.solidBackground, borderColor: 'transparent', color: '#fff' }
+    : {
+        background: 'linear-gradient(135deg,#5466F1,#B66DFF)',
+        borderColor: 'transparent',
+        color: '#fff',
+      }
+  const inactiveStyle = {
+    background: 'var(--duocal-surface)',
+    borderColor: visual?.border ?? 'var(--duocal-border)',
+    color: visual?.text ?? 'var(--duocal-muted)',
+  }
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all"
-      style={
-        active
-          ? { background: 'linear-gradient(135deg,#5466F1,#B66DFF)', color: '#fff' }
-          : { background: 'var(--duocal-surface)', color: 'var(--duocal-muted)', border: '1px solid var(--duocal-border)' }
-      }
+      className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-black shadow-[0_8px_18px_rgba(17,20,74,0.05)] transition-all active:scale-[0.98]"
+      style={active ? activeStyle : inactiveStyle}
     >
-      {cor && !active && (
-        <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: cor }} />
-      )}
-      {label}
+      {visual ? (
+        <span
+          className="grid size-5 shrink-0 place-items-center rounded-full text-[9px] font-black"
+          style={{
+            background: active ? 'rgba(255,255,255,0.22)' : visual.solidBackground,
+            color: '#fff',
+          }}
+        >
+          {visual.initials}
+        </span>
+      ) : null}
+      <span className="max-w-28 truncate">{visual?.label ?? label}</span>
     </button>
   )
 }
@@ -328,6 +351,7 @@ export function AgendaPage() {
   }, [buscarEvento.isError])
 
   const membros = useMemo(() => membrosQuery.data ?? [], [membrosQuery.data])
+  const agendaVisualMap = useMemo(() => buildAgendaVisualMap(membros), [membros])
   const categorias = useMemo(() => categoriasQuery.data ?? [], [categoriasQuery.data])
 
   const eventosServidor = useMemo(
@@ -449,7 +473,12 @@ export function AgendaPage() {
             {/* Chips de filtro */}
             {membros.length > 0 && (
               <div className="shrink-0 px-5 pb-3">
-                <AgendaFiltroChips membros={membros} filtro={filtro} onFiltro={setFiltro} />
+                <AgendaFiltroChips
+                  membros={membros}
+                  filtro={filtro}
+                  visualMap={agendaVisualMap}
+                  onFiltro={setFiltro}
+                />
               </div>
             )}
           </>
@@ -474,6 +503,7 @@ export function AgendaPage() {
               eventos={eventosServidor}
               eventosPendentes={eventosPendentesFiltrados}
               diaSelecionado={diaSelecionado}
+              visualMap={agendaVisualMap}
               hrInicioDia={timelineExpanded ? '00:00' : configuracao?.hrInicioDia}
               hrFimDia={timelineExpanded ? '23:00' : configuracao?.hrFimDia}
               autoScrollToCurrent={!timelineExpanded}
@@ -572,7 +602,3 @@ export function AgendaPage() {
 }
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
-
-function primeiroNome(nome: string | null): string {
-  return nome?.trim().split(/\s+/)[0] ?? 'Membro'
-}

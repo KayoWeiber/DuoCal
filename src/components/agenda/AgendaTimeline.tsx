@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CloudOff, RefreshCw } from 'lucide-react'
 import type { EventoWorkspace } from '../../hooks'
+import {
+  getEventoResponsavelVisual,
+  getParticipantesLabel,
+  type AgendaVisualMap,
+} from './agendaVisual'
 
 const HORA_INICIO_PADRAO = 6
 const HORA_FIM_PADRAO = 23
-const PX_POR_HORA = 64
+const PX_POR_HORA = 72
 const COLUNA_HORA_PX = 48
 const MS_POR_HORA = 60 * 60 * 1000
+const TOUCH_SPACING_MS = 8 * 60 * 1000
 
 type TimelineRange = {
   startHour: number
@@ -38,6 +44,7 @@ export type AgendaTimelineProps = {
   eventos: EventoWorkspace[]
   eventosPendentes: EventoWorkspace[]
   diaSelecionado: Date
+  visualMap: AgendaVisualMap
   hrInicioDia?: string
   hrFimDia?: string
   autoScrollToCurrent?: boolean
@@ -61,10 +68,14 @@ function parseHoraLabel(value: string | null | undefined, fallback: number) {
 
 function criarRange(startHour: number, endHour: number): TimelineRange {
   const normalizedStart = clamp(startHour, 0, 23)
-  const normalizedEnd = clamp(Math.max(endHour, normalizedStart), normalizedStart, 23)
+  const normalizedEnd = clamp(
+    Math.max(endHour, normalizedStart),
+    normalizedStart,
+    23,
+  )
   const hours = Array.from(
     { length: normalizedEnd - normalizedStart + 1 },
-    (_, i) => i + normalizedStart,
+    (_value, index) => index + normalizedStart,
   )
 
   return {
@@ -79,7 +90,7 @@ function criarRange(startHour: number, endHour: number): TimelineRange {
 function getDayBounds(dia: Date) {
   const inicio = new Date(dia.getFullYear(), dia.getMonth(), dia.getDate())
   const fim = new Date(inicio.getTime() + 24 * MS_POR_HORA)
-  return { inicio, fim }
+  return { fim, inicio }
 }
 
 function getHourInDay(ms: number, dayStartMs: number) {
@@ -94,20 +105,24 @@ function getEventoIntervalo(
   const { inicio, fim } = getDayBounds(diaSelecionado)
   const dayStartMs = inicio.getTime()
   const dayEndMs = fim.getTime()
-  const rawStartMs = evento.fl_dia_todo ? dayStartMs : new Date(evento.dt_inicio).getTime()
-  const rawEndMs = evento.fl_dia_todo ? dayEndMs : new Date(evento.dt_fim).getTime()
+  const rawStartMs = evento.fl_dia_todo
+    ? dayStartMs
+    : new Date(evento.dt_inicio).getTime()
+  const rawEndMs = evento.fl_dia_todo
+    ? dayEndMs
+    : new Date(evento.dt_fim).getTime()
   const startMs = Math.max(rawStartMs, dayStartMs)
   const endMs = Math.min(rawEndMs, dayEndMs)
 
   if (endMs <= startMs) return null
 
   return {
+    endHour: getHourInDay(endMs, dayStartMs),
+    endMs,
     evento,
     isPending,
-    startMs,
-    endMs,
     startHour: getHourInDay(startMs, dayStartMs),
-    endHour: getHourInDay(endMs, dayStartMs),
+    startMs,
   }
 }
 
@@ -117,18 +132,22 @@ function resolverRangeTimeline({
   diaSelecionado,
   hrInicioDia,
   hrFimDia,
-}: Pick<AgendaTimelineProps, 'eventos' | 'eventosPendentes' | 'diaSelecionado' | 'hrInicioDia' | 'hrFimDia'>) {
+}: Pick<
+  AgendaTimelineProps,
+  'diaSelecionado' | 'eventos' | 'eventosPendentes' | 'hrFimDia' | 'hrInicioDia'
+>) {
   const inicioConfigurado = parseHoraLabel(hrInicioDia, HORA_INICIO_PADRAO)
   const fimConfigurado = parseHoraLabel(hrFimDia, HORA_FIM_PADRAO)
   const intervalos = [
     ...eventos.map((evento) => getEventoIntervalo(evento, diaSelecionado, false)),
-    ...eventosPendentes.map((evento) => getEventoIntervalo(evento, diaSelecionado, true)),
+    ...eventosPendentes.map((evento) =>
+      getEventoIntervalo(evento, diaSelecionado, true),
+    ),
   ].filter((intervalo): intervalo is EventoComIntervalo => Boolean(intervalo))
 
   const temEventoNaMadrugada = intervalos.some(
     ({ evento, startHour }) => !evento.fl_dia_todo && startHour < inicioConfigurado,
   )
-
   const fimComEventos = intervalos.reduce((maiorFim, { evento, endHour }) => {
     if (evento.fl_dia_todo) return maiorFim
     return Math.max(maiorFim, Math.ceil(endHour) - 1)
@@ -148,16 +167,24 @@ function calcTopAtual(range: TimelineRange): number {
 }
 
 function calcTop(intervalo: EventoComIntervalo, range: TimelineRange): number {
-  const startHour = clamp(intervalo.startHour, range.startHour, range.endExclusiveHour)
+  const startHour = clamp(
+    intervalo.startHour,
+    range.startHour,
+    range.endExclusiveHour,
+  )
   return (startHour - range.startHour) * PX_POR_HORA
 }
 
 function calcHeight(intervalo: EventoComIntervalo, range: TimelineRange): number {
   if (intervalo.evento.fl_dia_todo) return range.totalHeight
 
-  const startHour = clamp(intervalo.startHour, range.startHour, range.endExclusiveHour)
+  const startHour = clamp(
+    intervalo.startHour,
+    range.startHour,
+    range.endExclusiveHour,
+  )
   const endHour = clamp(intervalo.endHour, range.startHour, range.endExclusiveHour)
-  return Math.max((endHour - startHour) * PX_POR_HORA, 36)
+  return Math.max((endHour - startHour) * PX_POR_HORA, 44)
 }
 
 function calcLayout(
@@ -171,9 +198,11 @@ function calcLayout(
     ...pendentes.map((evento) => getEventoIntervalo(evento, diaSelecionado, true)),
   ]
     .filter((intervalo): intervalo is EventoComIntervalo => Boolean(intervalo))
-    .filter((intervalo) => (
-      intervalo.endHour > range.startHour && intervalo.startHour < range.endExclusiveHour
-    ))
+    .filter(
+      (intervalo) =>
+        intervalo.endHour > range.startHour &&
+        intervalo.startHour < range.endExclusiveHour,
+    )
     .sort((a, b) => a.startMs - b.startMs)
 
   if (todos.length === 0) return []
@@ -181,31 +210,35 @@ function calcLayout(
   const colFim: number[] = []
   const assigned: number[] = []
 
-  todos.forEach(({ startMs, endMs }, i) => {
-    let col = colFim.findIndex((fim) => fim <= startMs)
+  todos.forEach(({ startMs, endMs }, index) => {
+    let col = colFim.findIndex((fim) => fim + TOUCH_SPACING_MS <= startMs)
+
     if (col === -1) {
       col = colFim.length
       colFim.push(endMs)
     } else {
       colFim[col] = Math.max(colFim[col], endMs)
     }
-    assigned[i] = col
+
+    assigned[index] = col
   })
 
-  return todos.map((intervalo, i) => {
-    const maxCol = todos.reduce((maiorColuna, outroIntervalo, j) => {
+  return todos.map((intervalo, index) => {
+    const maxCol = todos.reduce((maiorColuna, outroIntervalo, outroIndex) => {
       const sobrepoe =
-        outroIntervalo.startMs < intervalo.endMs && outroIntervalo.endMs > intervalo.startMs
-      return sobrepoe ? Math.max(maiorColuna, assigned[j]) : maiorColuna
+        outroIntervalo.startMs < intervalo.endMs + TOUCH_SPACING_MS &&
+        outroIntervalo.endMs + TOUCH_SPACING_MS > intervalo.startMs
+
+      return sobrepoe ? Math.max(maiorColuna, assigned[outroIndex]) : maiorColuna
     }, 0)
 
     return {
+      coluna: assigned[index],
       evento: intervalo.evento,
-      top: calcTop(intervalo, range),
       height: calcHeight(intervalo, range),
-      coluna: assigned[i],
-      totalColunas: maxCol + 1,
       isPending: intervalo.isPending,
+      top: calcTop(intervalo, range),
+      totalColunas: maxCol + 1,
     }
   })
 }
@@ -217,9 +250,11 @@ function EventoTimeline({
   coluna,
   totalColunas,
   isPending,
+  visualMap,
   onClick,
-}: EventoLayoutado & { onClick?: () => void }) {
-  const cor = evento.cd_cor_categoria ?? '#5466F1'
+}: EventoLayoutado & { visualMap: AgendaVisualMap; onClick?: () => void }) {
+  const visual = getEventoResponsavelVisual(evento, visualMap)
+  const categoriaCor = evento.cd_cor_categoria ?? visual.color
   const tini = new Date(evento.dt_inicio).toLocaleTimeString('pt-BR', {
     hour: '2-digit',
     minute: '2-digit',
@@ -228,71 +263,105 @@ function EventoTimeline({
     hour: '2-digit',
     minute: '2-digit',
   })
-  const curto = height < 52
+  const curto = height < 58
+  const narrow = totalColunas > 1
+  const participantesLabel = getParticipantesLabel(evento.participantes ?? [])
 
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={evento.nm_evento}
-      className="absolute flex flex-col overflow-hidden rounded-xl text-left transition active:scale-[0.98] active:opacity-70"
+      aria-label={`${evento.nm_evento}, ${participantesLabel}`}
+      className="absolute flex flex-col overflow-hidden rounded-2xl border text-left shadow-[0_8px_22px_rgba(17,20,74,0.08)] transition hover:shadow-[0_10px_26px_rgba(17,20,74,0.12)] active:scale-[0.98] active:opacity-70"
       style={{
-        top: top + 2,
-        height: Math.max(height - 4, 32),
-        left: `calc(${(coluna / totalColunas) * 100}% + 2px)`,
-        width: `calc(${(1 / totalColunas) * 100}% - 4px)`,
-        backgroundColor: `${cor}1F`,
-        borderLeft: `3px solid ${cor}`,
-        padding: curto ? '2px 6px' : '5px 8px',
+        top: top + 3,
+        height: Math.max(height - 6, 38),
+        left: `calc(${(coluna / totalColunas) * 100}% + 3px)`,
+        width: `calc(${(1 / totalColunas) * 100}% - 6px)`,
+        background: visual.background,
+        borderColor: visual.border,
+        borderLeft: `4px solid ${visual.color}`,
+        padding: curto ? '4px 6px' : '7px 8px',
         opacity: isPending ? 0.78 : 1,
       }}
     >
       {curto ? (
-        <p className="truncate text-[10px] font-bold leading-tight" style={{ color: cor }}>
-          {tini} · {evento.nm_evento}
-        </p>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span
+            className="grid size-5 shrink-0 place-items-center rounded-full text-[8px] font-black text-white"
+            style={{ background: visual.solidBackground }}
+          >
+            {visual.initials}
+          </span>
+          <p
+            className="min-w-0 truncate text-[10px] font-black leading-tight"
+            style={{ color: visual.text }}
+          >
+            {tini} · {evento.nm_evento}
+          </p>
+        </div>
       ) : (
         <>
-          <p className="shrink-0 text-[10px] leading-none" style={{ color: `${cor}99` }}>
-            {evento.fl_dia_todo ? 'Dia todo' : `${tini}-${tfim}`}
-          </p>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span
+              className="grid size-6 shrink-0 place-items-center rounded-full text-[9px] font-black text-white shadow-[0_2px_8px_rgba(17,20,74,0.12)]"
+              style={{ background: visual.solidBackground }}
+            >
+              {visual.initials}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p
+                className="truncate text-[10px] font-black leading-none"
+                style={{ color: visual.text }}
+              >
+                {evento.fl_dia_todo ? 'Dia todo' : `${tini}-${tfim}`}
+              </p>
+              {!narrow ? (
+                <p className="mt-0.5 truncate text-[9px] font-semibold leading-none text-(--duocal-muted)">
+                  {visual.label}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
           <p
-            className="mt-0.5 font-bold leading-snug"
+            className="mt-1 min-w-0 font-black leading-snug text-(--duocal-text)"
             style={{
-              color: cor,
-              fontSize: 12,
               display: '-webkit-box',
-              WebkitLineClamp: height > 72 ? 2 : 1,
-              WebkitBoxOrient: 'vertical',
+              fontSize: narrow ? 11 : 12,
               overflow: 'hidden',
+              WebkitBoxOrient: 'vertical',
+              WebkitLineClamp: height > 72 ? 2 : 1,
             }}
           >
             {evento.nm_evento}
           </p>
-          {height > 88 && evento.nm_categoria && (
-            <span
-              className="mt-auto inline-flex max-w-full items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold"
-              style={{ backgroundColor: `${cor}28`, color: cor }}
-            >
-              <span className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: cor }} />
+
+          {height > 92 && evento.nm_categoria && !narrow ? (
+            <span className="mt-auto inline-flex max-w-full items-center gap-1 rounded-full bg-white/70 px-1.5 py-0.5 text-[9px] font-bold text-(--duocal-muted)">
+              <span
+                className="size-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: categoriaCor }}
+              />
               <span className="truncate">{evento.nm_categoria}</span>
             </span>
-          )}
+          ) : null}
         </>
       )}
 
-      {evento.fl_recorrente && height >= 52 && (
+      {evento.fl_recorrente && height >= 52 ? (
         <RefreshCw
           className="pointer-events-none absolute bottom-1 right-1.5 opacity-40"
-          style={{ color: cor, width: 9, height: 9 }}
+          style={{ color: visual.color, width: 9, height: 9 }}
         />
-      )}
-      {isPending && (
+      ) : null}
+
+      {isPending ? (
         <CloudOff
           className="pointer-events-none absolute top-1 right-1.5"
           style={{ width: 10, height: 10, color: '#D97706' }}
         />
-      )}
+      ) : null}
     </button>
   )
 }
@@ -301,6 +370,7 @@ export function AgendaTimeline({
   eventos,
   eventosPendentes,
   diaSelecionado,
+  visualMap,
   hrInicioDia,
   hrFimDia,
   autoScrollToCurrent = true,
@@ -309,13 +379,14 @@ export function AgendaTimeline({
   const scrollRef = useRef<HTMLDivElement>(null)
   const eHoje = toISODate(diaSelecionado) === toISODate(new Date())
   const range = useMemo(
-    () => resolverRangeTimeline({
-      eventos,
-      eventosPendentes,
-      diaSelecionado,
-      hrInicioDia,
-      hrFimDia,
-    }),
+    () =>
+      resolverRangeTimeline({
+        diaSelecionado,
+        eventos,
+        eventosPendentes,
+        hrFimDia,
+        hrInicioDia,
+      }),
     [eventos, eventosPendentes, diaSelecionado, hrInicioDia, hrFimDia],
   )
   const layoutados = useMemo(
@@ -328,6 +399,7 @@ export function AgendaTimeline({
     const refreshTopAtual = () => setTopAtual(calcTopAtual(range))
     const timer = window.setTimeout(refreshTopAtual, 0)
     const id = window.setInterval(refreshTopAtual, 60_000)
+
     return () => {
       window.clearTimeout(timer)
       window.clearInterval(id)
@@ -336,6 +408,7 @@ export function AgendaTimeline({
 
   useEffect(() => {
     if (!scrollRef.current) return
+
     const top = calcTopAtual(range)
     scrollRef.current.scrollTop =
       autoScrollToCurrent && eHoje && top >= 0 ? Math.max(top - 100, 0) : 0
@@ -346,8 +419,8 @@ export function AgendaTimeline({
       ref={scrollRef}
       className="h-full overflow-y-auto overflow-x-hidden overscroll-contain scrollbar-hide transition-colors duration-200"
       style={{
-        backgroundColor: eHoje ? '#ffffff' : 'var(--duocal-surface-soft)',
         WebkitOverflowScrolling: 'touch',
+        backgroundColor: eHoje ? '#ffffff' : 'var(--duocal-surface-soft)',
       }}
     >
       <div
@@ -364,7 +437,9 @@ export function AgendaTimeline({
               <span
                 className="text-[10px] font-medium leading-none"
                 style={{
-                  color: eHoje ? 'var(--duocal-muted)' : 'rgba(107,114,128,0.55)',
+                  color: eHoje
+                    ? 'var(--duocal-muted)'
+                    : 'rgba(107,114,128,0.55)',
                   marginTop: '-7px',
                 }}
               >
@@ -383,13 +458,13 @@ export function AgendaTimeline({
               key={hora}
               className="pointer-events-none absolute inset-x-0"
               style={{
-                top: (hora - range.startHour) * PX_POR_HORA,
                 borderTop: '1px solid var(--duocal-border)',
+                top: (hora - range.startHour) * PX_POR_HORA,
               }}
             />
           ))}
 
-          {eHoje && topAtual >= 0 && (
+          {eHoje && topAtual >= 0 ? (
             <div
               className="pointer-events-none absolute inset-x-0 z-10 flex items-center"
               style={{ top: topAtual }}
@@ -400,12 +475,13 @@ export function AgendaTimeline({
               />
               <div className="flex-1 border-t-[2px] border-red-500" />
             </div>
-          )}
+          ) : null}
 
           {layoutados.map((layout) => (
             <EventoTimeline
               key={`${layout.evento.id}-${layout.top}`}
               {...layout}
+              visualMap={visualMap}
               onClick={layout.isPending ? undefined : () => onEventoClick(layout.evento)}
             />
           ))}
