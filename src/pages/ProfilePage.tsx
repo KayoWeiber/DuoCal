@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Bell, ChevronRight, Link2, LogOut, Plus, Settings, Tag, UserRound } from 'lucide-react'
 import {
   BottomNavigation,
-  FeedbackAlert,
   ProfileSetupModal,
+  PushNotificationsSheet,
   ScreenContainer,
   VersionOutdatedModal,
 } from '../components'
@@ -38,10 +38,9 @@ export function ProfilePage() {
   const membros = membrosQuery.data ?? []
   const { unreadCount } = useUnreadNotificationCount(perfil)
 
-  const [feedback, setFeedback] = useState<string | null>(null)
-  const [erro, setErro] = useState<string | null>(null)
   const [codeSheetOpen, setCodeSheetOpen] = useState(false)
   const [categorySheetOpen, setCategorySheetOpen] = useState(false)
+  const [pushSheetOpen, setPushSheetOpen] = useState(false)
   const [workspaceSettingsOpen, setWorkspaceSettingsOpen] = useState(false)
   const [versionOutdated] = useState(false)
 
@@ -60,11 +59,6 @@ export function ProfilePage() {
     window.location.replace('/login')
   }
 
-  function showWip() {
-    setFeedback('Funcionalidade em construção.')
-    setErro(null)
-  }
-
   return (
     <>
       <ScreenContainer withBottomNavigation>
@@ -73,16 +67,6 @@ export function ProfilePage() {
           <p className="text-sm font-semibold text-(--duocal-muted)">Conta</p>
           <h1 className="mt-1 text-3xl font-black text-(--duocal-text)">Perfil</h1>
         </header>
-
-        {/* Feedback */}
-        {feedback || erro ? (
-          <FeedbackAlert
-            className="mb-4"
-            message={feedback ?? erro ?? ''}
-            onClose={() => { setFeedback(null); setErro(null) }}
-            variant={erro ? 'error' : 'success'}
-          />
-        ) : null}
 
         {/* — Hero card (com workspace) ou card simples (sem workspace) — */}
         {workspace ? (
@@ -202,8 +186,8 @@ export function ProfilePage() {
               icon={<Bell className="size-[17px] text-(--duocal-warning)" />}
               iconBg="rgba(255,176,32,0.12)"
               label="Notificações"
-              sublabel="Preferências personalizadas"
-              onClick={showWip}
+              sublabel="Lembretes neste dispositivo"
+              onClick={() => setPushSheetOpen(true)}
             />
           </div>
         </section>
@@ -276,6 +260,13 @@ export function ProfilePage() {
           membros={membros}
           codigoConvite={perfil?.cd_codigo_conexao}
           onClose={() => setWorkspaceSettingsOpen(false)}
+        />
+      ) : null}
+
+      {pushSheetOpen && workspace ? (
+        <PushNotificationsSheet
+          workspaceId={workspace.workspace.id}
+          onClose={() => setPushSheetOpen(false)}
         />
       ) : null}
     </>
