@@ -1,5 +1,6 @@
 export * from './cache'
 export * from './errors'
+export * from './imageOptimizer'
 export * from './offlineStorage'
 export * from './push'
 export * from './supabase'

@@ -8,6 +8,7 @@ export type MeuPerfil = {
   ds_email: string
   cd_codigo_conexao: string
   url_avatar: string | null
+  avatar_path: string | null
   fl_perfil_completo: boolean
   dt_perfil_completo: string | null
   dt_ultimo_login: string | null
@@ -48,6 +49,48 @@ export function useCompletarPerfilUsuario() {
     },
     onSuccess: (perfil) => {
       queryClient.setQueryData(meuPerfilQueryKey, normalizePerfil(perfil))
+      queryClient.invalidateQueries({ queryKey: meuPerfilQueryKey })
+    },
+  })
+}
+
+export function useAtualizarAvatarUsuario() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (avatarPath: string) => {
+      const { data, error } = await supabase.rpc('rpc_atualizar_avatar_usuario', {
+        p_avatar_path: avatarPath,
+      })
+
+      if (error) throw error
+
+      return normalizePerfil(normalizeRpcRow<MeuPerfil>(data))
+    },
+    onSuccess: (perfil) => {
+      if (perfil) {
+        queryClient.setQueryData(meuPerfilQueryKey, normalizePerfil(perfil))
+      }
+      queryClient.invalidateQueries({ queryKey: meuPerfilQueryKey })
+    },
+  })
+}
+
+export function useRemoverAvatarUsuario() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc('rpc_remover_avatar_usuario')
+
+      if (error) throw error
+
+      return normalizePerfil(normalizeRpcRow<MeuPerfil>(data))
+    },
+    onSuccess: (perfil) => {
+      if (perfil) {
+        queryClient.setQueryData(meuPerfilQueryKey, normalizePerfil(perfil))
+      }
       queryClient.invalidateQueries({ queryKey: meuPerfilQueryKey })
     },
   })
@@ -103,6 +146,7 @@ function normalizePerfil(perfil: MeuPerfil | null) {
   return {
     ...perfil,
     cd_codigo_conexao: perfil.cd_codigo_conexao ?? '',
+    avatar_path: perfil.avatar_path ?? null,
   } satisfies MeuPerfil
 }
 

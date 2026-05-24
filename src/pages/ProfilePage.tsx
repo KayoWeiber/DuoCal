@@ -7,6 +7,8 @@ import {
   ScreenContainer,
   VersionOutdatedModal,
 } from '../components'
+import { AvatarImage } from '../components/profile/AvatarImage'
+import { AvatarUpload } from '../components/profile/AvatarUpload'
 import { CategoryManagementSheet } from '../components/profile/CategoryManagementSheet'
 import { ConnectionCodeSheet } from '../components/profile/ConnectionCodeSheet'
 import { ProfileHeroCard } from '../components/profile/ProfileHeroCard'
@@ -20,13 +22,6 @@ import {
   useWorkspaceAtual,
 } from '../hooks'
 import { appVersion, supabase } from '../lib'
-
-function getIniciais(nome: string | null): string {
-  if (!nome) return '?'
-  const partes = nome.trim().split(/\s+/)
-  if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase()
-  return nome.slice(0, 2).toUpperCase()
-}
 
 export function ProfilePage() {
   const { session, isLoading } = useAuthSession()
@@ -74,9 +69,19 @@ export function ProfilePage() {
         ) : (
           <section className="duocal-card p-5">
             <div className="flex items-center gap-3">
-              <div className="duocal-gradient grid size-14 shrink-0 place-items-center rounded-[22px] text-white shadow-[0_10px_24px_rgba(84,102,241,0.24)]">
-                <UserRound className="size-7" />
-              </div>
+              {perfil ? (
+                <AvatarImage
+                  avatarPath={perfil.avatar_path}
+                  nome={perfil.nm_usuario}
+                  size={56}
+                  className="shrink-0 rounded-[22px]"
+                  background="var(--duocal-primary)"
+                />
+              ) : (
+                <div className="duocal-gradient grid size-14 shrink-0 place-items-center rounded-[22px] text-white shadow-[0_10px_24px_rgba(84,102,241,0.24)]">
+                  <UserRound className="size-7" />
+                </div>
+              )}
               <div className="min-w-0">
                 <h2 className="truncate text-lg font-black text-(--duocal-text)">
                   {perfil?.nm_usuario ?? 'Seu perfil'}
@@ -88,6 +93,13 @@ export function ProfilePage() {
             </div>
           </section>
         )}
+
+        {/* — Avatar upload (só com workspace e perfil carregado) — */}
+        {workspace && perfil ? (
+          <section className="mt-5 flex justify-center">
+            <AvatarUpload perfil={perfil} workspaceId={workspace.workspace.id} />
+          </section>
+        ) : null}
 
         {/* — Seção Membros (só com workspace) — */}
         {workspace ? (
@@ -104,16 +116,12 @@ export function ProfilePage() {
                     key={membro.usuario_id}
                     className="flex items-center gap-3 px-4 py-3.5"
                   >
-                    <div
-                      className="grid size-10 shrink-0 place-items-center rounded-full text-sm font-black text-white"
-                      style={{
-                        background: ehVoce
-                          ? 'var(--duocal-primary)'
-                          : 'var(--duocal-violet)',
-                      }}
-                    >
-                      {getIniciais(membro.nm_usuario)}
-                    </div>
+                    <AvatarImage
+                      avatarPath={membro.avatar_path}
+                      nome={membro.nm_usuario}
+                      size={40}
+                      background={ehVoce ? 'var(--duocal-primary)' : 'var(--duocal-violet)'}
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-(--duocal-text)">
                         {membro.nm_usuario}

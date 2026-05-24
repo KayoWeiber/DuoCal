@@ -44,6 +44,7 @@ export type MembroWorkspace = {
   ds_email: string
   tp_papel: string
   dt_entrada: string
+  avatar_path: string | null
 }
 
 export type CriarEventoPayload = {
