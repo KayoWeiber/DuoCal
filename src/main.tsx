@@ -4,6 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import './styles/globals.css'
 import { router } from './router'
+import { registerServiceWorker } from './lib/push'
+
+void registerServiceWorker().catch((error) => {
+  console.warn('[DuoCal] Service Worker nao registrado.', error)
+})
 
 const queryClient = new QueryClient({
   defaultOptions: {
