@@ -86,6 +86,8 @@ $$;
 
 -- ─── 4. Atualizar rpc_listar_membros_workspace ───────────────
 -- Inclui avatar_path para exibição nas telas de agenda e perfil
+drop function if exists public.rpc_listar_membros_workspace(uuid);
+
 create or replace function public.rpc_listar_membros_workspace(
   p_workspace_id uuid
 )
@@ -133,9 +135,11 @@ $$;
 -- ─── 5. Permissões ───────────────────────────────────────────
 revoke all on function public.rpc_atualizar_avatar_usuario(text) from public;
 revoke all on function public.rpc_remover_avatar_usuario() from public;
+revoke all on function public.rpc_listar_membros_workspace(uuid) from public;
 
 grant execute on function public.rpc_atualizar_avatar_usuario(text) to authenticated;
 grant execute on function public.rpc_remover_avatar_usuario() to authenticated;
+grant execute on function public.rpc_listar_membros_workspace(uuid) to authenticated;
 
 -- ─── 6. Storage: bucket avatars ──────────────────────────────
 -- Bucket público: URLs funcionam sem auth, RLS controla escrita
