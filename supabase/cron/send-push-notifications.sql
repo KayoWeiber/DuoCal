@@ -9,15 +9,15 @@
 -- Antes de agendar, salve o segredo no Vault:
 --   select vault.create_secret('SEU_PUSH_CRON_SECRET', 'duocal_push_cron_secret');
 --
--- Substitua:
---   SEU_PROJECT_REF pelo project ref do Supabase.
+-- Este arquivo é um template. A variável ${VITE_SUPABASE_URL} deve ser
+-- substituída pelo valor do .env antes de executar no SQL Editor.
 
 select cron.schedule(
   'duocal-send-push-notifications',
   '* * * * *',
   $$
   select net.http_post(
-    url := 'https://SEU_PROJECT_REF.supabase.co/functions/v1/send-push-notifications',
+    url := '${VITE_SUPABASE_URL}/functions/v1/send-push-notifications',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || (
