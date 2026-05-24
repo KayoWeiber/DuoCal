@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Bell, BellOff, CheckCircle2, Info, Smartphone, X } from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { Bell, BellOff, CheckCircle2, Home, Info, Share2, Smartphone, X } from 'lucide-react'
 import {
   getErrorMessage,
   getExistingPushSubscription,
@@ -33,6 +33,9 @@ type BrowserPushState = PushEnvironment & {
 
 const initialBrowserState: BrowserPushState = {
   endpoint: null,
+  hasNotification: false,
+  hasPushManager: false,
+  hasServiceWorker: false,
   isIos: false,
   isLoading: true,
   isStandalone: false,
@@ -60,6 +63,8 @@ export function PushNotificationsSheet({ onClose, workspaceId }: Props) {
   const status = statusQuery.data ?? null
   const isActive = Boolean(status?.flAtivo && browserState.endpoint)
   const canRequestPermission = canRequestPushPermission(browserState)
+  const shouldShowIosInstallGuide =
+    browserState.isIos && !browserState.isStandalone
   const reminderMinutes = status?.nrMinutosAntesEvento ?? 30
   const statusInfo = useMemo(
     () => getStatusInfo(browserState, status),
@@ -242,6 +247,7 @@ export function PushNotificationsSheet({ onClose, workspaceId }: Props) {
     salvarPushSubscription.isPending ||
     desativarPushSubscription.isPending ||
     atualizarPreferencias.isPending
+  const activateButtonLabel = getActivateButtonLabel(browserState)
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-[rgba(17,20,74,0.36)] backdrop-blur-sm">
@@ -298,12 +304,8 @@ export function PushNotificationsSheet({ onClose, workspaceId }: Props) {
               statusTone={statusInfo.tone}
             />
 
-            {browserState.isIos && !browserState.isStandalone ? (
-              <FeedbackAlert
-                message="Para receber lembretes no iPhone, adicione o DuoCal à tela inicial e abra pelo ícone instalado."
-                title="Instale o PWA"
-                variant="info"
-              />
+            {shouldShowIosInstallGuide ? (
+              <IosInstallGuideCard />
             ) : null}
 
             {browserState.permission === 'denied' ? (
@@ -466,11 +468,68 @@ export function PushNotificationsSheet({ onClose, workspaceId }: Props) {
               isLoading={salvarPushSubscription.isPending}
               onClick={handleActivate}
             >
-              Ativar notificações
+              {activateButtonLabel}
             </Button>
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+function IosInstallGuideCard() {
+  return (
+    <section className="overflow-hidden rounded-3xl border border-[rgba(255,176,32,0.26)] bg-white shadow-[0_14px_34px_rgba(17,20,74,0.08)]">
+      <div className="h-1 w-full bg-(--duocal-warning)" />
+      <div className="space-y-4 p-4">
+        <div className="flex gap-3">
+          <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[rgba(255,176,32,0.14)] text-(--duocal-warning)">
+            <Smartphone className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-sm font-black text-(--duocal-text)">
+              Instale o DuoCal no iPhone
+            </h3>
+            <p className="mt-1 text-sm leading-5 text-(--duocal-muted)">
+              Para ativar notificações no iPhone, adicione o DuoCal à Tela de
+              Início. No Safari, toque em Compartilhar e depois em Adicionar à
+              Tela de Início. Depois abra o app pelo ícone criado.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-2">
+          <IosInstallStep
+            icon={<Share2 className="size-4" />}
+            label="1. Toque em Compartilhar"
+          />
+          <IosInstallStep
+            icon={<Home className="size-4" />}
+            label="2. Escolha Adicionar à Tela de Início"
+          />
+          <IosInstallStep
+            icon={<CheckCircle2 className="size-4" />}
+            label="3. Abra pelo ícone do DuoCal"
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function IosInstallStep({
+  icon,
+  label,
+}: {
+  icon: ReactNode
+  label: string
+}) {
+  return (
+    <div className="flex min-h-11 items-center gap-3 rounded-2xl bg-(--duocal-surface-soft) px-3 text-sm font-bold text-(--duocal-text)">
+      <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-white text-(--duocal-primary)">
+        {icon}
+      </span>
+      <span className="min-w-0">{label}</span>
     </div>
   )
 }
@@ -569,19 +628,27 @@ function PreferenceToggle({
 }
 
 function canRequestPushPermission(browserState: BrowserPushState) {
-  if (browserState.isIos && !browserState.isStandalone) {
-    return false
+  return browserState.isSupported && browserState.permission !== 'denied'
+}
+
+function getActivateButtonLabel(browserState: BrowserPushState) {
+  if (browserState.isLoading) {
+    return 'Verificando...'
   }
 
-  if (!browserState.isSupported) {
-    return false
+  if (browserState.isIos && !browserState.isStandalone) {
+    return 'Adicione à Tela de Início'
   }
 
   if (browserState.permission === 'denied') {
-    return false
+    return 'Permissão bloqueada'
   }
 
-  return true
+  if (!browserState.isSupported) {
+    return 'Indisponível neste navegador'
+  }
+
+  return 'Ativar notificações'
 }
 
 function getStatusInfo(
@@ -591,15 +658,24 @@ function getStatusInfo(
   if (browserState.isIos && !browserState.isStandalone) {
     return {
       description:
-        'No iOS, o Push funciona apenas quando o DuoCal está instalado na tela inicial.',
-      label: 'Instale o PWA',
+        'Para ativar notificações no iPhone, adicione o DuoCal à Tela de Início e abra pelo ícone criado.',
+      label: 'Tela de Início',
+      tone: 'warning' as const,
+    }
+  }
+
+  if (browserState.isIos && !browserState.isSupported) {
+    return {
+      description:
+        'No iPhone e iPad, as notificações exigem iOS/iPadOS 16.4 ou superior, app instalado e suporte a Service Worker, PushManager e Notification.',
+      label: 'Atualize o iOS',
       tone: 'warning' as const,
     }
   }
 
   if (!browserState.isSupported) {
     return {
-      description: 'Este navegador não oferece suporte a Web Push.',
+      description: buildUnsupportedMessage(browserState),
       label: 'Indisponível',
       tone: 'muted' as const,
     }
@@ -637,4 +713,18 @@ function getStatusInfo(
     label: 'Não ativadas',
     tone: 'primary' as const,
   }
+}
+
+function buildUnsupportedMessage(browserState: BrowserPushState) {
+  const missing = [
+    !browserState.hasServiceWorker ? 'Service Worker' : null,
+    !browserState.hasPushManager ? 'PushManager' : null,
+    !browserState.hasNotification ? 'Notification' : null,
+  ].filter(Boolean)
+
+  if (missing.length === 0) {
+    return 'Este navegador não oferece suporte a Web Push.'
+  }
+
+  return `Este navegador não oferece suporte completo a Web Push. Recurso ausente: ${missing.join(', ')}.`
 }

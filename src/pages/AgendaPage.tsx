@@ -38,7 +38,7 @@ import {
   type AgendaVisualMap,
 } from '../components/agenda/agendaVisual'
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
+
 
 const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const MESES_ABREV = [
@@ -46,7 +46,6 @@ const MESES_ABREV = [
   'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ',
 ]
 
-// ─── Helpers de data ──────────────────────────────────────────────────────────
 
 function gerarDias(base: Date, qtd = 14): Date[] {
   return Array.from({ length: qtd }, (_, i) => {
@@ -122,8 +121,6 @@ function filtrarEventos(eventos: EventoWorkspace[], filtro: string): EventoWorks
   return eventos.filter(e => (e.participantes ?? []).some(p => p.usuario_id === filtro))
 }
 
-// ─── Subcomponente: Seletor de dias ──────────────────────────────────────────
-
 function AgendaDayStrip({
   dias,
   diaSelecionado,
@@ -138,8 +135,6 @@ function AgendaDayStrip({
   const scrollRef = useRef<HTMLDivElement>(null)
   const selISO = toDateISO(diaSelecionado)
   const hojeISO = toDateISO(hoje)
-
-  // Scroll para o dia selecionado
   useEffect(() => {
     const container = scrollRef.current
     if (!container) return
@@ -192,7 +187,6 @@ function AgendaDayStrip({
   )
 }
 
-// ─── Subcomponente: Chips de filtro ──────────────────────────────────────────
 
 function AgendaFiltroChips({
   membros,
@@ -281,7 +275,6 @@ function ChipBtn({
   )
 }
 
-// ─── Subcomponentes: estados da timeline ──────────────────────────────────────
 
 function LoadingTimeline() {
   return (
@@ -304,8 +297,6 @@ function EmptyTimeline({ message }: { message: string }) {
     </div>
   )
 }
-
-// ─── Página principal ─────────────────────────────────────────────────────────
 
 export function AgendaPage() {
   const { session, isLoading: isSessionLoading } = useAuthSession()

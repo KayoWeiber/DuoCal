@@ -1,6 +1,9 @@
 export type PushPermissionState = NotificationPermission | 'unsupported'
 
 export type PushEnvironment = {
+  hasNotification: boolean
+  hasPushManager: boolean
+  hasServiceWorker: boolean
   isIos: boolean
   isStandalone: boolean
   isSupported: boolean
@@ -8,17 +11,27 @@ export type PushEnvironment = {
 }
 
 export function getPushEnvironment(): PushEnvironment {
+  const hasWindow = typeof window !== 'undefined'
+  const hasNavigator = typeof navigator !== 'undefined'
+  const hasNotification = hasWindow && 'Notification' in window
+  const hasServiceWorker = hasNavigator && 'serviceWorker' in navigator
+  const hasPushManager = hasWindow && 'PushManager' in window
+  const isIos = isIosDevice()
+  const isStandalone = isStandalonePwa()
   const isSupported =
-    typeof window !== 'undefined' &&
-    'Notification' in window &&
-    'serviceWorker' in navigator &&
-    'PushManager' in window
+    hasNotification &&
+    hasServiceWorker &&
+    hasPushManager &&
+    (!isIos || isStandalone)
 
   return {
-    isIos: isIosDevice(),
-    isStandalone: isStandalonePwa(),
+    hasNotification,
+    hasPushManager,
+    hasServiceWorker,
+    isIos,
+    isStandalone,
     isSupported,
-    permission: isSupported ? Notification.permission : 'unsupported',
+    permission: hasNotification ? Notification.permission : 'unsupported',
   }
 }
 
@@ -27,7 +40,12 @@ export function isIosDevice() {
     return false
   }
 
-  return /iphone|ipad|ipod/i.test(navigator.userAgent)
+  const platform = navigator.platform.toLowerCase()
+  const userAgent = navigator.userAgent.toLowerCase()
+  const iPadDesktopMode =
+    platform === 'macintel' && navigator.maxTouchPoints > 1
+
+  return /iphone|ipad|ipod/.test(userAgent) || iPadDesktopMode
 }
 
 export function isStandalonePwa() {
