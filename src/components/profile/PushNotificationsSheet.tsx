@@ -4,6 +4,7 @@ import {
   getErrorMessage,
   getExistingPushSubscription,
   getPushEnvironment,
+  getRawErrorMessage,
   getVapidPublicKey,
   registerServiceWorker,
   requestNotificationPermission,
@@ -133,22 +134,28 @@ export function PushNotificationsSheet({ onClose, workspaceId }: Props) {
   async function handleActivate() {
     setFeedback(null)
     setErro(null)
+    let activationStep = 'validar suporte do navegador'
 
     try {
       if (!canRequestPermission) {
         throw new Error(statusInfo.description)
       }
 
+      activationStep = 'ler chave publica VAPID'
       const vapidPublicKey = getVapidPublicKey()
 
       if (!vapidPublicKey) {
         throw new Error('VITE_VAPID_PUBLIC_KEY nao configurada.')
       }
 
+      activationStep = 'registrar Service Worker'
       await registerServiceWorker()
+      activationStep = 'solicitar permissao de notificacao'
       await requestNotificationPermission()
 
+      activationStep = 'criar assinatura push no navegador'
       const subscription = await subscribeUserToPush(vapidPublicKey)
+      activationStep = 'salvar assinatura push no Supabase'
       const savedStatus = await salvarPushSubscription.mutateAsync({
         subscription,
         workspaceId,
@@ -164,6 +171,15 @@ export function PushNotificationsSheet({ onClose, workspaceId }: Props) {
         setFeedback('Notificações ativadas neste dispositivo.')
       }
     } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('[DuoCal] Falha ao ativar notificacoes push.', {
+          activationStep,
+          browserState: getPushEnvironment(),
+          rawError: getRawErrorMessage(error),
+          workspaceId,
+        })
+      }
+
       setErro(getErrorMessage(error))
     }
   }

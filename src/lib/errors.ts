@@ -34,6 +34,40 @@ const exactMessageMap = new Map<string, string>([
   ['CODIGO_CONEXAO_IMUTAVEL', 'O código de conexão não pode ser alterado manualmente.'],
   ['AUTH_USER_ID_IMUTAVEL', 'Não foi possível alterar dados protegidos da conta.'],
   ['VERSAO_CLIENTE_OBSOLETA', versionOutdatedMessage],
+  [
+    'VITE_VAPID_PUBLIC_KEY nao configurada.',
+    'A chave publica de notificacoes nao esta configurada neste ambiente.',
+  ],
+  [
+    'Service Worker nao suportado neste navegador.',
+    'Este navegador nao oferece suporte a Service Worker.',
+  ],
+  [
+    'Push API nao suportada neste navegador.',
+    'Este navegador nao oferece suporte a Web Push.',
+  ],
+  [
+    'Notificacoes nao suportadas neste navegador.',
+    'Este navegador nao oferece suporte a notificacoes.',
+  ],
+  [
+    'Permissao de notificacao nao concedida.',
+    'Permita as notificacoes para ativar os lembretes neste dispositivo.',
+  ],
+  [
+    'Subscription push incompleta.',
+    'O navegador nao retornou uma assinatura push completa. Tente ativar novamente.',
+  ],
+  [
+    'PUSH_SUBSCRIPTION_INVALIDA',
+    'A assinatura push deste navegador esta invalida. Tente ativar novamente.',
+  ],
+  [
+    'PUSH_SUBSCRIPTION_NAO_ENCONTRADA',
+    'Nao encontramos a assinatura push deste dispositivo.',
+  ],
+  ['NAO_AUTENTICADO', 'Entre na sua conta para continuar.'],
+  ['SEM_PERMISSAO', 'Voce nao tem permissao neste workspace.'],
 ])
 
 const codeMessageMap = new Map<string, string>([
@@ -49,6 +83,7 @@ const codeMessageMap = new Map<string, string>([
   ['23514', 'Revise os dados informados e tente novamente.'],
   ['42883', 'O DuoCal precisa ser atualizado para concluir esta ação.'],
   ['PGRST116', 'Não encontramos essa informação.'],
+  ['PGRST202', 'O DuoCal precisa ser atualizado para concluir esta ação.'],
 ])
 
 const partialMessageMap: Array<[string, string]> = [
@@ -75,6 +110,16 @@ const partialMessageMap: Array<[string, string]> = [
   ['relation "', 'O DuoCal precisa ser atualizado para concluir esta ação.'],
   ['function min(uuid) does not exist', 'O DuoCal precisa ser atualizado para concluir esta ação.'],
   ['no function matches the given name', 'O DuoCal precisa ser atualizado para concluir esta ação.'],
+  ['could not find the function public.rpc_salvar_push_subscription', 'O banco ainda nao recebeu a migration de notificacoes push.'],
+  ['applicationserverkey is not valid', 'A chave publica VAPID esta invalida. Gere um novo par de chaves e atualize o ambiente.'],
+  ['invalid applicationserverkey', 'A chave publica VAPID esta invalida. Gere um novo par de chaves e atualize o ambiente.'],
+  ['push service error', 'O navegador nao conseguiu criar a assinatura push. Verifique HTTPS/PWA e tente novamente.'],
+  ['failed to register a serviceworker', 'Nao foi possivel registrar o Service Worker do DuoCal.'],
+  ['service worker registration failed', 'Nao foi possivel registrar o Service Worker do DuoCal.'],
+  ['only secure origins are allowed', 'Notificacoes push exigem HTTPS ou localhost.'],
+  ['operation is insecure', 'Notificacoes push exigem HTTPS ou localhost.'],
+  ['user denied permission to use the push api', 'Permita as notificacoes para ativar os lembretes neste dispositivo.'],
+  ['notification permission has been denied', 'As notificacoes foram bloqueadas no navegador. Altere a permissao nas configuracoes.'],
 ]
 
 export function getErrorMessage(error: unknown) {
