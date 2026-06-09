@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, Filter, Plus, Search } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { CalendarDays, ChevronDown, Filter, List, Plus, Search } from 'lucide-react'
 import {
   BottomNavigation,
   EventDetailSheet,
@@ -33,6 +33,13 @@ import type {
 } from '../hooks'
 import type { SyncQueueItem } from '../lib'
 import { AgendaTimeline } from '../components/agenda/AgendaTimeline'
+import { AgendaMonthView } from '../components/agenda/AgendaMonthView'
+import {
+  addMonths,
+  firstDayOfMonth,
+  getMonthGridDays,
+  isSameMonth,
+} from '../components/agenda/agendaMonthUtils'
 import {
   buildAgendaVisualMap,
   type AgendaResponsavelVisual,
@@ -47,6 +54,7 @@ const MESES_ABREV = [
   'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ',
 ]
 
+type AgendaViewMode = 'dia' | 'mes'
 
 function gerarDias(base: Date, qtd = 14): Date[] {
   return Array.from({ length: qtd }, (_, i) => {
@@ -103,13 +111,13 @@ function pendingItemToEvento(
   }
 }
 
-function pendingItemsForDay(
+function pendingItemsForRange(
   items: SyncQueueItem[],
-  dtInicioDay: string,
-  dtFimDay: string,
+  dtInicioRange: string,
+  dtFimRange: string,
 ): SyncQueueItem[] {
-  const inicio = new Date(dtInicioDay)
-  const fim = new Date(dtFimDay)
+  const inicio = new Date(dtInicioRange)
+  const fim = new Date(dtFimRange)
   return items.filter((item) => {
     const p = item.payload as CriarEventoPayload
     return new Date(p.dtInicio) < fim && new Date(p.dtFim) > inicio
@@ -287,6 +295,62 @@ function ChipBtn({
 }
 
 
+function AgendaViewToggle({
+  viewMode,
+  onChange,
+}: {
+  viewMode: AgendaViewMode
+  onChange: (mode: AgendaViewMode) => void
+}) {
+  return (
+    <div className="grid grid-cols-2 rounded-full border border-(--duocal-border) bg-white p-1 shadow-[0_8px_20px_rgba(17,20,74,0.05)]">
+      <ViewToggleButton
+        active={viewMode === 'dia'}
+        icon={<List className="size-4" />}
+        label="Dia"
+        onClick={() => onChange('dia')}
+      />
+      <ViewToggleButton
+        active={viewMode === 'mes'}
+        icon={<CalendarDays className="size-4" />}
+        label={'M\u00eas'}
+        onClick={() => onChange('mes')}
+      />
+    </div>
+  )
+}
+
+function ViewToggleButton({
+  active,
+  icon,
+  label,
+  onClick,
+}: {
+  active: boolean
+  icon: ReactNode
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        'inline-flex min-h-9 items-center justify-center gap-2 rounded-full px-3 text-sm font-black transition active:scale-[0.98]',
+        active ? 'text-white shadow-[0_8px_18px_rgba(84,102,241,0.24)]' : 'text-(--duocal-muted)',
+      ].join(' ')}
+      style={
+        active
+          ? { background: 'linear-gradient(135deg,#5466F1,#B66DFF)' }
+          : undefined
+      }
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  )
+}
+
 function LoadingTimeline() {
   return (
     <div className="flex h-full items-center justify-center gap-1.5">
@@ -326,11 +390,16 @@ export function AgendaPage() {
   const [eventoSelecionado, setEventoSelecionado] = useState<EventoWorkspace | null>(null)
   const [editandoEventoId, setEditandoEventoId] = useState<string | null>(null)
   const [timelineExpanded, setTimelineExpanded] = useState(false)
+  const [viewMode, setViewMode] = useState<AgendaViewMode>('dia')
+  const [mesVisivel, setMesVisivel] = useState<Date>(() => firstDayOfMonth(new Date()))
 
   const hoje = new Date()
-  const dias = gerarDias(hoje)
-  const dtInicio = toTimestampStart(diaSelecionado)
-  const dtFim = toTimestampEnd(diaSelecionado)
+  const dias = gerarDias(diaSelecionado)
+  const diasGradeMes = useMemo(() => getMonthGridDays(mesVisivel), [mesVisivel])
+  const queryStart = viewMode === 'mes' ? diasGradeMes[0] : diaSelecionado
+  const queryEnd = viewMode === 'mes' ? diasGradeMes[diasGradeMes.length - 1] : diaSelecionado
+  const dtInicio = toTimestampStart(queryStart)
+  const dtFim = toTimestampEnd(queryEnd)
 
   const eventosQuery = useEventosWorkspace(workspaceId, dtInicio, dtFim)
   const membrosQuery = useMembrosWorkspace(workspaceId)
@@ -362,7 +431,7 @@ export function AgendaPage() {
   )
 
   const eventosPendentes = useMemo(() => {
-    const itens = pendingItemsForDay(pendingItems, dtInicio, dtFim)
+    const itens = pendingItemsForRange(pendingItems, dtInicio, dtFim)
     return itens.map(item => pendingItemToEvento(item, membros, categorias))
   }, [pendingItems, dtInicio, dtFim, membros, categorias])
 
@@ -373,8 +442,34 @@ export function AgendaPage() {
 
   const perfilIncompleto = Boolean(perfil && (!perfil.fl_perfil_completo || !perfil.nm_usuario))
   const isLoading = workspaceQuery.isLoading || eventosQuery.isLoading
-  const mesAno = `${MESES_ABREV[diaSelecionado.getMonth()]} ${diaSelecionado.getFullYear()}`
+  const mesAnoDate = viewMode === 'mes' ? mesVisivel : diaSelecionado
+  const mesAno = `${MESES_ABREV[mesAnoDate.getMonth()]} ${mesAnoDate.getFullYear()}`
   const configuracao = configuracaoQuery.data
+
+  function handleChangeViewMode(nextMode: AgendaViewMode) {
+    setViewMode(nextMode)
+
+    if (nextMode === 'mes') {
+      setTimelineExpanded(false)
+      setMesVisivel(firstDayOfMonth(diaSelecionado))
+    }
+  }
+
+  function handleSelectMonthDay(dia: Date) {
+    setDiaSelecionado(dia)
+
+    if (!isSameMonth(dia, mesVisivel)) {
+      setMesVisivel(firstDayOfMonth(dia))
+    }
+  }
+
+  function handleNavigateMonth(amount: number) {
+    const nextMonth = addMonths(mesVisivel, amount)
+    const selectedDay = isSameMonth(hoje, nextMonth) ? hoje : nextMonth
+
+    setMesVisivel(nextMonth)
+    setDiaSelecionado(selectedDay)
+  }
 
   async function handleSave(payload: CriarEventoPayload) {
     try {
@@ -415,14 +510,21 @@ export function AgendaPage() {
               ) : null}
               <button
                 type="button"
-                onClick={() => setTimelineExpanded((expanded) => !expanded)}
+                onClick={() => {
+                  if (viewMode === 'dia') {
+                    setTimelineExpanded((expanded) => !expanded)
+                  }
+                }}
                 aria-expanded={!timelineExpanded}
                 aria-label={timelineExpanded ? 'Mostrar calendário da agenda' : 'Ocultar calendário da agenda'}
                 className="flex min-w-0 items-center gap-0.5 text-left text-[26px] font-black leading-none text-(--duocal-text)"
               >
                 Agenda
                 <ChevronDown
-                  className="size-5 shrink-0 text-(--duocal-muted) transition-transform"
+                  className={[
+                    'size-5 shrink-0 text-(--duocal-muted) transition-transform',
+                    viewMode === 'dia' ? '' : 'hidden',
+                  ].join(' ')}
                   style={{ transform: timelineExpanded ? 'rotate(-90deg)' : 'rotate(0deg)' }}
                 />
               </button>
@@ -462,6 +564,15 @@ export function AgendaPage() {
 
         {!timelineExpanded ? (
           <>
+            <div className="shrink-0 px-5 pb-3">
+              <AgendaViewToggle
+                viewMode={viewMode}
+                onChange={handleChangeViewMode}
+              />
+            </div>
+
+            {viewMode === 'dia' ? (
+              <>
             {/* Seletor de dias */}
             <div className="shrink-0 px-5 pb-1">
               <AgendaDayStrip
@@ -471,6 +582,8 @@ export function AgendaPage() {
                 onSelect={setDiaSelecionado}
               />
             </div>
+              </>
+            ) : null}
 
             {/* Chips de filtro */}
             {membros.length > 0 && (
@@ -488,6 +601,26 @@ export function AgendaPage() {
           <div className="h-1 shrink-0" />
         )}
 
+        {viewMode === 'mes' && !timelineExpanded ? (
+          <AgendaMonthView
+            diaSelecionado={diaSelecionado}
+            emptyMessage={
+              workspaceId
+                ? 'Nenhum evento neste dia.'
+                : 'Conecte-se a um workspace para ver seus eventos.'
+            }
+            eventos={workspaceId ? eventosServidor : []}
+            eventosPendentes={workspaceId ? eventosPendentesFiltrados : []}
+            hoje={hoje}
+            isLoading={isLoading}
+            mesVisivel={mesVisivel}
+            visualMap={agendaVisualMap}
+            onEventoClick={setEventoSelecionado}
+            onNextMonth={() => handleNavigateMonth(1)}
+            onPreviousMonth={() => handleNavigateMonth(-1)}
+            onSelectDay={handleSelectMonthDay}
+          />
+        ) : (
         <div
           className={[
             'mx-3 overflow-hidden rounded-3xl bg-white shadow-[0_4px_24px_rgba(17,20,74,0.07)]',
@@ -513,6 +646,7 @@ export function AgendaPage() {
             />
           )}
         </div>
+        )}
 
       </div>
 
