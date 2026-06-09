@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Bell, ChevronRight, Link2, LogOut, Plus, Settings, Tag, UserRound } from 'lucide-react'
 import {
   BottomNavigation,
@@ -8,7 +8,10 @@ import {
   VersionOutdatedModal,
 } from '../components'
 import { AvatarImage } from '../components/profile/AvatarImage'
-import { AvatarUpload } from '../components/profile/AvatarUpload'
+import {
+  AvatarUpload,
+  type AvatarUploadHandle,
+} from '../components/profile/AvatarUpload'
 import { CategoryManagementSheet } from '../components/profile/CategoryManagementSheet'
 import { ConnectionCodeSheet } from '../components/profile/ConnectionCodeSheet'
 import { ProfileHeroCard } from '../components/profile/ProfileHeroCard'
@@ -38,6 +41,7 @@ export function ProfilePage() {
   const [pushSheetOpen, setPushSheetOpen] = useState(false)
   const [workspaceSettingsOpen, setWorkspaceSettingsOpen] = useState(false)
   const [versionOutdated] = useState(false)
+  const avatarUploadRef = useRef<AvatarUploadHandle>(null)
 
   useEffect(() => {
     if (!isLoading && !session) {
@@ -58,9 +62,26 @@ export function ProfilePage() {
     <>
       <ScreenContainer withBottomNavigation>
         {/* Header */}
-        <header className="pb-5">
-          <p className="text-sm font-semibold text-(--duocal-muted)">Conta</p>
-          <h1 className="mt-1 text-3xl font-black text-(--duocal-text)">Perfil</h1>
+        <header className="flex items-start justify-between gap-4 pb-5">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-(--duocal-muted)">Conta</p>
+            <h1 className="mt-1 text-3xl font-black text-(--duocal-text)">Perfil</h1>
+          </div>
+          {workspace && perfil ? (
+            <button
+              type="button"
+              onClick={() => avatarUploadRef.current?.openMenu()}
+              className="mt-1 grid size-11 shrink-0 place-items-center rounded-full border border-(--duocal-border) bg-white text-(--duocal-primary) shadow-[0_10px_24px_rgba(17,20,74,0.07)] transition active:scale-[0.97] hover:bg-[rgba(84,102,241,0.08)]"
+              aria-label="Abrir opções da foto de perfil"
+            >
+              <AvatarImage
+                avatarPath={perfil.avatar_path}
+                nome={perfil.nm_usuario}
+                size={36}
+                background="linear-gradient(135deg,#5466F1,#B66DFF)"
+              />
+            </button>
+          ) : null}
         </header>
 
         {/* — Hero card (com workspace) ou card simples (sem workspace) — */}
@@ -96,8 +117,13 @@ export function ProfilePage() {
 
         {/* — Avatar upload (só com workspace e perfil carregado) — */}
         {workspace && perfil ? (
-          <section className="mt-5 flex justify-center">
-            <AvatarUpload perfil={perfil} workspaceId={workspace.workspace.id} />
+          <section className="contents">
+            <AvatarUpload
+              ref={avatarUploadRef}
+              perfil={perfil}
+              workspaceId={workspace.workspace.id}
+              showTrigger={false}
+            />
           </section>
         ) : null}
 
