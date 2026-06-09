@@ -72,6 +72,10 @@ export function useAtualizarAvatarUsuario() {
         queryClient.setQueryData(meuPerfilQueryKey, normalizePerfil(perfil))
       }
       queryClient.invalidateQueries({ queryKey: meuPerfilQueryKey })
+      queryClient.invalidateQueries({
+        queryKey: buildQueryKey('membros-workspace'),
+        exact: false,
+      })
     },
   })
 }
@@ -92,6 +96,10 @@ export function useRemoverAvatarUsuario() {
         queryClient.setQueryData(meuPerfilQueryKey, normalizePerfil(perfil))
       }
       queryClient.invalidateQueries({ queryKey: meuPerfilQueryKey })
+      queryClient.invalidateQueries({
+        queryKey: buildQueryKey('membros-workspace'),
+        exact: false,
+      })
     },
   })
 }
