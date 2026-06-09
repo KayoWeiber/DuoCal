@@ -494,7 +494,7 @@ export function AgendaPage() {
   return (
     <>
       <div
-        className="duocal-app-shell min-h-dvh overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom,0px))]"
+        className="duocal-app-shell min-h-dvh overflow-x-hidden pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]"
         style={{
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
