@@ -1,5 +1,12 @@
-import { useRef, useState, type ChangeEvent, type ReactNode } from 'react'
-import { Camera, ImagePlus, Trash2, X } from 'lucide-react'
+import {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from 'react'
+import { ImagePlus, Trash2, X } from 'lucide-react'
 import {
   buildAvatarPath,
   getErrorMessage,
@@ -15,9 +22,18 @@ import { FeedbackAlert } from '../ui/FeedbackAlert'
 type Props = {
   perfil: MeuPerfil
   workspaceId: string
+  size?: number
+  showTrigger?: boolean
 }
 
-export function AvatarUpload({ perfil, workspaceId }: Props) {
+export type AvatarUploadHandle = {
+  openMenu: () => void
+}
+
+export const AvatarUpload = forwardRef<AvatarUploadHandle, Props>(function AvatarUpload(
+  { perfil, workspaceId, size = 88, showTrigger = true },
+  ref,
+) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -30,6 +46,8 @@ export function AvatarUpload({ perfil, workspaceId }: Props) {
   const isLoading =
     uploading || atualizarAvatar.isPending || removerAvatar.isPending
   const hasAvatar = Boolean(perfil.avatar_path)
+  const ringPadding = size <= 56 ? 2 : 4
+  const glowPadding = size <= 56 ? 2 : 4
 
   function handleOpenMenu() {
     if (isLoading) return
@@ -38,6 +56,10 @@ export function AvatarUpload({ perfil, workspaceId }: Props) {
     setConfirmRemover(false)
     setMenuOpen(true)
   }
+
+  useImperativeHandle(ref, () => ({
+    openMenu: handleOpenMenu,
+  }))
 
   function handleAlterarFoto() {
     if (isLoading) return
@@ -74,7 +96,7 @@ export function AvatarUpload({ perfil, workspaceId }: Props) {
       } else {
         setErro(
           getErrorMessage(error) ||
-            'Não foi possível salvar a foto. Tente novamente.',
+            'Nao foi possivel salvar a foto. Tente novamente.',
         )
       }
     } finally {
@@ -94,39 +116,40 @@ export function AvatarUpload({ perfil, workspaceId }: Props) {
       await removerAvatar.mutateAsync()
       setMenuOpen(false)
     } catch (error) {
-      setErro(getErrorMessage(error) || 'Não foi possível remover a foto.')
+      setErro(getErrorMessage(error) || 'Nao foi possivel remover a foto.')
     }
   }
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="relative rounded-full bg-white p-1 shadow-[0_14px_34px_rgba(17,20,74,0.14)] ring-1 ring-[rgba(84,102,241,0.12)]">
-        <div className="rounded-full bg-[linear-gradient(135deg,rgba(84,102,241,0.14),rgba(182,109,255,0.18))] p-1">
-          <AvatarImage
-            avatarPath={perfil.avatar_path}
-            nome={perfil.nm_usuario}
-            size={88}
-            background="linear-gradient(135deg,#5466F1,#B66DFF)"
-          />
-        </div>
-
+      {showTrigger ? (
         <button
           type="button"
           onClick={handleOpenMenu}
           disabled={isLoading}
-          className="absolute -right-0.5 -top-0.5 grid size-8 place-items-center rounded-full border-2 border-white text-white shadow-[0_8px_18px_rgba(84,102,241,0.32)] transition active:scale-[0.96] disabled:opacity-60"
-          style={{ background: 'linear-gradient(135deg,#5466F1,#B66DFF)' }}
-          aria-label="Abrir opções da foto de perfil"
+          className="relative rounded-full bg-white p-1 shadow-[0_14px_34px_rgba(17,20,74,0.14)] ring-1 ring-[rgba(84,102,241,0.12)] transition active:scale-[0.98] disabled:opacity-80"
+          style={{ padding: ringPadding }}
+          aria-label="Abrir opcoes da foto de perfil"
         >
-          <Camera className="size-4" />
-        </button>
-
-        {isLoading ? (
-          <div className="absolute inset-1 flex items-center justify-center rounded-full bg-black/45">
-            <div className="size-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          <div
+            className="rounded-full bg-[linear-gradient(135deg,rgba(84,102,241,0.14),rgba(182,109,255,0.18))]"
+            style={{ padding: glowPadding }}
+          >
+            <AvatarImage
+              avatarPath={perfil.avatar_path}
+              nome={perfil.nm_usuario}
+              size={size}
+              background="linear-gradient(135deg,#5466F1,#B66DFF)"
+            />
           </div>
-        ) : null}
-      </div>
+
+          {isLoading ? (
+            <div className="absolute inset-1 flex items-center justify-center rounded-full bg-black/45">
+              <div className="size-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            </div>
+          ) : null}
+        </button>
+      ) : null}
 
       {erro ? (
         <div className="w-full max-w-xs">
@@ -164,7 +187,7 @@ export function AvatarUpload({ perfil, workspaceId }: Props) {
       ) : null}
     </div>
   )
-}
+})
 
 function AvatarActionsSheet({
   confirmRemover,
@@ -205,7 +228,7 @@ function AvatarActionsSheet({
             type="button"
             onClick={onClose}
             className="grid size-9 shrink-0 place-items-center rounded-2xl bg-(--duocal-surface-soft) text-(--duocal-muted) transition hover:text-(--duocal-primary)"
-            aria-label="Fechar opções da foto"
+            aria-label="Fechar opcoes da foto"
           >
             <X className="size-4" />
           </button>
@@ -218,7 +241,7 @@ function AvatarActionsSheet({
                 Remover foto?
               </p>
               <p className="mt-1 text-xs leading-5 text-(--duocal-muted)">
-                Seu avatar voltará a mostrar as iniciais do perfil.
+                Seu avatar voltara a mostrar as iniciais do perfil.
               </p>
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <button
