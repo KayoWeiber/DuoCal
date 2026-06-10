@@ -42,7 +42,7 @@ export default defineConfig({
         name: 'DuoCal',
         short_name: 'DuoCal',
         description: 'Agenda compartilhada para casais. Sincronia é a base de tudo.',
-        theme_color: '#5466F1',
+        theme_color: '#F8FAFC',
         background_color: '#F8FAFC',
         display: 'standalone',
         orientation: 'portrait',

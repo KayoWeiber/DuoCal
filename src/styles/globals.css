@@ -5,6 +5,11 @@
   --duocal-primary-dark: #3F46D8;
   --duocal-violet: #B66DFF;
   --duocal-bg: #F6F7FB;
+  --duocal-app-bg-top: #F8FAFC;
+  --duocal-app-bg-bottom: #EEF2FF;
+  --duocal-app-background:
+    radial-gradient(circle at top, rgba(84, 102, 241, 0.10), transparent 32%),
+    linear-gradient(180deg, var(--duocal-app-bg-top) 0%, var(--duocal-app-bg-bottom) 100%);
   --duocal-surface: #FFFFFF;
   --duocal-surface-soft: #F1F3FA;
   --duocal-text: #11144A;
@@ -22,7 +27,8 @@
 
 html {
   font-family: Inter, system-ui, sans-serif;
-  background: var(--duocal-bg);
+  min-height: 100%;
+  background: var(--duocal-app-bg-top);
   color: var(--duocal-text);
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
@@ -30,14 +36,15 @@ html {
 }
 
 body {
+  margin: 0;
   min-width: 320px;
   min-height: 100dvh;
   max-width: 100%;
   overflow-x: hidden;
   position: relative;
-  background:
-    radial-gradient(circle at top, rgba(84, 102, 241, 0.10), transparent 32%),
-    linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%);
+  background-color: var(--duocal-app-bg-top);
+  background-image: var(--duocal-app-background);
+  background-attachment: fixed;
   color: var(--duocal-text);
 }
 
@@ -56,6 +63,7 @@ body {
   overflow-x: hidden;
   display: flex;
   justify-content: center;
+  background-color: transparent;
 }
 
 button,
@@ -82,6 +90,7 @@ input {
   min-height: 100dvh;
   overflow-x: hidden;
   position: relative;
+  background-color: transparent;
 }
 
 @media (min-width: 481px) and (min-height: 600px) {
@@ -107,9 +116,7 @@ input {
 }
 
 .duocal-ios-shell {
-  background:
-    radial-gradient(circle at top, rgba(84, 102, 241, 0.10), transparent 32%),
-    linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%);
+  background-color: transparent;
 }
 
 .duocal-gradient {
